@@ -8,7 +8,7 @@
  *                                    find-or-create the user, start a session
  */
 import { createHash, randomBytes } from "node:crypto";
-import { one } from "./db";
+import { one, sql } from "./db";
 import type { UserRow } from "./data";
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -135,20 +135,35 @@ const adminEmails = () =>
 /**
  * Find the user by Google ID, else link an existing account with the same
  * (Google-verified) email, else create one. Emails in ADMIN_EMAILS become admins.
+ *
+ * Security: an email+password account is unverified until Google proves the
+ * owner controls the address. If someone registered this email with a
+ * password before the real owner arrived, linking now would let that person
+ * keep access. So when Google verifies an account for the first time, any
+ * password set before verification is removed and its other sessions ended.
  */
 export async function upsertGoogleUser(p: GoogleProfile): Promise<UserRow> {
   const role = adminEmails().has(p.email) ? "admin" : null;
-  const user = await one<UserRow>(
-    `INSERT INTO users (email, name, google_id, role)
-     VALUES ($1, $2, $3, coalesce($4::user_role, 'user'))
+  const user = await one<UserRow & { was_unverified_password: boolean }>(
+    `WITH prior AS (
+       SELECT id, (password_hash IS NOT NULL AND email_verified_at IS NULL) AS unverified_pw
+       FROM users WHERE email = $1
+     )
+     INSERT INTO users (email, name, google_id, role, email_verified_at)
+     VALUES ($1, $2, $3, coalesce($4::user_role, 'user'), now())
      ON CONFLICT (email) DO UPDATE SET
-       google_id = coalesce(users.google_id, EXCLUDED.google_id),
-       name      = coalesce(users.name, EXCLUDED.name),
-       role      = CASE WHEN $4::user_role IS NOT NULL THEN $4::user_role ELSE users.role END
-     RETURNING *`,
+       google_id         = coalesce(users.google_id, EXCLUDED.google_id),
+       name              = coalesce(users.name, EXCLUDED.name),
+       role              = CASE WHEN $4::user_role IS NOT NULL THEN $4::user_role ELSE users.role END,
+       password_hash     = CASE WHEN users.email_verified_at IS NULL AND users.google_id IS NULL
+                                THEN NULL ELSE users.password_hash END,
+       email_verified_at = coalesce(users.email_verified_at, now())
+     RETURNING *, coalesce((SELECT unverified_pw FROM prior), false) AS was_unverified_password`,
     [p.email, p.name, p.sub, role],
   );
   // Same email but already linked to a different Google account: refuse rather than merge.
   if (!user || user.google_id !== p.sub) throw new OAuthError("account_conflict");
-  return user;
+  if (user.was_unverified_password) await sql("DELETE FROM sessions WHERE user_id = $1", [user.id]);
+  const { was_unverified_password: _w, ...rest } = user;
+  return rest;
 }

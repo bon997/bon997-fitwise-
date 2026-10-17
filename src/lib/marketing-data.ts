@@ -1,4 +1,4 @@
-// Placeholder marketing content (stats, testimonials, logos are illustrative). Replace with real data before launch.
+// Landing page content. Everything here must be true: no invented numbers, quotes or customer names.
 
 export const exampleJob = {
   title: "Senior Product Designer",
@@ -11,13 +11,15 @@ export const exampleJob = {
   missing: ["Motion design"],
 };
 
-export const companies = ["Northwind", "Halcyon", "Brightline", "Kestrel", "Meridian", "Oakfield"];
+/** Short promises shown under the hero. */
+export const promises = ["Free during beta", "No credit card", "Your resume is never sold", "Delete your data any time"];
 
+/** Facts about how the product works (not usage claims, which we can't back up yet). */
 export const stats = [
-  { value: "1.2M", label: "jobs indexed weekly" },
-  { value: "3.4×", label: "more interviews per application" },
-  { value: "11 min", label: "average time to a tailored application" },
-  { value: "92%", label: "of users find an 80+ fit in week one" },
+  { value: "5", label: "signals behind every fit score" },
+  { value: "2×", label: "weight on a job's must-have skills" },
+  { value: "0", label: "resumes shown to employers or sold" },
+  { value: "1 click", label: "to download or delete your data" },
 ];
 
 export const steps = [
@@ -38,23 +40,25 @@ export const steps = [
   },
 ];
 
-export const testimonials = [
+/**
+ * Real quotes only, with the person's permission. The section stays hidden
+ * while this list is empty. Example shape:
+ * { quote: "…", name: "First name + initial", role: "Their role" }
+ */
+export const testimonials: { quote: string; name: string; role: string }[] = [];
+
+/** Shown in place of testimonials until there are real ones. */
+export const principles = [
   {
-    quote:
-      "I stopped applying to everything. Fitwise showed me the six roles I actually had a shot at, and I got offers from two.",
-    name: "Amira K.",
-    role: "Data Analyst → Analytics Engineer",
+    title: "Honest scores",
+    body: "Your fit score only measures how well you meet a job's requirements. Your preferences can reorder results, but never inflate the number.",
   },
   {
-    quote:
-      "The missing-skills list was the useful part. I took one short course and my scores on the roles I wanted jumped 15 points.",
-    name: "Jonas L.",
-    role: "Frontend Developer",
+    title: "Nothing made up",
+    body: "Cover letters are written only from experience in your resume. No invented results, no fake numbers. You review every word before it's sent.",
   },
   {
-    quote:
-      "Cover letters that sound like me, not like a template. I edit for two minutes instead of writing for forty.",
-    name: "Priya S.",
-    role: "Product Manager",
+    title: "Your data, your call",
+    body: "Your resume is used only to match you with jobs. Download everything or delete your account from your profile, any time.",
   },
 ];

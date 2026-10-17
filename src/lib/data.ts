@@ -25,6 +25,7 @@ export type UserRow = {
   seniority: Seniority | null;
   preferences: { locations?: string[]; remote_only?: boolean; target_titles?: string[]; salary_min?: number | null; suggested_roles?: string[] };
   resume_score: number | null;
+  email_verified_at: Date | null;
   profile_updated_at: Date | null;
   created_at: Date;
   updated_at: Date;

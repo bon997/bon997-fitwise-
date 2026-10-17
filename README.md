@@ -25,10 +25,13 @@ Only `DATABASE_URL` is required to run. Without `ANTHROPIC_API_KEY`, AI endpoint
 | 4. Backend API endpoints | ✅ done |
 | 5. AI matching engine, resume parser, cover letters | ✅ done |
 | 6a. Sign in with Google | ✅ done |
-| 6b. Email + password sign-in | later (Google covers most users) |
+| 6b. Email + password sign-in | ✅ done |
 | 7. Pages: profile, job search, job details + Apply with AI, dashboard | ✅ done |
 | 8. Personalization ("For you" ranking) | ✅ done |
 | 9. GDPR: data export + account deletion | ✅ done |
+| 10. Pricing, FAQ, Privacy Policy, Terms, 404 | ✅ done |
+| 11. Daily AI limits per user (protects your Claude bill) | ✅ done |
+| 12. Honest landing page (no invented stats or testimonials) | ✅ done |
 | 8. Dashboard + application tracker | next |
 | 9. Pricing, FAQ, admin panel | next |
 
@@ -55,6 +58,22 @@ Where Claude is used:
 Resumes and job posts are wrapped in tags and treated as untrusted data in every prompt.
 
 Weekly matches come from Pinecone nearest neighbours plus any recent job that shares a skill. All candidates are scored with the same formula.
+
+## Before you launch: checklist
+
+- [ ] Run the latest `db/schema.sql` in the Supabase SQL Editor (safe to run again; it only adds what's missing)
+- [ ] In Vercel, set `CONTACT_EMAIL` and `OPERATOR_NAME` (shown on the Privacy and Terms pages)
+- [ ] Have the Privacy Policy and Terms reviewed by someone qualified. They are a solid starting point, not legal advice.
+- [ ] Add real testimonials to `src/lib/marketing-data.ts` once users give permission. The section stays hidden until then.
+- [ ] Password reset by email needs an email service (e.g. Resend). Until then, Gmail users can sign in with Google.
+
+## Email + password sign-in
+
+- Passwords are hashed with scrypt; only the hash is stored. Minimum 10 characters, with checks for obvious choices.
+- After 8 failed attempts for one email (or 30 from one IP) within 15 minutes, sign-in pauses for that email or IP.
+- The same error is returned for a wrong email or a wrong password, with the same timing.
+- **Takeover protection:** a password account is unverified until its owner signs in with Google. If someone registers another person's email with a password, that password is erased and their sessions are ended the moment the real owner signs in with Google.
+- Password sign-up never grants admin. Admin comes only from a Google-verified address in `ADMIN_EMAILS`.
 
 ## Personalization ("For you")
 
@@ -100,6 +119,8 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 
 | Method & path | Purpose |
 |---|---|
+| `POST /api/auth/signup` | `{ name, email, password }` creates an account and signs in |
+| `POST /api/auth/login` | `{ email, password }` signs in |
 | `GET /api/auth/google?returnTo=/path` | Redirects to Google's account picker |
 | `GET /api/auth/google/callback` | Google returns here; creates or links the user, starts a 30-day session |
 | `POST /api/auth/logout` | Ends the session |
@@ -131,7 +152,7 @@ fitwise/
 ├── db/
 │   ├── schema.sql                    ✅ users, jobs, applications, fit_scores, saved_jobs, ingest_runs, sessions, job_dismissals
 │   └── seed.sql                      ✅ demo user, admin, 9 jobs
-├── tests/                            ✅ 29 tests: scoring, personalization, normalization, source mapping
+├── tests/                            ✅ 33 tests: scoring, personalization, passwords, normalization, source mapping
 └── src/
     ├── app/
     │   ├── layout.tsx                ✅ root layout, fonts, metadata

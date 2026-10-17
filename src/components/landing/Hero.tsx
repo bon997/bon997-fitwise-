@@ -7,7 +7,7 @@ export function Hero() {
       <div>
         <p className="inline-flex items-center gap-2 rounded-full border border-line bg-white/60 px-3 py-1 text-xs text-ink-2">
           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-          Scored against 1.2M live listings
+          Free during beta · AI fit scores for every job
         </p>
         <h1 className="mt-6 font-display text-5xl leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
           Stop guessing.

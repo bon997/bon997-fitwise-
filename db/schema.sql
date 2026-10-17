@@ -184,3 +184,27 @@ CREATE TABLE IF NOT EXISTS job_dismissals (
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, job_id)
 );
+
+-- ── Email + password sign-in ────────────────────────────────────────────
+-- email_verified_at is set when an identity provider (Google) proves the user
+-- owns the address. Password sign-ups stay unverified until then.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at timestamptz;
+
+-- Failed sign-in attempts, for brute-force protection. Old rows are pruned automatically.
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id          bigserial PRIMARY KEY,
+  email       citext,
+  ip          text,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS login_attempts_email ON login_attempts (email, created_at);
+CREATE INDEX IF NOT EXISTS login_attempts_ip ON login_attempts (ip, created_at);
+
+-- ── AI usage (daily limits so the Claude bill can't run away) ───────────
+CREATE TABLE IF NOT EXISTS ai_usage (
+  id          bigserial PRIMARY KEY,
+  user_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind        text NOT NULL,              -- cover_letter | resume_parse | fit_explain
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ai_usage_user_kind ON ai_usage (user_id, kind, created_at);

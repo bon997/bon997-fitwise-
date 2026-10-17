@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { one } from "@/lib/db";
 import { parseResume, ACCEPTED_RESUME_TYPES } from "@/lib/ai/parse-resume";
 import { storeResume } from "@/lib/storage";
+import { useAiAllowance } from "@/lib/ai-usage";
 import { publicUser, type UserRow } from "@/lib/data";
 
 export const maxDuration = 60;
@@ -29,8 +30,12 @@ export const POST = route(async (req: Request) => {
   if (!ext) throw new HttpError(415, "Upload a PDF, DOCX or TXT file");
 
   const bytes = Buffer.from(await file.arrayBuffer());
+  const allowance = await useAiAllowance(user, "resume_parse");
   const [{ parsed, text }, resumeUrl] = await Promise.all([
-    parseResume({ bytes, mimeType: file.type }),
+    parseResume({ bytes, mimeType: file.type }).catch(async (e) => {
+      await allowance.refund();
+      throw e;
+    }),
     // Keeping the original file is optional; a storage problem shouldn't block reading the resume.
     storeResume(user.id, bytes, file.type, ext).catch((e) => {
       console.error("resume storage failed", e);

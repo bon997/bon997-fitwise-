@@ -1,20 +1,16 @@
-import { companies, stats } from "@/lib/marketing-data";
+import { promises, stats } from "@/lib/marketing-data";
 
 export function LogoStrip() {
   return (
     <section className="border-y border-line bg-paper-2/60">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <p className="text-center text-xs uppercase tracking-[0.18em] text-muted">
-          Members have been hired at
-        </p>
-        <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-          {companies.map((c) => (
-            <li key={c} className="font-display text-2xl text-ink/45">
-              {c}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ul className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-4 py-6 text-sm text-ink-2 sm:px-6">
+        {promises.map((p) => (
+          <li key={p} className="flex items-center gap-2">
+            <span className="text-accent" aria-hidden>✓</span>
+            {p}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

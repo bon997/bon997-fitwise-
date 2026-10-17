@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { getJob, fitForJob, hasProfile, profileText } from "@/lib/matching";
 import { generateCoverLetter } from "@/lib/ai/cover-letter";
 import { one } from "@/lib/db";
+import { useAiAllowance } from "@/lib/ai-usage";
 
 export const maxDuration = 60;
 
@@ -27,6 +28,7 @@ export const POST = route(async (req: Request) => {
   if (!job) throw new HttpError(404, "Job not found");
 
   const fit = await fitForJob(user, job);
+  const allowance = await useAiAllowance(user, "cover_letter");
   const letter = await generateCoverLetter({
     candidateName: user.name,
     profileText: user.resume_text || profileText(user),
@@ -34,6 +36,9 @@ export const POST = route(async (req: Request) => {
     fit: { matchedSkills: fit?.matched_skills ?? [], missingSkills: fit?.missing_skills ?? [] },
     tone: body.tone,
     extraNotes: body.notes,
+  }).catch(async (e) => {
+    await allowance.refund(); // a failed generation shouldn't use up the user's allowance
+    throw e;
   });
 
   let application = null;

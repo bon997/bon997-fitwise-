@@ -1,4 +1,5 @@
-import { steps, testimonials } from "@/lib/marketing-data";
+import Link from "next/link";
+import { principles, steps, testimonials } from "@/lib/marketing-data";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 
 export function HowItWorks() {
@@ -21,6 +22,8 @@ export function HowItWorks() {
 }
 
 export function Testimonials() {
+  // Until there are real quotes, show what we promise instead of inventing praise.
+  if (testimonials.length === 0) return <Principles />;
   return (
     <section className="bg-ink text-paper">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
@@ -34,6 +37,24 @@ export function Testimonials() {
                 <span className="block text-paper/55">{t.role}</span>
               </figcaption>
             </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Principles() {
+  return (
+    <section className="bg-ink text-paper">
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <h2 className="font-display text-4xl sm:text-5xl">Built on three promises.</h2>
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {principles.map((p) => (
+            <div key={p.title} className="rounded-2xl border border-paper/15 p-6">
+              <h3 className="text-lg font-semibold">{p.title}</h3>
+              <p className="mt-3 leading-relaxed text-paper/75">{p.body}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -59,10 +80,12 @@ export function Footer() {
     <footer className="border-t border-line">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <p>© {new Date().getFullYear()} Fitwise</p>
-        <ul className="flex gap-6">
-          <li><a href="/pricing" className="hover:text-ink">Pricing</a></li>
-          <li><a href="/faq" className="hover:text-ink">FAQ</a></li>
-          <li><a href="/privacy" className="hover:text-ink">Privacy</a></li>
+        <ul className="flex flex-wrap gap-x-6 gap-y-2">
+          <li><Link href="/jobs" className="hover:text-ink">Jobs</Link></li>
+          <li><Link href="/pricing" className="hover:text-ink">Pricing</Link></li>
+          <li><Link href="/faq" className="hover:text-ink">FAQ</Link></li>
+          <li><Link href="/privacy" className="hover:text-ink">Privacy</Link></li>
+          <li><Link href="/terms" className="hover:text-ink">Terms</Link></li>
         </ul>
       </div>
     </footer>
