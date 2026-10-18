@@ -28,7 +28,7 @@ export const pool =
     connectionString: databaseUrl(),
     max: Number(process.env.PG_POOL_MAX ?? 10),
     // Supabase and most hosted Postgres require TLS; local dev usually doesn't.
-    ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : undefined,
+    ssl: process.env.DATABASE_SSL?.trim().toLowerCase() === "true" ? { rejectUnauthorized: false } : undefined,
   });
 if (process.env.NODE_ENV !== "production") g.__pgPool = pool;
 
