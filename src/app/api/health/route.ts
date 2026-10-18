@@ -12,18 +12,17 @@ export async function GET() {
   const config: Record<string, unknown> = {
     database_url_set: Boolean(raw),
     starts_with_postgresql: raw ? /^postgres(ql)?:\/\//i.test(raw) : false,
-    database_ssl: process.env.DATABASE_SSL ?? null,
+    database_ssl: process.env.DATABASE_SSL?.trim().toLowerCase() === "true",
   };
   if (raw && config.starts_with_postgresql) {
     try {
       const u = new URL(raw);
       Object.assign(config, {
-        host: u.hostname,
+        // Enough to spot a wrong host or port without publishing the connection details.
+        host_is_supabase_pooler: u.hostname.endsWith(".pooler.supabase.com"),
         port: u.port || "5432",
-        user: decodeURIComponent(u.username),
         password_set: u.password.length > 0,
         password_is_placeholder: /YOUR-PASSWORD|^PASSWORD$/i.test(decodeURIComponent(u.password)),
-        database: u.pathname.replace(/^\//, ""),
       });
     } catch {
       config.parse_error = "The value is not a valid URL (a special character in the password can cause this).";
