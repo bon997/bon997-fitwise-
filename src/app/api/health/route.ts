@@ -41,5 +41,15 @@ export async function GET() {
     database = { ok: false, code: err.code ?? null, message: message.slice(0, 300) };
   }
 
-  return NextResponse.json({ config, database }, { status: 200, headers: { "Cache-Control": "no-store" } });
+  // Presence and shape only: never the values.
+  const aiKey = process.env.ANTHROPIC_API_KEY?.trim() ?? "";
+  const setup = {
+    ai_key_set: aiKey.length > 0,
+    ai_key_looks_right: aiKey.startsWith("sk-ant-"),
+    admin_emails_set: Boolean(process.env.ADMIN_EMAILS?.trim()),
+    job_source_key_set: Boolean(process.env.SERPAPI_KEY?.trim() || process.env.RAPIDAPI_KEY?.trim()),
+    google_sign_in_set: Boolean(process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim()),
+  };
+
+  return NextResponse.json({ config, database, setup }, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
