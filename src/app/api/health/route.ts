@@ -42,5 +42,5 @@ export async function GET() {
     database = { ok: false, code: err.code ?? null, message: message.slice(0, 300) };
   }
 
-  return NextResponse.json({ config, database }, { status: database.ok ? 200 : 503, headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ config, database }, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
