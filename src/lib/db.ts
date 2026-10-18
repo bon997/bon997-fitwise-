@@ -8,7 +8,7 @@ const g = globalThis as unknown as { __pgPool?: Pool };
  * quotes, a pasted "DATABASE_URL=" prefix. Anything that still isn't a postgres URL
  * gets a clear error instead of a confusing DNS failure.
  */
-function databaseUrl(): string | undefined {
+export function databaseUrl(): string | undefined {
   let url = process.env.DATABASE_URL?.trim();
   if (!url) return undefined;
   url = url.replace(/^DATABASE_URL\s*=\s*/i, "").trim();
