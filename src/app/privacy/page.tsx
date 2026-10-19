@@ -54,6 +54,7 @@ export default function PrivacyPage() {
             <tr><td>Anthropic</td><td>AI that reads resumes and writes cover letters</td><td>Resume text, profile, job text</td></tr>
             <tr><td>Google</td><td>&ldquo;Continue with Google&rdquo; sign-in</td><td>Name and email</td></tr>
             <tr><td>Pinecone (if enabled)</td><td>Matching by meaning</td><td>Profile summary text</td></tr>
+            <tr><td>Arbetsförmedlingen (JobTech)</td><td>Collecting public job listings in Sweden</td><td>No personal data</td></tr>
             <tr><td>SerpApi</td><td>Collecting public job listings</td><td>No personal data</td></tr>
           </tbody>
         </table>

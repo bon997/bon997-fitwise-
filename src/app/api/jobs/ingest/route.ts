@@ -6,7 +6,7 @@ import { runIngest } from "@/lib/ingest";
 export const maxDuration = 60; // one page of listings + skill extraction fits comfortably
 
 const Body = z.object({
-  source: z.enum(["serpapi", "rapidapi"]),
+  source: z.enum(["jobtech", "serpapi", "rapidapi"]),
   query: z.string().trim().min(2).max(200),
   location: z.string().trim().max(100).optional(),
   pages: z.number().int().min(1).max(5).default(1),

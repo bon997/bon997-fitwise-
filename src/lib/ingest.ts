@@ -5,17 +5,20 @@
 import { sql, one } from "./db";
 import { searchSerpApi } from "./sources/serpapi";
 import { searchJSearch } from "./sources/rapidapi";
+import { searchJobTech } from "./sources/jobtech";
 import type { RawJob } from "./sources/types";
 import { extractJobSignals } from "./ai/extract-job";
 import { upsertJobs, jobEmbeddingText } from "./search/pinecone";
 import type { JobRow } from "./data";
 
-export type IngestRequest = { source: "serpapi" | "rapidapi"; query: string; location?: string; pages?: number };
+export type IngestRequest = { source: "serpapi" | "rapidapi" | "jobtech"; query: string; location?: string; pages?: number };
 
 async function fetchRaw(r: IngestRequest): Promise<RawJob[]> {
   const pages = Math.min(Math.max(r.pages ?? 1, 1), 5);
   const all: RawJob[] = [];
-  if (r.source === "rapidapi") {
+  if (r.source === "jobtech") {
+    for (let page = 1; page <= pages; page++) all.push(...(await searchJobTech({ ...r, page })));
+  } else if (r.source === "rapidapi") {
     for (let page = 1; page <= pages; page++) all.push(...(await searchJSearch({ ...r, page })));
   } else {
     let token: string | undefined;

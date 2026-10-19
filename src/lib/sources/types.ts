@@ -1,6 +1,6 @@
 /** Normalized shape every job source maps into before upsert. */
 export type RawJob = {
-  source: "serpapi" | "rapidapi";
+  source: "serpapi" | "rapidapi" | "jobtech";
   externalId: string;
   title: string;
   company: string;

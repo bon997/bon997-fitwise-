@@ -37,7 +37,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Where do the jobs come from?",
-    a: <p>From public job listings collected through Google Jobs search. Each job links to the employer&apos;s own application page.</p>,
+    a: <p>From public job listings: Platsbanken, the Swedish Public Employment Service&apos;s job board, and Google Jobs search. Each job links to the employer&apos;s own application page.</p>,
   },
   {
     q: "Does Fitwise apply to jobs for me?",
