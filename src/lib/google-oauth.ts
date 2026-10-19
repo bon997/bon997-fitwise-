@@ -26,15 +26,15 @@ export class OAuthError extends Error {
 }
 
 export function googleConfig() {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
   if (!clientId || !clientSecret) throw new OAuthError("not_configured", "GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are not set");
   return { clientId, clientSecret };
 }
 
 /** Public base URL of the app. Set APP_URL in production so it matches the redirect URI registered with Google. */
 export function appUrl(req: Request): string {
-  return (process.env.APP_URL ?? new URL(req.url).origin).replace(/\/+$/, "");
+  return (process.env.APP_URL?.trim() || new URL(req.url).origin).replace(/\/+$/, "");
 }
 
 export const redirectUri = (req: Request) => `${appUrl(req)}/api/auth/google/callback`;
