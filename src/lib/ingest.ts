@@ -73,6 +73,7 @@ export async function enrichJobs(ids: string[]): Promise<{ enriched: number; fai
   const jobs = await sql<JobRow>("SELECT * FROM jobs WHERE id = ANY($1::uuid[]) AND skills = '[]'::jsonb", [ids]);
   let enriched = 0;
   let failed = 0;
+  let firstError: string | undefined;
   await pool(jobs, 5, async (j) => {
     try {
       const x = await extractJobSignals(j);
@@ -86,6 +87,7 @@ export async function enrichJobs(ids: string[]): Promise<{ enriched: number; fai
       enriched++;
     } catch (e) {
       failed++;
+      firstError ??= e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300);
       console.error(`enrich ${j.id} failed`, e);
     }
   });
@@ -96,7 +98,8 @@ export async function enrichJobs(ids: string[]): Promise<{ enriched: number; fai
     ready.map((j) => ({ id: j.id, text: jobEmbeddingText(j), location: j.location, remote: j.remote, postedAt: j.posted_at })),
   );
   if (ready.length) await sql("UPDATE jobs SET embedded_at = now() WHERE id = ANY($1::uuid[])", [ready.map((j) => j.id)]);
-  return { enriched, failed };
+  // The first failure reason is returned so the admin page can say why (bad key, no credit…).
+  return { enriched, failed, ...(firstError ? { enrich_error: firstError } : {}) };
 }
 
 export async function runIngest(r: IngestRequest) {

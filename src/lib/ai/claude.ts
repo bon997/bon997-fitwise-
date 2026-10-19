@@ -11,8 +11,10 @@ export const MODELS = {
 
 let client: Anthropic | null = null;
 export function claude(): Anthropic {
-  if (!process.env.ANTHROPIC_API_KEY) throw new AiUnavailableError();
-  client ??= new Anthropic();
+  // Trim: keys pasted into hosting dashboards often carry a stray space or newline.
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) throw new AiUnavailableError();
+  client ??= new Anthropic({ apiKey });
   return client;
 }
 

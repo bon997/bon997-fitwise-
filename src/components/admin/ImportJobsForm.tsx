@@ -9,6 +9,7 @@ type Result = {
   updated: number;
   enriched: number;
   failed: number;
+  enrich_error?: string;
 };
 
 /** Admin: pull real listings from Platsbanken (free), SerpAPI (Google Jobs) or RapidAPI (JSearch) without a terminal. */
@@ -114,6 +115,11 @@ export function ImportJobsForm({
           Found {result.fetched}: {result.inserted} new, {result.updated}{" "}
           updated. Skills read for {result.enriched}
           {result.failed > 0 ? ` (${result.failed} failed)` : ""}.
+        </p>
+      )}
+      {result?.enrich_error && (
+        <p role="alert" className="mt-2 text-sm text-warn">
+          Why skills failed: {result.enrich_error}
         </p>
       )}
       {error && (
