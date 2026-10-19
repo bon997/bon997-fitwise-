@@ -27,6 +27,8 @@ export class AiUnavailableError extends Error {
 
 type Content = Anthropic.Messages.ContentBlockParam[] | string;
 
+const noForcedToolChoice = new Set<string>();
+
 /**
  * Ask Claude for structured output. Forces a single tool call whose input
  * schema is derived from the zod schema, then validates the result.
@@ -42,20 +44,36 @@ export async function structured<S extends z.ZodType>(opts: {
 }): Promise<z.infer<S>> {
   const { $schema: _ignored, ...inputSchema } = z.toJSONSchema(opts.schema) as Record<string, unknown>;
 
-  const res = await claude().messages.create({
-    model: opts.model ?? MODELS.smart,
-    max_tokens: opts.maxTokens ?? 4096,
-    system: opts.system,
-    tools: [
-      {
-        name: opts.name,
-        description: opts.description,
-        input_schema: inputSchema as Anthropic.Messages.Tool.InputSchema,
-      },
-    ],
-    tool_choice: { type: "tool", name: opts.name },
-    messages: [{ role: "user", content: opts.content }],
-  });
+  const model = opts.model ?? MODELS.smart;
+  const tool = {
+    name: opts.name,
+    description: opts.description,
+    input_schema: inputSchema as Anthropic.Messages.Tool.InputSchema,
+  };
+  const request = (forced: boolean) =>
+    claude().messages.create({
+      model,
+      max_tokens: opts.maxTokens ?? 4096,
+      // Without a forced tool choice, say it plainly so the model still answers through the tool.
+      system: forced ? opts.system : `${opts.system}\n\nAlways respond by calling the ${opts.name} tool exactly once. Do not reply with plain text.`,
+      tools: [tool],
+      tool_choice: forced ? { type: "tool", name: opts.name } : { type: "auto" },
+      messages: [{ role: "user", content: opts.content }],
+    });
+
+  // Some newer models reject a forced tool_choice; remember that per model and fall back to "auto".
+  let res: Anthropic.Messages.Message;
+  if (noForcedToolChoice.has(model)) {
+    res = await request(false);
+  } else {
+    try {
+      res = await request(true);
+    } catch (e) {
+      if (!(e instanceof Anthropic.BadRequestError && /tool_choice/i.test(e.message))) throw e;
+      noForcedToolChoice.add(model);
+      res = await request(false);
+    }
+  }
 
   const block = res.content.find((b) => b.type === "tool_use");
   if (!block || block.type !== "tool_use") {
