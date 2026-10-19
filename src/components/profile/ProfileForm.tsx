@@ -21,6 +21,8 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
   const [pending, start] = useTransition();
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  // Upload feedback sits next to the upload box, not by the Save button far below.
+  const [uploadMsg, setUploadMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [tips, setTips] = useState<{ improvements: string[]; roles: string[] } | null>(null);
 
   const [name, setName] = useState(initial.name ?? "");
@@ -41,7 +43,7 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
 
   const upload = async (file: File) => {
     setUploading(true);
-    setMsg(null);
+    setUploadMsg(null);
     try {
       const form = new FormData();
       form.append("file", file);
@@ -64,10 +66,10 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
       setSeniority(u.seniority ?? "");
       setTitles((u.preferences.target_titles ?? []).join(", "));
       setTips({ improvements: body.improvements ?? [], roles: body.suggested_roles ?? [] });
-      setMsg({ kind: "ok", text: "Resume read. Check the skills below and fix anything we got wrong." });
+      setUploadMsg({ kind: "ok", text: "Resume read. Check the skills below and fix anything we got wrong." });
       router.refresh();
     } catch (e) {
-      setMsg({ kind: "err", text: (e as Error).message });
+      setUploadMsg({ kind: "err", text: (e as Error).message });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -120,6 +122,11 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
             accept=".pdf,.docx,.doc,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
             onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         </label>
+        {uploadMsg && (
+          <p role={uploadMsg.kind === "err" ? "alert" : "status"} className={`mt-3 text-sm ${uploadMsg.kind === "ok" ? "text-accent" : "text-warn"}`}>
+            {uploadMsg.text}
+          </p>
+        )}
         {tips && (tips.improvements.length > 0 || tips.roles.length > 0) && (
           <div className="mt-4 grid gap-4 rounded-xl bg-paper-2/60 p-4 text-sm sm:grid-cols-2">
             {tips.roles.length > 0 && (
