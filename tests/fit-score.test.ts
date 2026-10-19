@@ -196,3 +196,14 @@ describe("semantic helpers", () => {
     expect(calibrate(0.8)).toBeCloseTo(0.5);
   });
 });
+
+describe("jobs without skills", () => {
+  it("never score as a near-perfect fit on location alone", async () => {
+    const { computeFitScore, NO_SKILLS_CAP } = await import("@/lib/ai/fit-score");
+    const r = computeFitScore(
+      { skills: ["Logistics"], yearsExperience: 3, seniority: "mid", preferences: { locations: ["Stockholm"] } },
+      { skills: [], minYears: null, seniority: null, location: "Stockholm", remote: true },
+    );
+    expect(r.score).toBeLessThanOrEqual(NO_SKILLS_CAP);
+  });
+});

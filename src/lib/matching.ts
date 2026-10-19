@@ -74,14 +74,18 @@ export async function scoreAndStore(
 }
 
 /** Fresh cached scores for these jobs; computes and stores any that are missing or stale. */
+/** Bump when the scoring rules change, so cached scores are recomputed. */
+const SCORING_CHANGED_AT = "2026-10-19T20:00:00Z";
+
 export async function fitScoresFor(user: UserRow, jobIds: string[]): Promise<Map<string, FitScoreRow>> {
   if (jobIds.length === 0 || !hasProfile(user)) return new Map();
 
   const rows = await sql<FitScoreRow & { fresh: boolean }>(
-    `SELECT f.*, (f.computed_at >= coalesce($3::timestamptz, '-infinity') AND f.computed_at >= j.updated_at) AS fresh
+    `SELECT f.*, (f.computed_at >= coalesce($3::timestamptz, '-infinity') AND f.computed_at >= j.updated_at
+                  AND f.computed_at >= $4::timestamptz) AS fresh
      FROM fit_scores f JOIN jobs j ON j.id = f.job_id
      WHERE f.user_id = $1 AND f.job_id = ANY($2::uuid[])`,
-    [user.id, jobIds, user.profile_updated_at],
+    [user.id, jobIds, user.profile_updated_at, SCORING_CHANGED_AT],
   );
   const cached = new Map(rows.filter((r) => r.fresh).map((r) => [r.job_id, r as FitScoreRow]));
 

@@ -131,6 +131,9 @@ export function scoreLocation(prefs: FitProfile["preferences"], job: Pick<FitJob
  * @param semantic  calibrated similarity 0–1 between resume and job text
  *                  (from embeddings), or null if unavailable.
  */
+/** Highest score a job can get when neither skills nor text similarity are available. */
+export const NO_SKILLS_CAP = 50;
+
 export function computeFitScore(profile: FitProfile, job: FitJob, semantic: number | null = null): FitResult {
   const skills = scoreSkills(profile.skills, job.skills);
 
@@ -152,6 +155,11 @@ export function computeFitScore(profile: FitProfile, job: FitJob, semantic: numb
   }
 
   let score = den === 0 ? 0 : num / den;
+  // Without the job's skills there's too little to judge; location and level alone
+  // must never make a job look like a perfect fit.
+  if (breakdown.skills == null && breakdown.semantic == null) {
+    score = Math.min(score, NO_SKILLS_CAP);
+  }
   if (skills.missingRequired > 0) {
     score = Math.min(score, 100 - CAP_PER_MISSING_REQUIRED * skills.missingRequired);
   }

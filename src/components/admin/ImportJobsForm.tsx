@@ -10,6 +10,7 @@ type Result = {
   enriched: number;
   failed: number;
   enrich_error?: string;
+  duplicates?: number;
 };
 
 /** Admin: pull real listings from Platsbanken (free), SerpAPI (Google Jobs) or RapidAPI (JSearch) without a terminal. */
@@ -114,7 +115,8 @@ export function ImportJobsForm({
         <p role="status" className="mt-3 text-sm text-accent">
           Found {result.fetched}: {result.inserted} new, {result.updated}{" "}
           updated. Skills read for {result.enriched}
-          {result.failed > 0 ? ` (${result.failed} failed)` : ""}.
+          {result.failed > 0 ? ` (${result.failed} failed)` : ""}
+          {result.duplicates ? `. Skipped ${result.duplicates} duplicate ad${result.duplicates > 1 ? "s" : ""}` : ""}.
         </p>
       )}
       {result?.enrich_error && (

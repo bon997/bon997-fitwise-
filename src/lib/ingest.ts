@@ -102,6 +102,20 @@ export async function enrichJobs(ids: string[]): Promise<{ enriched: number; fai
   return { enriched, failed, ...(firstError ? { enrich_error: firstError } : {}) };
 }
 
+/** Keep the oldest of identical active listings (same title, company and place); hide the rest. */
+export async function hideDuplicateJobs(): Promise<number> {
+  const rows = await sql<{ id: string }>(
+    `UPDATE jobs SET is_active = false WHERE id IN (
+       SELECT id FROM (
+         SELECT id, row_number() OVER (
+           PARTITION BY lower(title), lower(company), coalesce(location, '') ORDER BY created_at, id) AS n
+         FROM jobs WHERE is_active) d
+       WHERE d.n > 1)
+     RETURNING id`,
+  );
+  return rows.length;
+}
+
 export async function runIngest(r: IngestRequest) {
   const run = await one<{ id: string }>("INSERT INTO ingest_runs (source, query) VALUES ($1, $2) RETURNING id", [
     r.source,
@@ -112,20 +126,38 @@ export async function runIngest(r: IngestRequest) {
     let inserted = 0;
     let updated = 0;
     const needsEnrich: string[] = [];
+    let duplicates = 0;
     for (const j of raw) {
       if (!j.externalId || !j.title || !j.company) continue;
+      // Job boards sometimes list the same job twice under different ad numbers.
+      const twin = await one(
+        `SELECT 1 FROM jobs WHERE is_active AND lower(title) = lower($1) AND lower(company) = lower($2)
+           AND coalesce(location, '') = coalesce($3, '') AND NOT (source = $4 AND external_id = $5)`,
+        [j.title, j.company, j.location, j.source, j.externalId],
+      );
+      if (twin) {
+        duplicates++;
+        continue;
+      }
       const res = await upsertRaw(j);
       if (res.inserted) inserted++;
       else updated++;
       if (res.changed) needsEnrich.push(res.id);
     }
-    const enrich = await enrichJobs(needsEnrich);
+    // Also catch up on a few older jobs whose skills were never read (e.g. imported while the AI key was missing).
+    const backlog = await sql<{ id: string }>(
+      `SELECT id FROM jobs WHERE is_active AND skills = '[]'::jsonb AND NOT (id = ANY($1::uuid[]))
+       ORDER BY created_at DESC LIMIT 10`,
+      [needsEnrich],
+    );
+    const enrich = await enrichJobs([...needsEnrich, ...backlog.map((b) => b.id)]);
+    await hideDuplicateJobs();
     // Keep the reason skills couldn't be read on the run, so it's still visible after a page reload.
     const note = "enrich_error" in enrich && enrich.enrich_error ? `Skills not read: ${enrich.enrich_error}` : null;
     await sql("UPDATE ingest_runs SET fetched=$2, inserted=$3, updated=$4, error=$5, finished_at=now() WHERE id=$1", [
       run!.id, raw.length, inserted, updated, note,
     ]);
-    return { runId: run!.id, fetched: raw.length, inserted, updated, ...enrich };
+    return { runId: run!.id, fetched: raw.length, inserted, updated, duplicates, ...enrich };
   } catch (e) {
     await sql("UPDATE ingest_runs SET error=$2, finished_at=now() WHERE id=$1", [run!.id, String(e).slice(0, 1000)]);
     throw e;
