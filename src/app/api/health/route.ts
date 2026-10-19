@@ -49,6 +49,11 @@ export async function GET() {
     ai_key_looks_right: /^sk-ant-[A-Za-z0-9_-]{20,}$/.test(aiKey),
     admin_emails_set: Boolean(process.env.ADMIN_EMAILS?.trim()),
     job_source_key_set: Boolean(process.env.SERPAPI_KEY?.trim() || process.env.RAPIDAPI_KEY?.trim()),
+    // Names only (never values) of AI-related settings, and whether any holds characters an
+    // HTTP header can't carry, such as the "…" in a key copied from a masked preview.
+    ai_settings: Object.keys(process.env)
+      .filter((k) => /^(ANTHROPIC|CLAUDE)_/.test(k))
+      .map((k) => ({ name: k, has_bad_characters: /[^\x20-\x7e]/.test(process.env[k] ?? "") })),
     google_sign_in_set: Boolean(process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim()),
   };
 

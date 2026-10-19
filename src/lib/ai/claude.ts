@@ -14,7 +14,8 @@ export function claude(): Anthropic {
   // Trim: keys pasted into hosting dashboards often carry a stray space or newline.
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) throw new AiUnavailableError();
-  client ??= new Anthropic({ apiKey });
+  // authToken: null so a stray ANTHROPIC_AUTH_TOKEN can never override the API key.
+  client ??= new Anthropic({ apiKey, authToken: null });
   return client;
 }
 
