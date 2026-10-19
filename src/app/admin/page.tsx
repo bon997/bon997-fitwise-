@@ -7,7 +7,7 @@ import { timeAgo } from "@/lib/format";
 
 export const metadata = { title: "Admin — Fitwise" };
 
-type Totals = { users: number; with_profile: number; active_jobs: number; applications: number; jobs_7d: number };
+type Totals = { users: number; with_profile: number; active_jobs: number; applications: number; jobs_7d: number; no_skills: number };
 type Run = { id: string; source: string; query: string; fetched: number; inserted: number; updated: number; error: string | null; started_at: Date };
 
 export default async function AdminPage() {
@@ -21,7 +21,8 @@ export default async function AdminPage() {
       (SELECT count(*)::int FROM users WHERE jsonb_array_length(skills) > 0) AS with_profile,
       (SELECT count(*)::int FROM jobs WHERE is_active) AS active_jobs,
       (SELECT count(*)::int FROM applications) AS applications,
-      (SELECT count(*)::int FROM jobs WHERE created_at > now() - interval '7 days') AS jobs_7d`),
+      (SELECT count(*)::int FROM jobs WHERE created_at > now() - interval '7 days') AS jobs_7d,
+      (SELECT count(*)::int FROM jobs WHERE is_active AND skills = '[]'::jsonb) AS no_skills`),
     sql<Run>("SELECT * FROM ingest_runs ORDER BY started_at DESC LIMIT 15"),
   ]);
 
@@ -29,7 +30,7 @@ export default async function AdminPage() {
     ["Users", totals!.users],
     ["With a profile", totals!.with_profile],
     ["Active jobs", totals!.active_jobs],
-    ["Jobs added (7 days)", totals!.jobs_7d],
+    ["Skills not read yet", totals!.no_skills],
     ["Applications", totals!.applications],
   ] as const;
 
