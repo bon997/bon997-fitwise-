@@ -207,3 +207,21 @@ describe("jobs without skills", () => {
     expect(r.score).toBeLessThanOrEqual(NO_SKILLS_CAP);
   });
 });
+
+describe("supply-chain skill matching", () => {
+  it("counts a specific skill toward the broader one the job asks for", async () => {
+    const { skillCredit, normalizeSkill } = await import("@/lib/ai/skills");
+    const have = new Set(["supply chain management", "power bi", "procurement"].map(normalizeSkill));
+    expect(skillCredit("supply chain", have)).toBe(1);
+    expect(skillCredit("supply chain planning", have)).toBe(0.5);
+    expect(skillCredit(normalizeSkill("Inköp"), have)).toBe(1);
+    expect(skillCredit("project management", have)).toBe(0); // "management" alone must not match
+  });
+  it("labels acronyms properly", async () => {
+    const { skillLabel } = await import("@/lib/format");
+    expect(skillLabel("sap")).toBe("SAP");
+    expect(skillLabel("power bi")).toBe("Power BI");
+    expect(skillLabel("s&op")).toBe("S&OP");
+    expect(skillLabel("warehouse management")).toBe("Warehouse Management");
+  });
+});

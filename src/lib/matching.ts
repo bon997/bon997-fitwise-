@@ -75,7 +75,7 @@ export async function scoreAndStore(
 
 /** Fresh cached scores for these jobs; computes and stores any that are missing or stale. */
 /** Bump when the scoring rules change, so cached scores are recomputed. */
-const SCORING_CHANGED_AT = "2026-10-19T20:00:00Z";
+const SCORING_CHANGED_AT = "2026-10-19T20:40:00Z";
 
 export async function fitScoresFor(user: UserRow, jobIds: string[]): Promise<Map<string, FitScoreRow>> {
   if (jobIds.length === 0 || !hasProfile(user)) return new Map();

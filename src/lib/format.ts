@@ -26,12 +26,20 @@ export const BREAKDOWN_LABEL: Record<string, string> = {
   skills: "Skills", semantic: "Background", experience: "Experience", seniority: "Seniority", location: "Location",
 };
 
+const ACRONYMS = new Set(["sap", "erp", "wms", "tms", "kpi", "kpis", "crm", "iso", "bi", "api", "hr", "it", "qa", "ux", "ui", "seo", "gdpr", "b2b", "b2c", "edi", "mrp", "plm", "aws", "gcp", "sla", "rfq", "rfp", "3pl", "fmcg", "vba", "ai", "ml"]);
+
 /** Capitalize normalized skill names for display ("next.js" stays, "react" → "React"). */
 export function skillLabel(s: string): string {
   const special: Record<string, string> = {
     "aws": "AWS", "sql": "SQL", "graphql": "GraphQL", "postgresql": "PostgreSQL", "typescript": "TypeScript",
     "javascript": "JavaScript", "node.js": "Node.js", "next.js": "Next.js", "ci/cd": "CI/CD", "dbt": "dbt",
     "rest api": "REST API", "mysql": "MySQL", "mongodb": "MongoDB", "ui design": "UI design", "c#": "C#",
+    "s&op": "S&OP", "lean six sigma": "Lean Six Sigma",
   };
-  return special[s] ?? s.replace(/\b\w/g, (c) => c.toUpperCase());
+  if (special[s]) return special[s];
+  // Short all-letter words are usually acronyms: SAP, ERP, WMS, KPI, CRM, ISO, BI.
+  return s
+    .split(" ")
+    .map((w) => (ACRONYMS.has(w) ? w.toUpperCase() : w.replace(/^\p{L}/u, (c) => c.toUpperCase())))
+    .join(" ");
 }

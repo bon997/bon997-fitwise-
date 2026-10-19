@@ -49,6 +49,23 @@ const ALIASES: Record<string, string> = {
   "excel": "microsoft excel",
   "ms excel": "microsoft excel",
   "powerbi": "power bi",
+  "microsoft power bi": "power bi",
+  "sap erp": "sap",
+  "sap s/4hana": "sap",
+  "scm": "supply chain management",
+  "supply chain management (scm)": "supply chain management",
+  "s&op (sales and operations planning)": "s&op",
+  "sales and operations planning": "s&op",
+  "purchasing": "procurement",
+  "inköp": "procurement",
+  "upphandling": "procurement",
+  "logistik": "logistics",
+  "lagerhantering": "warehouse management",
+  "lean": "lean manufacturing",
+  "six sigma": "lean six sigma",
+  "ms office": "microsoft office",
+  "powerpoint": "microsoft powerpoint",
+  "ms powerpoint": "microsoft powerpoint",
 };
 
 /**
@@ -80,6 +97,17 @@ const RELATED: Record<string, string[]> = {
   "tableau": ["power bi", "looker"],
   "power bi": ["tableau", "looker"],
   "spark": ["databricks", "hadoop"],
+  "procurement": ["strategic procurement", "sourcing", "supplier management", "category management"],
+  "strategic procurement": ["procurement", "sourcing", "category management"],
+  "sourcing": ["procurement", "strategic procurement"],
+  "logistics": ["supply chain management", "transport management", "warehouse management"],
+  "supply chain management": ["logistics", "supply chain planning", "s&op"],
+  "supply chain planning": ["s&op", "demand planning", "supply chain management"],
+  "s&op": ["supply chain planning", "demand planning"],
+  "warehouse management": ["logistics", "inventory management"],
+  "inventory management": ["warehouse management", "supply chain planning"],
+  "erp": ["sap", "oracle", "microsoft dynamics"],
+  "microsoft office": ["microsoft excel", "microsoft powerpoint"],
 };
 
 export function normalizeSkill(raw: string): string {
@@ -100,10 +128,27 @@ export function normalizeSkills(list: readonly string[]): string[] {
   return [...out];
 }
 
+const words = (s: string) => s.split(/[\s/&,()-]+/).filter(Boolean);
+
+/** True when every word of the (multi-word) `part` appears in `whole`. */
+function containsPhrase(whole: string, part: string): boolean {
+  const p = words(part);
+  if (p.length < 2) return false; // single words like "management" would match too much
+  const w = new Set(words(whole));
+  return p.every((x) => w.has(x));
+}
+
 /** Credit (0–1) the user gets toward one required skill. */
 export function skillCredit(jobSkill: string, userSkills: ReadonlySet<string>): number {
   if (userSkills.has(jobSkill)) return 1;
+  let credit = 0;
+  for (const u of userSkills) {
+    // Job asks for the broader skill the user has a specific form of: "supply chain" ← "supply chain management".
+    if (containsPhrase(u, jobSkill)) return 1;
+    // Job asks for a narrower form: "supply chain planning" ← "supply chain". Related, not the same.
+    if (containsPhrase(jobSkill, u)) credit = 0.5;
+  }
   const related = RELATED[jobSkill];
-  if (related?.some((r) => userSkills.has(r))) return 0.5;
-  return 0;
+  if (related?.some((r) => userSkills.has(r))) credit = Math.max(credit, 0.5);
+  return credit;
 }
