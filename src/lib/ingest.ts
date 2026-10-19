@@ -120,8 +120,10 @@ export async function runIngest(r: IngestRequest) {
       if (res.changed) needsEnrich.push(res.id);
     }
     const enrich = await enrichJobs(needsEnrich);
-    await sql("UPDATE ingest_runs SET fetched=$2, inserted=$3, updated=$4, finished_at=now() WHERE id=$1", [
-      run!.id, raw.length, inserted, updated,
+    // Keep the reason skills couldn't be read on the run, so it's still visible after a page reload.
+    const note = "enrich_error" in enrich && enrich.enrich_error ? `Skills not read: ${enrich.enrich_error}` : null;
+    await sql("UPDATE ingest_runs SET fetched=$2, inserted=$3, updated=$4, error=$5, finished_at=now() WHERE id=$1", [
+      run!.id, raw.length, inserted, updated, note,
     ]);
     return { runId: run!.id, fetched: raw.length, inserted, updated, ...enrich };
   } catch (e) {

@@ -67,9 +67,12 @@ export default async function AdminPage() {
               {runs.map((r) => (
                 <li key={r.id} className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
                   <span className="min-w-0 font-medium">{r.query}</span>
-                  <span className={r.error ? "text-warn" : "text-muted"}>
-                    {r.error ? `Failed: ${r.error.slice(0, 120)}` : `${r.fetched} found · ${r.inserted} new · ${r.updated} updated`} · {timeAgo(r.started_at)}
+                  <span className={r.error && r.fetched === 0 ? "text-warn" : "text-muted"}>
+                    {r.error && r.fetched === 0
+                      ? `Failed: ${r.error.slice(0, 160)}`
+                      : `${r.fetched} found · ${r.inserted} new · ${r.updated} updated`} · {timeAgo(r.started_at)}
                   </span>
+                  {r.error && r.fetched > 0 && <span className="basis-full text-warn">{r.error.slice(0, 300)}</span>}
                 </li>
               ))}
             </ul>
