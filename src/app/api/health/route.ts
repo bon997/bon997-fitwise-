@@ -45,7 +45,8 @@ export async function GET() {
   const aiKey = process.env.ANTHROPIC_API_KEY?.trim() ?? "";
   const setup = {
     ai_key_set: aiKey.length > 0,
-    ai_key_looks_right: aiKey.startsWith("sk-ant-"),
+    // A key copied from the masked list view contains "…" and is unusable.
+    ai_key_looks_right: /^sk-ant-[A-Za-z0-9_-]{20,}$/.test(aiKey),
     admin_emails_set: Boolean(process.env.ADMIN_EMAILS?.trim()),
     job_source_key_set: Boolean(process.env.SERPAPI_KEY?.trim() || process.env.RAPIDAPI_KEY?.trim()),
     google_sign_in_set: Boolean(process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim()),
