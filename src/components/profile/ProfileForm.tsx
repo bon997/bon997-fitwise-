@@ -47,7 +47,16 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
       form.append("file", file);
       const res = await fetch("/api/resume", { method: "POST", body: form });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "Upload failed");
+      if (!res.ok) {
+        throw new Error(
+          body.error ??
+            (res.status === 413
+              ? "That file is too big. Upload a resume under 4 MB."
+              : res.status === 504
+                ? "Reading the resume took too long. Try again, or upload a smaller PDF."
+                : `Upload failed (error ${res.status}). Try again in a minute.`),
+        );
+      }
       const u = body.user;
       setName(u.name ?? name);
       setSkills(u.skills);
@@ -102,13 +111,13 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
       <section className="rounded-2xl border border-line bg-white p-5 sm:p-6">
         <h2 className="text-lg font-semibold">Resume</h2>
         <p className="mt-1 text-sm text-ink-2">
-          {hasResume ? "Upload a newer version any time; your skills are re-read from it." : "Upload your resume and we'll fill in your skills and experience. PDF, Word or text, up to 5 MB."}
+          {hasResume ? "Upload a newer version any time; your skills are re-read from it." : "Upload your resume and we'll fill in your skills and experience. PDF, Word (.docx) or text, up to 4 MB."}
         </p>
         <label className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-line px-4 py-8 text-center hover:border-accent/50 ${uploading ? "opacity-60" : ""}`}>
           <span className="text-sm font-medium">{uploading ? "Reading your resume…" : "Choose a file"}</span>
           <span className="mt-1 text-xs text-muted">or skip this and add skills by hand below</span>
           <input ref={fileRef} type="file" className="sr-only" disabled={uploading}
-            accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+            accept=".pdf,.docx,.doc,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
             onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         </label>
         {tips && (tips.improvements.length > 0 || tips.roles.length > 0) && (

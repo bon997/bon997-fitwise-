@@ -69,7 +69,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Which file types can I upload?",
-    a: <p>PDF, Word (.docx) and plain text, up to 5 MB. You can also skip the upload and type your skills by hand.</p>,
+    a: <p>PDF, Word (.docx) and plain text, up to 4 MB. Older .doc files need to be saved as .docx or PDF first. You can also skip the upload and type your skills by hand.</p>,
   },
   {
     q: "Is it really free? Are there limits?",
