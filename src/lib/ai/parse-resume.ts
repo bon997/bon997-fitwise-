@@ -19,8 +19,14 @@ const ResumeSchema = z.object({
   ),
   years_experience: z.number().nullable().describe("Total professional years, excluding overlap and education"),
   seniority: z.enum(SENIORITY).nullable(),
-  suggested_roles: z.array(z.string()).max(6).describe("Job titles this person is a realistic fit for now"),
-  improvements: z.array(z.string()).max(5).describe("Specific, actionable fixes to the resume itself"),
+  suggested_roles: z
+    .array(z.string())
+    .describe("Up to 6 job titles this person is a realistic fit for now")
+    .transform((xs) => xs.slice(0, 6)),
+  improvements: z
+    .array(z.string())
+    .describe("Up to 5 specific, actionable fixes to the resume itself")
+    .transform((xs) => xs.slice(0, 5)),
 });
 
 export type ParsedResume = z.infer<typeof ResumeSchema> & { resume_score: number };

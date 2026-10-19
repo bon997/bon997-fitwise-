@@ -6,8 +6,12 @@ import { SENIORITY } from "./fit-score";
 const JobExtractSchema = z.object({
   skills: z
     .array(z.object({ name: z.string(), required: z.boolean().describe("true if must-have, false if nice-to-have/bonus") }))
-    .max(25),
-  responsibilities: z.array(z.string()).max(8).describe("Short bullet points, one action each"),
+    .describe("Up to 25 skills")
+    .transform((xs) => xs.slice(0, 25)),
+  responsibilities: z
+    .array(z.string())
+    .describe("Up to 8 short bullet points, one action each")
+    .transform((xs) => xs.slice(0, 8)),
   seniority: z.enum(SENIORITY).nullable(),
   min_years: z.number().nullable().describe("Minimum years of experience stated, else null"),
   remote: z.boolean(),

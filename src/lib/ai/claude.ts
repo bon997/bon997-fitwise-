@@ -42,7 +42,7 @@ export async function structured<S extends z.ZodType>(opts: {
   model?: string;
   maxTokens?: number;
 }): Promise<z.infer<S>> {
-  const { $schema: _ignored, ...inputSchema } = z.toJSONSchema(opts.schema) as Record<string, unknown>;
+  const { $schema: _ignored, ...inputSchema } = z.toJSONSchema(opts.schema, { io: "input" }) as Record<string, unknown>;
 
   const model = opts.model ?? MODELS.smart;
   const tool = {
