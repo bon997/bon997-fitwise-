@@ -29,7 +29,7 @@ export const FAQ = defineT({
     },
     {
       id: "matches",
-      q: "How many jobs do you search, and how do you find my matches?",
+      q: "Where do the jobs come from, and how are they matched to me?",
       a: (
         <>
           <p>
@@ -47,7 +47,7 @@ export const FAQ = defineT({
     },
     {
       id: "guarantee",
-      q: "Do you guarantee I'll get interviews or a job offer?",
+      q: "Can Fitwise promise that I'll get a job?",
       a: (
         <p>
           No. Nobody honest can. The decision is always the employer&apos;s. What Fitwise does is help you spend your time
@@ -58,7 +58,7 @@ export const FAQ = defineT({
     },
     {
       id: "cost",
-      q: "What will I be charged, and when?",
+      q: "Does Fitwise cost anything?",
       a: (
         <p>
           Nothing. Fitwise is free during the beta and we never ask for a card. To keep it free, AI features have daily
@@ -70,7 +70,7 @@ export const FAQ = defineT({
     },
     {
       id: "cancel",
-      q: "How do I cancel, and will I lose access right away?",
+      q: "Can I stop using Fitwise whenever I want?",
       a: (
         <p>
           There&apos;s no subscription to cancel, so you can simply stop using Fitwise and keep your account. If you want
@@ -82,7 +82,7 @@ export const FAQ = defineT({
     },
     {
       id: "ai-letters",
-      q: "Will employers know my application was written with AI?",
+      q: "Can employers tell that AI helped with my letter?",
       a: (
         <>
           <p>
@@ -99,12 +99,14 @@ export const FAQ = defineT({
     },
     {
       id: "privacy",
-      q: "Is my data safe and private?",
+      q: "Who can see my resume and my data?",
       a: (
         <p>
-          Yes. Your data is encrypted in transit and at rest, stored in the EU (Ireland), never sold, never shown to employers, and
-          used only to match you with jobs and draft your letters. You can download everything we hold about you, or
-          delete your whole account, at any time from your Profile page. Details are in our{" "}
+          Employers never see it, and we never sell it. It&apos;s used only to match you with jobs and draft your letters.
+          The few services that run Fitwise (hosting, the database and the AI that reads your resume) handle it only for
+          that. Your data is encrypted in transit and at rest and stored in the EU (Ireland). You can download everything
+          we hold about you, or delete your whole account, at any time from your Profile page. Details, including the full
+          list of services, are in our{" "}
           <Link href="/privacy">Privacy Policy</Link>.
         </p>
       ),
@@ -182,7 +184,7 @@ export const FAQ = defineT({
     },
     {
       id: "matches",
-      q: "Hur många jobb söker ni bland, och hur hittar ni mina matchningar?",
+      q: "Var kommer jobben ifrån, och hur matchas de mot mig?",
       a: (
         <>
           <p>
@@ -200,7 +202,7 @@ export const FAQ = defineT({
     },
     {
       id: "guarantee",
-      q: "Garanterar ni att jag får intervjuer eller ett jobberbjudande?",
+      q: "Kan Fitwise lova att jag får jobb?",
       a: (
         <p>
           Nej. Det kan ingen ärlig tjänst lova, beslutet är alltid arbetsgivarens. Det Fitwise gör är att hjälpa dig lägga
@@ -211,7 +213,7 @@ export const FAQ = defineT({
     },
     {
       id: "cost",
-      q: "Vad kostar det, och när betalar jag?",
+      q: "Kostar Fitwise något?",
       a: (
         <p>
           Ingenting. Fitwise är gratis under betan och vi ber aldrig om kortuppgifter. För att det ska förbli gratis har
@@ -224,7 +226,7 @@ export const FAQ = defineT({
     },
     {
       id: "cancel",
-      q: "Hur avslutar jag, och förlorar jag tillgången direkt?",
+      q: "Kan jag sluta använda Fitwise när jag vill?",
       a: (
         <p>
           Det finns inget abonnemang att säga upp, så du kan helt enkelt sluta använda Fitwise och behålla kontot. Vill du
@@ -235,7 +237,7 @@ export const FAQ = defineT({
     },
     {
       id: "ai-letters",
-      q: "Kommer arbetsgivare att märka att ansökan skrevs med AI?",
+      q: "Kan arbetsgivare se att AI hjälpte till med mitt brev?",
       a: (
         <>
           <p>
@@ -252,12 +254,14 @@ export const FAQ = defineT({
     },
     {
       id: "privacy",
-      q: "Är min data säker och privat?",
+      q: "Vem kan se mitt CV och min data?",
       a: (
         <p>
-          Ja. Din data krypteras både under överföring och när den lagras, sparas inom EU (Irland), säljs aldrig, visas aldrig för
-          arbetsgivare och används bara för att matcha dig med jobb och skriva dina brev. Du kan ladda ner allt vi har om dig,
-          eller radera hela kontot, när du vill från din profilsida. Mer finns i vår{" "}
+          Arbetsgivare ser det aldrig, och vi säljer det aldrig. Det används bara för att matcha dig med jobb och skriva
+          dina brev. De få tjänster som driver Fitwise (webbhotell, databas och AI:n som läser ditt CV) hanterar det bara
+          för det. Din data krypteras både under överföring och när den lagras, och sparas inom EU (Irland). Du kan ladda
+          ner allt vi har om dig, eller radera hela kontot, när du vill från din profilsida. Mer information, med hela
+          listan över tjänster, finns i vår{" "}
           <Link href="/privacy">integritetspolicy</Link>.
         </p>
       ),
