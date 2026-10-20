@@ -3,6 +3,7 @@ import { site } from "@/lib/site";
 import { FAQ } from "@/lib/faq-data";
 import { FaqList, faqFacts } from "@/components/marketing/FaqList";
 import { OpenFromHash } from "@/components/marketing/OpenFromHash";
+import { JsonLd, plainText } from "@/components/seo/JsonLd";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 
@@ -37,10 +38,23 @@ export async function generateMetadata() {
 export default async function FaqPage() {
   const locale = await getLocale();
   const t = T[locale];
+  const faqs = FAQ[locale](await faqFacts());
   return (
     <PageShell eyebrow={t.eyebrow} title={t.title} narrow>
       <OpenFromHash />
-      <FaqList items={FAQ[locale](await faqFacts())} openFirst />
+      <FaqList items={faqs} openFirst />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          inLanguage: locale,
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: plainText(f.a).replace(/\s+/g, " ").trim() },
+          })),
+        }}
+      />
 
       <section id="contact" className="mt-12 scroll-mt-24 rounded-2xl border border-line bg-white p-6">
         <h2 className="text-lg font-semibold">{t.stillTitle}</h2>

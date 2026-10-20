@@ -20,6 +20,10 @@ const T = defineT({
     resumeNew: "Upload your resume and we'll fill in your skills and experience. PDF, Word (.docx) or text, up to 4 MB.",
     reading: "Reading your resume…",
     choose: "Choose a file",
+    drop: "or drag it here",
+    dropNow: "Drop your resume here",
+    badType: "That file type can't be read. Upload a PDF, Word (.docx) or text file.",
+    oldDoc: "Old Word files (.doc) can't be read. In Word, choose File → Save As → .docx or PDF, then upload that.",
     skip: "or skip this and add skills by hand below",
     rolesNow: "Roles you fit now",
     stronger: "Make your resume stronger",
@@ -62,6 +66,10 @@ const T = defineT({
     resumeNew: "Ladda upp ditt CV så fyller vi i dina kompetenser och din erfarenhet. PDF, Word (.docx) eller text, upp till 4 MB.",
     reading: "Läser ditt CV…",
     choose: "Välj en fil",
+    drop: "eller dra hit den",
+    dropNow: "Släpp ditt CV här",
+    badType: "Den filtypen kan inte läsas. Ladda upp en PDF, Word-fil (.docx) eller textfil.",
+    oldDoc: "Gamla Word-filer (.doc) kan inte läsas. Välj Arkiv → Spara som → .docx eller PDF i Word och ladda upp den.",
     skip: "eller hoppa över och lägg till kompetenser själv nedan",
     rolesNow: "Roller du passar för nu",
     stronger: "Gör ditt CV starkare",
@@ -110,6 +118,7 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
   const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   // Upload feedback sits next to the upload box, not by the Save button far below.
   const [uploadMsg, setUploadMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
@@ -131,7 +140,22 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
     setSkillInput("");
   };
 
+  // Check the file here first, so a wrong type or size is explained instantly instead of after an upload.
+  const check = (file: File): string | null => {
+    const ext = file.name.toLowerCase().split(".").pop() ?? "";
+    if (ext === "doc") return t.oldDoc;
+    if (!["pdf", "docx", "txt"].includes(ext)) return t.badType;
+    if (file.size > 4 * 1024 * 1024) return t.tooBig;
+    return null;
+  };
+
   const upload = async (file: File) => {
+    const problem = check(file);
+    if (problem) {
+      setUploadMsg({ kind: "err", text: problem });
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     setUploading(true);
     setUploadMsg(null);
     try {
@@ -205,8 +229,29 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
         <p className="mt-1 text-sm text-ink-2">
           {hasResume ? t.resumeHas : t.resumeNew}
         </p>
-        <label className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-line px-4 py-8 text-center hover:border-accent/50 ${uploading ? "opacity-60" : ""}`}>
-          <span className="text-sm font-medium">{uploading ? t.reading : t.choose}</span>
+        <label
+          onDragOver={(e) => { e.preventDefault(); if (!uploading) setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file && !uploading) upload(file);
+          }}
+          className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors ${
+            dragging ? "border-accent bg-accent-soft/60" : "border-line hover:border-accent/50"
+          } ${uploading ? "cursor-wait opacity-60" : ""}`}
+        >
+          {uploading ? (
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+              {t.reading}
+            </span>
+          ) : (
+            <span className="text-sm font-medium">
+              {dragging ? t.dropNow : <><span className="text-accent underline underline-offset-2">{t.choose}</span> {t.drop}</>}
+            </span>
+          )}
           <span className="mt-1 text-xs text-muted">{t.skip}</span>
           <input ref={fileRef} type="file" className="sr-only" disabled={uploading}
             accept=".pdf,.docx,.doc,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"

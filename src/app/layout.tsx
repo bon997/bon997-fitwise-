@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/client";
@@ -15,6 +16,22 @@ const META = defineT({
   },
 });
 
+// Self-hosted (Latin incl. å ä ö) so pages never wait on Google Fonts and text doesn't jump when fonts load.
+const inter = localFont({
+  src: "./fonts/inter-latin-var.woff2",
+  weight: "100 900",
+  display: "swap",
+  variable: "--font-inter",
+});
+const instrumentSerif = localFont({
+  src: [
+    { path: "./fonts/instrument-serif-latin.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/instrument-serif-latin-italic.woff2", weight: "400", style: "italic" },
+  ],
+  display: "swap",
+  variable: "--font-instrument-serif",
+});
+
 export async function generateMetadata(): Promise<Metadata> {
   return META[await getLocale()];
 }
@@ -22,16 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   return (
-    <html lang={locale}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang={locale} className={`${inter.variable} ${instrumentSerif.variable}`}>
       <body>
         <LocaleProvider locale={locale}>{children}</LocaleProvider>
       </body>
