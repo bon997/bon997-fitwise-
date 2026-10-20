@@ -57,7 +57,7 @@ export default async function PrivacyPage() {
             </thead>
             <tbody>
               <tr><td>Vercel</td><td>Driftar webbplatsen</td><td>Anrop till webbplatsen</td></tr>
-              <tr><td>Supabase</td><td>Databas (EU-region)</td><td>All konto- och profildata</td></tr>
+              <tr><td>Supabase</td><td>Databas (EU, Irland)</td><td>All konto- och profildata</td></tr>
               <tr><td>Anthropic</td><td>AI som läser CV:n och skriver personliga brev</td><td>CV-text, profil, jobbtext</td></tr>
               <tr><td>Google</td><td>Inloggning med ”Fortsätt med Google”</td><td>Namn och e-post</td></tr>
               <tr><td>Pinecone (om aktiverat)</td><td>Matchning på innehåll</td><td>Sammanfattning av profilen</td></tr>
@@ -139,7 +139,7 @@ export default async function PrivacyPage() {
           </thead>
           <tbody>
             <tr><td>Vercel</td><td>Hosting the website</td><td>Requests to the site</td></tr>
-            <tr><td>Supabase</td><td>Database (EU region)</td><td>All account and profile data</td></tr>
+            <tr><td>Supabase</td><td>Database (EU, Ireland)</td><td>All account and profile data</td></tr>
             <tr><td>Anthropic</td><td>AI that reads resumes and writes cover letters</td><td>Resume text, profile, job text</td></tr>
             <tr><td>Google</td><td>&ldquo;Continue with Google&rdquo; sign-in</td><td>Name and email</td></tr>
             <tr><td>Pinecone (if enabled)</td><td>Matching by meaning</td><td>Profile summary text</td></tr>

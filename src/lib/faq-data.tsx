@@ -102,7 +102,7 @@ export const FAQ = defineT({
       q: "Is my data safe and private?",
       a: (
         <p>
-          Yes. Your data is encrypted in transit and at rest, never sold, never shown to employers, and
+          Yes. Your data is encrypted in transit and at rest, stored in the EU (Ireland), never sold, never shown to employers, and
           used only to match you with jobs and draft your letters. You can download everything we hold about you, or
           delete your whole account, at any time from your Profile page. Details are in our{" "}
           <Link href="/privacy">Privacy Policy</Link>.
@@ -255,7 +255,7 @@ export const FAQ = defineT({
       q: "Är min data säker och privat?",
       a: (
         <p>
-          Ja. Din data krypteras både under överföring och när den lagras, säljs aldrig, visas aldrig för
+          Ja. Din data krypteras både under överföring och när den lagras, sparas inom EU (Irland), säljs aldrig, visas aldrig för
           arbetsgivare och används bara för att matcha dig med jobb och skriva dina brev. Du kan ladda ner allt vi har om dig,
           eller radera hela kontot, när du vill från din profilsida. Mer finns i vår{" "}
           <Link href="/privacy">integritetspolicy</Link>.
