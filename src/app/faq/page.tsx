@@ -2,6 +2,7 @@ import { PageShell } from "@/components/marketing/PageShell";
 import { site } from "@/lib/site";
 import { FAQ } from "@/lib/faq-data";
 import { FaqList, faqFacts } from "@/components/marketing/FaqList";
+import { OpenFromHash } from "@/components/marketing/OpenFromHash";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 
@@ -38,6 +39,7 @@ export default async function FaqPage() {
   const t = T[locale];
   return (
     <PageShell eyebrow={t.eyebrow} title={t.title} narrow>
+      <OpenFromHash />
       <FaqList items={FAQ[locale](await faqFacts())} openFirst />
 
       <section id="contact" className="mt-12 scroll-mt-24 rounded-2xl border border-line bg-white p-6">

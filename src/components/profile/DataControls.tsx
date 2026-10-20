@@ -10,6 +10,7 @@ const T = defineT({
     title: "Your data",
     intro: "Your resume and profile are only used to match you with jobs. You can take a copy or delete everything at any time.",
     download: "Download my data",
+    safe: "How we keep it safe",
     del: "Delete my account",
     warning: "This permanently deletes your profile, resume, applications and saved jobs. It can't be undone. Type",
     toConfirm: "to confirm.",
@@ -23,6 +24,7 @@ const T = defineT({
     title: "Din data",
     intro: "Ditt CV och din profil används bara för att matcha dig med jobb. Du kan ladda ner en kopia eller radera allt när du vill.",
     download: "Ladda ner min data",
+    safe: "Så skyddar vi den",
     del: "Radera mitt konto",
     warning: "Det här raderar permanent din profil, ditt CV, dina ansökningar och sparade jobb. Det går inte att ångra. Skriv",
     toConfirm: "för att bekräfta.",
@@ -60,7 +62,7 @@ export function DataControls() {
   return (
     <section className="rounded-2xl border border-line bg-white p-5 sm:p-6">
       <h2 className="text-lg font-semibold">{t.title}</h2>
-      <p className="mt-1 text-sm text-ink-2">{t.intro}</p>
+      <p className="mt-1 text-sm text-ink-2">{t.intro} <a href="/faq#privacy" className="text-accent underline underline-offset-2">{t.safe}</a></p>
       <div className="mt-4 flex flex-wrap gap-2">
         <a href="/api/me/export" className="rounded-full border border-ink/20 px-4 py-2 text-sm hover:border-ink/50">{t.download}</a>
         {!confirming && (

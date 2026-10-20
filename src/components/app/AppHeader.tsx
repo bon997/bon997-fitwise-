@@ -5,8 +5,8 @@ import { defineT } from "@/i18n/config";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 const T = defineT({
-  en: { dashboard: "Dashboard", jobs: "Jobs", profile: "Profile", admin: "Admin", signOut: "Sign out", signIn: "Sign in" },
-  sv: { dashboard: "Översikt", jobs: "Jobb", profile: "Profil", admin: "Admin", signOut: "Logga ut", signIn: "Logga in" },
+  en: { dashboard: "Dashboard", jobs: "Jobs", profile: "Profile", admin: "Admin", signOut: "Sign out", signIn: "Sign in", help: "Help and FAQ" },
+  sv: { dashboard: "Översikt", jobs: "Jobb", profile: "Profil", admin: "Admin", signOut: "Logga ut", signIn: "Logga in", help: "Hjälp och vanliga frågor" },
 });
 
 export async function AppHeader({ user, active }: { user: UserRow | null; active?: string }) {
@@ -39,6 +39,15 @@ export async function AppHeader({ user, active }: { user: UserRow | null; active
               ))}
             </nav>
           )}
+          <Link
+            href="/faq"
+            title={t.help}
+            aria-label={t.help}
+            aria-current={active === "/faq" ? "page" : undefined}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line text-sm font-semibold text-ink-2 hover:border-ink/40 hover:text-ink"
+          >
+            ?
+          </Link>
           <LanguageSwitcher className="shrink-0" />
           {user ? (
             <form action="/api/auth/logout" method="post" className="hidden sm:block">

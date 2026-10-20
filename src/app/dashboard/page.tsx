@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { hasProfile, recommendJobs, skillGaps } from "@/lib/matching";
 import { sql } from "@/lib/db";
 import { AppHeader } from "@/components/app/AppHeader";
+import { Footer } from "@/components/landing/Sections";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { JobCard } from "@/components/jobs/JobCard";
 import { StatusSelect } from "@/components/dashboard/StatusSelect";
@@ -218,6 +219,7 @@ export default async function DashboardPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </>
   );
 }

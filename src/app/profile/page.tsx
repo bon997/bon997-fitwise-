@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { num } from "@/lib/data";
 import { AppHeader } from "@/components/app/AppHeader";
+import { Footer } from "@/components/landing/Sections";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { DataControls } from "@/components/profile/DataControls";
@@ -76,6 +77,7 @@ export default async function ProfilePage() {
           <button className="text-sm text-muted underline underline-offset-2">{t.signOut}</button>
         </form>
       </main>
+      <Footer />
     </>
   );
 }

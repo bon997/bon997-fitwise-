@@ -4,6 +4,7 @@ import { JobSearchQuery, jobFacets, queryObject, searchJobs } from "@/lib/job-se
 import { hasProfile } from "@/lib/matching";
 import { sql } from "@/lib/db";
 import { AppHeader } from "@/components/app/AppHeader";
+import { Footer } from "@/components/landing/Sections";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobFilters } from "@/components/jobs/JobFilters";
 import { getLocale } from "@/i18n/server";
@@ -135,6 +136,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SP }) {
           </nav>
         )}
       </main>
+      <Footer />
     </>
   );
 }

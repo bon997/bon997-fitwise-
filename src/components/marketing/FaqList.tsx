@@ -2,6 +2,7 @@ import Link from "next/link";
 import { one } from "@/lib/db";
 import { FAQ, type Faq, type FaqFacts } from "@/lib/faq-data";
 import { getLocale } from "@/i18n/server";
+import { OpenFromHash } from "./OpenFromHash";
 
 /** Facts for the answers; the FAQ still renders if the database is unreachable. */
 export async function faqFacts(): Promise<FaqFacts> {
@@ -39,6 +40,7 @@ export async function FaqSection() {
       <div className="mt-8">
         <FaqList items={items} />
       </div>
+      <OpenFromHash />
       <p className="mt-6 text-sm">
         <Link href="/faq" className="text-ink-2 underline underline-offset-2 hover:text-ink">
           {sv ? "Alla frågor och svar →" : "All questions →"}

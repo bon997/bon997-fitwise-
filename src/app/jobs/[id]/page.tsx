@@ -6,6 +6,7 @@ import { personalize } from "@/lib/ai/personalize";
 import { one } from "@/lib/db";
 import { UUID } from "@/lib/http";
 import { AppHeader } from "@/components/app/AppHeader";
+import { Footer } from "@/components/landing/Sections";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { SkillChips } from "@/components/jobs/SkillChips";
 import { JobActions } from "@/components/jobs/JobActions";
@@ -24,6 +25,7 @@ const T = defineT({
     nice: "Nice to have:",
     about: "About the role",
     yourFit: "Your fit",
+    howScore: "How is this calculated?",
     addSkills: "Add your skills",
     addSkillsRest: "to see how well you match this job.",
     signIn: "Sign in",
@@ -40,6 +42,7 @@ const T = defineT({
     nice: "Meriterande:",
     about: "Om rollen",
     yourFit: "Din matchning",
+    howScore: "Hur räknas poängen?",
     addSkills: "Lägg till dina kompetenser",
     addSkillsRest: "för att se hur väl du matchar jobbet.",
     signIn: "Logga in",
@@ -131,7 +134,10 @@ export default async function JobPage({ params }: Props) {
 
           <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
             <section className="rounded-2xl border border-line bg-white p-5 sm:p-6" aria-labelledby="fit-heading">
-              <h2 id="fit-heading" className="text-lg font-semibold">{t.yourFit}</h2>
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 id="fit-heading" className="text-lg font-semibold">{t.yourFit}</h2>
+                <a href="/faq#score" className="text-xs text-muted underline underline-offset-2 hover:text-ink">{t.howScore}</a>
+              </div>
               {fit ? (
                 <>
                   <div className="mt-4 flex items-center gap-5">
@@ -190,6 +196,7 @@ export default async function JobPage({ params }: Props) {
           </aside>
         </div>
       </main>
+      <Footer />
     </>
   );
 }

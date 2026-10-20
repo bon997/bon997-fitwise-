@@ -13,6 +13,7 @@ const T = defineT({
     savedDraft: "Saved to your tracker as a draft.",
     marked: "Marked as applied. Track it on your dashboard.",
     copied: "Copied to clipboard.",
+    aiQ: "Will employers know it was written with AI?",
     title: "Apply with AI",
     intro: "We draft a cover letter from your real experience and this job's requirements. Nothing is sent until you send it.",
     tone: "Tone",
@@ -39,6 +40,7 @@ const T = defineT({
     savedDraft: "Sparat i din översikt som utkast.",
     marked: "Markerat som sökt. Följ det i din översikt.",
     copied: "Kopierat.",
+    aiQ: "Märker arbetsgivare att brevet skrevs med AI?",
     title: "Sök med AI",
     intro: "Vi skriver ett utkast till personligt brev utifrån din riktiga erfarenhet och jobbets krav. Inget skickas förrän du skickar det.",
     tone: "Ton",
@@ -161,7 +163,8 @@ export function ApplyWithAI({ jobId, applyUrl, existingLetter, application }: Pr
         )}
       </div>
       <p className="mt-1 text-sm text-ink-2">
-        {t.intro}
+        {t.intro}{" "}
+        <a href="/faq#ai-letters" className="text-accent underline underline-offset-2">{t.aiQ}</a>
       </p>
 
       <div className="mt-4 grid gap-3">
