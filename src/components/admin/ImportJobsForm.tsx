@@ -2,6 +2,41 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "@/i18n/client";
+import { defineT } from "@/i18n/config";
+
+const T = defineT({
+  en: {
+    failed: (s: number) => `Import failed (${s})`,
+    title: "Import real jobs",
+    intro: "Search a job board and add the results to Fitwise. Each import adds about 10 jobs. Platsbanken (Sweden) is free; Google Jobs uses one search from your SerpApi plan.",
+    noAi: "ANTHROPIC_API_KEY isn't set, so imported jobs won't get skills extracted and fit scores will be weak.",
+    whatPh: "e.g. frontend developer", what: "What jobs",
+    wherePh: "e.g. Stockholm", where: "Where",
+    source: "Source",
+    importing: "Importing… (up to a minute)", import: "Import jobs",
+    result: (r: Result) =>
+      `Found ${r.fetched}: ${r.inserted} new, ${r.updated} updated. Skills read for ${r.enriched}` +
+      (r.failed > 0 ? ` (${r.failed} failed)` : "") +
+      (r.duplicates ? `. Skipped ${r.duplicates} duplicate ad${r.duplicates > 1 ? "s" : ""}` : "") + ".",
+    why: "Why skills failed:",
+  },
+  sv: {
+    failed: (s: number) => `Importen misslyckades (${s})`,
+    title: "Importera riktiga jobb",
+    intro: "Sök på en jobbsajt och lägg till resultaten i Fitwise. Varje import lägger till ungefär 10 jobb. Platsbanken är gratis; Google Jobs använder en sökning från din SerpApi-plan.",
+    noAi: "ANTHROPIC_API_KEY saknas, så importerade jobb får inga kompetenser utlästa och matchningen blir svag.",
+    whatPh: "t.ex. inköpare", what: "Vilka jobb",
+    wherePh: "t.ex. Stockholm", where: "Var",
+    source: "Källa",
+    importing: "Importerar… (upp till en minut)", import: "Importera jobb",
+    result: (r: Result) =>
+      `Hittade ${r.fetched}: ${r.inserted} nya, ${r.updated} uppdaterade. Kompetenser lästa för ${r.enriched}` +
+      (r.failed > 0 ? ` (${r.failed} misslyckades)` : "") +
+      (r.duplicates ? `. Hoppade över ${r.duplicates} dubblett${r.duplicates > 1 ? "er" : ""}` : "") + ".",
+    why: "Varför kompetenserna inte lästes:",
+  },
+});
 
 type Result = {
   fetched: number;
@@ -19,6 +54,7 @@ export function ImportJobsForm({
 }: {
   sources: { serpapi: boolean; rapidapi: boolean; ai: boolean };
 }) {
+  const t = T[useLocale()];
   const router = useRouter();
   const [source, setSource] = useState("jobtech");
   const [query, setQuery] = useState("");
@@ -48,7 +84,7 @@ export function ImportJobsForm({
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok)
-        throw new Error(body.error ?? `Import failed (${res.status})`);
+        throw new Error(body.error ?? t.failed(res.status));
       setResult(body);
       router.refresh();
     } catch (err) {
@@ -63,17 +99,14 @@ export function ImportJobsForm({
       onSubmit={submit}
       className="rounded-2xl border border-line bg-white p-5 sm:p-6"
     >
-      <h2 className="text-lg font-semibold">Import real jobs</h2>
+      <h2 className="text-lg font-semibold">{t.title}</h2>
       <p className="mt-1 text-sm text-ink-2">
-        Search a job board and add the results to Fitwise. Each import adds
-        about 10 jobs. Platsbanken (Sweden) is free; Google Jobs uses one search
-        from your SerpApi plan.
+        {t.intro}
       </p>
       <>
         {!sources.ai && (
           <p className="mt-4 rounded-lg bg-warn-soft px-3 py-2.5 text-sm text-warn">
-            ANTHROPIC_API_KEY isn&apos;t set, so imported jobs won&apos;t get
-            skills extracted and fit scores will be weak.
+            {t.noAi}
           </p>
         )}
         <div className="mt-4 grid gap-3 sm:grid-cols-[2fr_1.4fr_1fr]">
@@ -82,21 +115,21 @@ export function ImportJobsForm({
             minLength={2}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. frontend developer"
-            aria-label="What jobs"
+            placeholder={t.whatPh}
+            aria-label={t.what}
             className={field}
           />
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Stockholm"
-            aria-label="Where"
+            placeholder={t.wherePh}
+            aria-label={t.where}
             className={field}
           />
           <select
             value={source}
             onChange={(e) => setSource(e.target.value)}
-            aria-label="Source"
+            aria-label={t.source}
             className={field}
           >
             <option value="jobtech">Platsbanken (Sweden)</option>
@@ -108,20 +141,17 @@ export function ImportJobsForm({
           disabled={busy}
           className="mt-3 rounded-full bg-ink px-6 py-2.5 text-sm font-medium text-paper hover:bg-ink-2 disabled:opacity-60"
         >
-          {busy ? "Importing… (up to a minute)" : "Import jobs"}
+          {busy ? t.importing : t.import}
         </button>
       </>
       {result && (
         <p role="status" className="mt-3 text-sm text-accent">
-          Found {result.fetched}: {result.inserted} new, {result.updated}{" "}
-          updated. Skills read for {result.enriched}
-          {result.failed > 0 ? ` (${result.failed} failed)` : ""}
-          {result.duplicates ? `. Skipped ${result.duplicates} duplicate ad${result.duplicates > 1 ? "s" : ""}` : ""}.
+          {t.result(result)}
         </p>
       )}
       {result?.enrich_error && (
         <p role="alert" className="mt-2 text-sm text-warn">
-          Why skills failed: {result.enrich_error}
+          {t.why} {result.enrich_error}
         </p>
       )}
       {error && (

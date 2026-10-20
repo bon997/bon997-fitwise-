@@ -1,15 +1,28 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { getLocale } from "@/i18n/server";
+import { LocaleProvider } from "@/i18n/client";
+import { defineT } from "@/i18n/config";
 
-export const metadata: Metadata = {
-  title: "Fitwise — AI job matching that tells you where you fit",
-  description:
-    "Upload your resume once. Fitwise scores every job against your skills, explains the gaps, and drafts the cover letter.",
-};
+const META = defineT({
+  en: {
+    title: "Fitwise — AI job matching that tells you where you fit",
+    description: "Upload your resume once. Fitwise scores every job against your skills, explains the gaps, and drafts the cover letter.",
+  },
+  sv: {
+    title: "Fitwise — AI-matchning som visar var du passar in",
+    description: "Ladda upp ditt CV en gång. Fitwise jämför varje jobb med dina kompetenser, visar vad som saknas och skriver utkast till personligt brev.",
+  },
+});
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export async function generateMetadata(): Promise<Metadata> {
+  return META[await getLocale()];
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -19,7 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }

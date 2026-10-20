@@ -1,10 +1,48 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/i18n/client";
+import { defineT } from "@/i18n/config";
+
+const T = defineT({
+  en: {
+    generic: "Something went wrong. Please try again.",
+    offline: "Couldn't reach the server. Check your connection and try again.",
+    signin: "Sign in",
+    signup: "Create account",
+    name: "Your name",
+    email: "Email",
+    password: "Password",
+    hide: "Hide",
+    show: "Show",
+    min: "At least 10 characters.",
+    wait: "Please wait…",
+    forgot: "Forgot your password? If it's a Gmail address, use “Continue with Google” above.",
+    needName: "Enter your name.",
+    badEmail: "Enter a valid email address.",
+  },
+  sv: {
+    generic: "Något gick fel. Försök igen.",
+    offline: "Kunde inte nå servern. Kontrollera din anslutning och försök igen.",
+    signin: "Logga in",
+    signup: "Skapa konto",
+    name: "Ditt namn",
+    email: "E-post",
+    password: "Lösenord",
+    hide: "Dölj",
+    show: "Visa",
+    min: "Minst 10 tecken.",
+    wait: "Vänta…",
+    forgot: "Glömt lösenordet? Om det är en Gmail-adress, använd ”Fortsätt med Google” ovan.",
+    needName: "Skriv ditt namn.",
+    badEmail: "Skriv en giltig e-postadress.",
+  },
+});
 
 type Mode = "signin" | "signup";
 
 export function EmailAuthForm({ initialMode, returnTo }: { initialMode: Mode; returnTo: string }) {
+  const t = T[useLocale()];
   const [mode, setMode] = useState<Mode>(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,6 +56,8 @@ export function EmailAuthForm({ initialMode, returnTo }: { initialMode: Mode; re
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "signup" && !name.trim()) return setError(t.needName);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError(t.badEmail);
     setBusy(true);
     setError(null);
     try {
@@ -28,12 +68,12 @@ export function EmailAuthForm({ initialMode, returnTo }: { initialMode: Mode; re
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(body.issues?.[0]?.message ?? body.error ?? "Something went wrong. Please try again.");
+        setError(body.issues?.[0]?.message ?? body.error ?? t.generic);
         return;
       }
       window.location.href = body.redirect ?? "/dashboard";
     } catch {
-      setError("Couldn't reach the server. Check your connection and try again.");
+      setError(t.offline);
     } finally {
       setBusy(false);
     }
@@ -56,26 +96,26 @@ export function EmailAuthForm({ initialMode, returnTo }: { initialMode: Mode; re
             onClick={() => switchTo(m)}
             className={`rounded-full py-2 font-medium transition-colors ${mode === m ? "bg-white text-ink shadow-sm" : "text-muted hover:text-ink"}`}
           >
-            {m === "signin" ? "Sign in" : "Create account"}
+            {m === "signin" ? t.signin : t.signup}
           </button>
         ))}
       </div>
 
       {mode === "signup" && (
         <label className="block text-sm">
-          <span className="text-ink-2">Your name</span>
+          <span className="text-ink-2">{t.name}</span>
           <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={120} autoComplete="name" className={field} />
         </label>
       )}
       <label className="block text-sm">
-        <span className="text-ink-2">Email</span>
+        <span className="text-ink-2">{t.email}</span>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className={field} />
       </label>
       <label className="block text-sm">
         <span className="flex items-center justify-between text-ink-2">
-          Password
+          {t.password}
           <button type="button" onClick={() => setShowPw(!showPw)} className="text-xs text-muted hover:text-ink">
-            {showPw ? "Hide" : "Show"}
+            {showPw ? t.hide : t.show}
           </button>
         </span>
         <input
@@ -87,7 +127,7 @@ export function EmailAuthForm({ initialMode, returnTo }: { initialMode: Mode; re
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
           className={field}
         />
-        {mode === "signup" && <span className="mt-1 block text-xs text-muted">At least 10 characters.</span>}
+        {mode === "signup" && <span className="mt-1 block text-xs text-muted">{t.min}</span>}
       </label>
 
       {error && (
@@ -100,12 +140,12 @@ export function EmailAuthForm({ initialMode, returnTo }: { initialMode: Mode; re
         disabled={busy}
         className="w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-paper hover:bg-ink-2 disabled:opacity-60"
       >
-        {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+        {busy ? t.wait : mode === "signup" ? t.signup : t.signin}
       </button>
 
       {mode === "signin" && (
         <p className="text-center text-xs text-muted">
-          Forgot your password? If it&apos;s a Gmail address, use &ldquo;Continue with Google&rdquo; above.
+          {t.forgot}
         </p>
       )}
     </form>

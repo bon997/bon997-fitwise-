@@ -1,5 +1,11 @@
 import { text, asDocument, MODELS } from "./claude";
 import type { FitResult } from "./fit-score";
+import type { Locale } from "@/i18n/config";
+
+const LANGUAGE: Record<Locale, string> = {
+  en: "Write the letter in English.",
+  sv: "Skriv brevet på svenska (naturlig, korrekt svenska som en svensk arbetsgivare förväntar sig; inleds t.ex. med \"Hej,\" eller en hälsning till rekryteraren om namnet finns). Write it in Swedish.",
+};
 
 type JobForLetter = { title: string; company: string; description: string; requirements: string };
 
@@ -27,6 +33,7 @@ export async function generateCoverLetter(opts: {
   fit: Pick<FitResult, "matchedSkills" | "missingSkills">;
   tone?: LetterTone;
   extraNotes?: string;
+  language?: Locale;
 }): Promise<string> {
   const { job, fit } = opts;
   const content = [
@@ -35,6 +42,7 @@ export async function generateCoverLetter(opts: {
     `Matched skills: ${fit.matchedSkills.join(", ") || "none identified"}`,
     `Missing skills: ${fit.missingSkills.join(", ") || "none"}`,
     `Tone: ${TONES[opts.tone ?? "professional"]}`,
+    `Language: ${LANGUAGE[opts.language ?? "en"]}`,
     opts.extraNotes ? asDocument("candidate_notes", opts.extraNotes, 1_000) : "",
     "Write the cover letter now.",
   ]

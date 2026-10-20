@@ -5,6 +5,7 @@ import { parseResume, ACCEPTED_RESUME_TYPES } from "@/lib/ai/parse-resume";
 import { storeResume } from "@/lib/storage";
 import { useAiAllowance } from "@/lib/ai-usage";
 import { publicUser, type UserRow } from "@/lib/data";
+import { localeFromRequest, say } from "@/i18n/server";
 
 export const maxDuration = 60;
 // Vercel rejects request bodies over 4.5 MB before our code runs, so stay under that.
@@ -28,27 +29,29 @@ export const POST = route(async (req: Request) => {
   try {
     form = await req.formData();
   } catch {
-    throw new HttpError(400, "Expected multipart/form-data with a 'file' field");
+    throw new HttpError(400, say(req, "Expected a file upload", "En fil saknas i uppladdningen"));
   }
   const file = form.get("file");
-  if (!(file instanceof File)) throw new HttpError(400, "Missing 'file'");
-  if (file.size > MAX_BYTES) throw new HttpError(413, "Resume must be 4 MB or smaller");
+  if (!(file instanceof File)) throw new HttpError(400, say(req, "Choose a file to upload", "Välj en fil att ladda upp"));
+  if (file.size > MAX_BYTES) throw new HttpError(413, say(req, "Resume must be 4 MB or smaller", "CV:t får vara högst 4 MB"));
   const dot = file.name.toLowerCase().split(".").pop() ?? "";
-  if (dot === "doc") throw new HttpError(415, "Old Word files (.doc) can't be read. In Word, choose File → Save As → .docx or PDF, then upload that.");
+  if (dot === "doc") throw new HttpError(415, say(req,
+    "Old Word files (.doc) can't be read. In Word, choose File → Save As → .docx or PDF, then upload that.",
+    "Gamla Word-filer (.doc) kan inte läsas. Välj Arkiv → Spara som → .docx eller PDF i Word och ladda upp den."));
   // Some browsers send an empty or generic type; fall back to the file extension.
   const mimeType = file.type in ACCEPTED_RESUME_TYPES ? file.type : BY_EXTENSION[dot] ?? file.type;
   const ext = ACCEPTED_RESUME_TYPES[mimeType as keyof typeof ACCEPTED_RESUME_TYPES];
-  if (!ext) throw new HttpError(415, "Upload a PDF, Word (.docx) or text file");
+  if (!ext) throw new HttpError(415, say(req, "Upload a PDF, Word (.docx) or text file", "Ladda upp en PDF, Word-fil (.docx) eller textfil"));
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const allowance = await useAiAllowance(user, "resume_parse");
+  const allowance = await useAiAllowance(user, "resume_parse", localeFromRequest(req));
   const [{ parsed, text }, resumeUrl] = await Promise.all([
-    parseResume({ bytes, mimeType }).catch(async (e) => {
+    parseResume({ bytes, mimeType }, localeFromRequest(req)).catch(async (e) => {
       await allowance.refund();
       console.error("resume parse failed", e);
       // Say what went wrong (it is the user's own file); never a stack trace.
       const reason = e instanceof Error ? e.message.slice(0, 200) : "unknown error";
-      throw new HttpError(422, `We couldn't read this resume: ${reason}`);
+      throw new HttpError(422, say(req, `We couldn't read this resume: ${reason}`, `Vi kunde inte läsa CV:t: ${reason}`));
     }),
     // Keeping the original file is optional; a storage problem shouldn't block reading the resume.
     storeResume(user.id, bytes, mimeType, ext).catch((e) => {

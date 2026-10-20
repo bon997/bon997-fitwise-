@@ -43,7 +43,15 @@ Be literal: only include skills and roles the resume actually supports. Do not i
 Prefer canonical skill names ("React", "PostgreSQL", "Kubernetes").`;
 
 /** Returns the parsed resume plus the plain text (stored for re-scoring and cover letters). */
-export async function parseResume(file: { bytes: Buffer; mimeType: string }): Promise<{ parsed: ParsedResume; text: string }> {
+const OUTPUT_LANGUAGE = {
+  en: "Write suggested_roles, improvements and experience summaries in English.",
+  sv: "Write suggested_roles (as Swedish job titles used on Platsbanken, e.g. \"Inköpare\"), improvements and experience summaries in Swedish. Keep skill names canonical.",
+} as const;
+
+export async function parseResume(
+  file: { bytes: Buffer; mimeType: string },
+  locale: keyof typeof OUTPUT_LANGUAGE = "en",
+): Promise<{ parsed: ParsedResume; text: string }> {
   const kind = ACCEPTED_RESUME_TYPES[file.mimeType as keyof typeof ACCEPTED_RESUME_TYPES];
   if (!kind) throw new Error(`Unsupported resume type: ${file.mimeType}`);
 
@@ -66,7 +74,7 @@ export async function parseResume(file: { bytes: Buffer; mimeType: string }): Pr
     schema: ResumeSchema,
     name: "save_resume",
     description: "Save the structured resume data.",
-    system: SYSTEM,
+    system: `${SYSTEM}\n${OUTPUT_LANGUAGE[locale]}`,
     content,
     model: MODELS.smart,
   });

@@ -36,7 +36,11 @@ export type UserSignals = {
 
 export type PersonalJob = SignalJob & { salary_min: number | null; salary_max: number | null };
 
-export type Reason = { text: string; positive: boolean };
+export type ReasonCode =
+  | "hidden_company" | "target_role" | "similar_saved" | "below_salary" | "meets_salary"
+  | "dismissed_role" | "passed_city" | "passed_level";
+/** `text` is English; `code` + `arg` let the UI show the reason in any language. */
+export type Reason = { text: string; positive: boolean; code?: ReasonCode; arg?: string };
 export type Personalization = { boost: number; reasons: Reason[]; hidden: boolean };
 
 /** Words that say nothing about the kind of role. */
@@ -110,12 +114,12 @@ export type PersonalProfile = ReturnType<typeof buildProfile>;
 
 export function personalize(job: PersonalJob, p: PersonalProfile): Personalization {
   if (p.hiddenCompanies.has(job.company.toLowerCase().trim())) {
-    return { boost: 0, reasons: [{ text: `You hid jobs from ${job.company}`, positive: false }], hidden: true };
+    return { boost: 0, reasons: [{ text: `You hid jobs from ${job.company}`, positive: false, code: "hidden_company", arg: job.company }], hidden: true };
   }
 
   const reasons: Reason[] = [];
-  const up = (text: string) => reasons.push({ text, positive: true });
-  const down = (text: string) => reasons.push({ text, positive: false });
+  const up = (code: ReasonCode, text: string) => reasons.push({ text, positive: true, code });
+  const down = (code: ReasonCode, text: string, arg?: string) => reasons.push({ text, positive: false, code, arg });
   let boost = 0;
   const title = titleTokens(job.title);
   const skills = skillSet(job);
@@ -125,7 +129,7 @@ export function personalize(job: PersonalJob, p: PersonalProfile): Personalizati
   const targetMatch = Math.max(0, ...p.targetTitleTokens.map((t) => overlap(title, t)));
   if (targetMatch >= 0.66) {
     boost += Math.round(6 * targetMatch);
-    up("Matches a role you're targeting");
+    up("target_role", "Matches a role you're targeting");
   }
 
   // 2. Similar to jobs you saved or applied to (learned) — up to +6
@@ -139,7 +143,7 @@ export function personalize(job: PersonalJob, p: PersonalProfile): Personalizati
     const sim = 0.6 * titleSim + 0.4 * skillSim;
     if (sim >= 0.35) {
       boost += Math.round(6 * sim);
-      up("Similar to jobs you saved or applied to");
+      up("similar_saved", "Similar to jobs you saved or applied to");
     }
   }
 
@@ -148,10 +152,10 @@ export function personalize(job: PersonalJob, p: PersonalProfile): Personalizati
     const top = job.salary_max ?? job.salary_min;
     if (top != null && top < p.s.salaryMin) {
       boost -= 10;
-      down("Pays below your minimum salary");
+      down("below_salary", "Pays below your minimum salary");
     } else if (job.salary_min != null && job.salary_min >= p.s.salaryMin) {
       boost += 3;
-      up("Meets your salary minimum");
+      up("meets_salary", "Meets your salary minimum");
     }
   }
 
@@ -159,17 +163,17 @@ export function personalize(job: PersonalJob, p: PersonalProfile): Personalizati
   const roleSim = Math.max(0, ...p.roleDismissTitles.map((t) => overlap(title, t)));
   if (roleSim >= 0.6) {
     boost -= Math.round(8 * roleSim);
-    down("Similar to roles you marked as not for you");
+    down("dismissed_role", "Similar to roles you marked as not for you");
   }
 
   // 5. Locations / seniority you dismissed twice or more (learned) — −6 each
   if (job.location && (p.badCities.get(cityOf(job.location)) ?? 0) >= 2) {
     boost -= 6;
-    down(`You've passed on jobs in ${job.location.split(",")[0]}`);
+    down("passed_city", `You've passed on jobs in ${job.location.split(",")[0]}`, job.location.split(",")[0]);
   }
   if (job.seniority && (p.badSeniority.get(job.seniority) ?? 0) >= 2) {
     boost -= 6;
-    down(`You've passed on ${job.seniority}-level roles`);
+    down("passed_level", `You've passed on ${job.seniority}-level roles`, job.seniority);
   }
 
   return { boost: Math.max(-MAX_BOOST, Math.min(MAX_BOOST, boost)), reasons, hidden: false };

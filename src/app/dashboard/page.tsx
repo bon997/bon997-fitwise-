@@ -7,9 +7,66 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { JobCard } from "@/components/jobs/JobCard";
 import { StatusSelect } from "@/components/dashboard/StatusSelect";
-import { STATUS_LABEL, skillLabel, timeAgo } from "@/lib/format";
+import { labels, skillLabel, timeAgo } from "@/lib/format";
+import { getLocale } from "@/i18n/server";
+import { defineT } from "@/i18n/config";
 
-export const metadata = { title: "Dashboard — Fitwise" };
+const T = defineT({
+  en: {
+    meta: "Dashboard — Fitwise",
+    welcome: (n?: string) => `Welcome${n ? `, ${n}` : ""}.`,
+    intro: "Add your resume or a few skills and we'll score every job against them, then learn what you like as you go.",
+    step1: "Upload your resume, or type your skills.",
+    step2: "Tell us the roles, places and salary you want.",
+    step3: "Get matches ranked for you every week.",
+    setup: "Set up my profile",
+    hi: (n?: string) => `Hi${n ? ` ${n}` : ""}.`,
+    strength: "Profile strength",
+    improve: "Improve it",
+    matches: "Your matches this week",
+    seeAll: "See all →",
+    rankedBy: "Ranked by your fit, your preferences, and the jobs you've saved or passed on.",
+    noMatches: "No new matches in the last two weeks.",
+    browse: "Browse all jobs",
+    applications: "Applications",
+    nothingYet: "Nothing yet. Open a job and use",
+    applyAi: "Apply with AI",
+    gaps: "Skills worth learning",
+    gapsNote: "Missing from your near-miss matches (50–85 fit).",
+    jobs: (n: number) => `${n} job${n === 1 ? "" : "s"}`,
+    saved: "Saved jobs",
+    savedEmpty: "Tap ☆ Save on any job to keep it here.",
+  },
+  sv: {
+    meta: "Översikt — Fitwise",
+    welcome: (n?: string) => `Välkommen${n ? `, ${n}` : ""}.`,
+    intro: "Lägg till ditt CV eller några kompetenser så matchar vi varje jobb mot dem och lär oss vad du gillar efter hand.",
+    step1: "Ladda upp ditt CV eller skriv in dina kompetenser.",
+    step2: "Berätta vilka roller, orter och vilken lön du vill ha.",
+    step3: "Få matchningar rankade för dig varje vecka.",
+    setup: "Skapa min profil",
+    hi: (n?: string) => `Hej${n ? ` ${n}` : ""}.`,
+    strength: "Profilstyrka",
+    improve: "Förbättra den",
+    matches: "Veckans matchningar",
+    seeAll: "Visa alla →",
+    rankedBy: "Rankade efter din matchning, dina önskemål och de jobb du sparat eller valt bort.",
+    noMatches: "Inga nya matchningar de senaste två veckorna.",
+    browse: "Bläddra bland alla jobb",
+    applications: "Ansökningar",
+    nothingYet: "Inget än. Öppna ett jobb och använd",
+    applyAi: "Sök med AI",
+    gaps: "Kompetenser värda att lära sig",
+    gapsNote: "Saknas i dina nästan-matchningar (50–85 i matchning).",
+    jobs: (n: number) => `${n} jobb`,
+    saved: "Sparade jobb",
+    savedEmpty: "Tryck på ☆ Spara på ett jobb för att samla det här.",
+  },
+});
+
+export async function generateMetadata() {
+  return { title: T[await getLocale()].meta };
+}
 
 const PIPELINE = ["applied", "interviewing", "offer"] as const;
 
@@ -17,23 +74,25 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?returnTo=/dashboard");
   const first = user.name?.split(" ")[0];
+  const locale = await getLocale();
+  const t = T[locale];
 
   if (!hasProfile(user)) {
     return (
       <>
         <AppHeader user={user} active="/dashboard" />
         <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-          <h1 className="font-display text-4xl sm:text-5xl">Welcome{first ? `, ${first}` : ""}.</h1>
+          <h1 className="font-display text-4xl sm:text-5xl">{t.welcome(first)}</h1>
           <p className="mt-4 max-w-xl text-lg text-ink-2">
-            Add your resume or a few skills and we&apos;ll score every job against them, then learn what you like as you go.
+            {t.intro}
           </p>
           <ol className="mt-8 space-y-3 text-ink-2">
-            <li><span className="font-medium text-ink">1.</span> Upload your resume, or type your skills.</li>
-            <li><span className="font-medium text-ink">2.</span> Tell us the roles, places and salary you want.</li>
-            <li><span className="font-medium text-ink">3.</span> Get matches ranked for you every week.</li>
+            <li><span className="font-medium text-ink">1.</span> {t.step1}</li>
+            <li><span className="font-medium text-ink">2.</span> {t.step2}</li>
+            <li><span className="font-medium text-ink">3.</span> {t.step3}</li>
           </ol>
           <Link href="/profile" className="mt-8 inline-block rounded-full bg-ink px-6 py-3 text-sm font-medium text-paper hover:bg-ink-2">
-            Set up my profile
+            {t.setup}
           </Link>
         </main>
       </>
@@ -65,19 +124,19 @@ export default async function DashboardPage() {
     <>
       <AppHeader user={user} active="/dashboard" />
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
-        <h1 className="font-display text-4xl sm:text-5xl">Hi{first ? ` ${first}` : ""}.</h1>
+        <h1 className="font-display text-4xl sm:text-5xl">{t.hi(first)}</h1>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex items-center gap-4 rounded-2xl border border-line bg-white p-5">
             <FitScoreRing score={user.resume_score ?? 0} size={64} label="/ 100" />
             <div>
-              <p className="text-sm font-medium">Profile strength</p>
-              <Link href="/profile" className="text-xs text-accent underline underline-offset-2">Improve it</Link>
+              <p className="text-sm font-medium">{t.strength}</p>
+              <Link href="/profile" className="text-xs text-accent underline underline-offset-2">{t.improve}</Link>
             </div>
           </div>
           {PIPELINE.map((s) => (
             <div key={s} className="rounded-2xl border border-line bg-white p-5">
-              <p className="text-sm text-muted">{STATUS_LABEL[s]}</p>
+              <p className="text-sm text-muted">{labels(locale).status[s]}</p>
               <p className="mt-1 font-display text-4xl tabular-nums">{count(s)}</p>
             </div>
           ))}
@@ -86,13 +145,13 @@ export default async function DashboardPage() {
         <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_340px]">
           <section aria-labelledby="matches-heading" className="min-w-0">
             <div className="flex items-baseline justify-between gap-4">
-              <h2 id="matches-heading" className="font-display text-3xl">Your matches this week</h2>
-              <Link href="/jobs?sort=for_you" className="shrink-0 text-sm text-ink-2 hover:text-ink">See all →</Link>
+              <h2 id="matches-heading" className="font-display text-3xl">{t.matches}</h2>
+              <Link href="/jobs?sort=for_you" className="shrink-0 text-sm text-ink-2 hover:text-ink">{t.seeAll}</Link>
             </div>
-            <p className="mt-1 text-sm text-muted">Ranked by your fit, your preferences, and the jobs you&apos;ve saved or passed on.</p>
+            <p className="mt-1 text-sm text-muted">{t.rankedBy}</p>
             {matches.length === 0 ? (
               <div className="mt-5 rounded-2xl border border-dashed border-line p-8 text-center text-ink-2">
-                No new matches in the last two weeks. <Link href="/jobs" className="text-accent underline underline-offset-2">Browse all jobs</Link>
+                {t.noMatches} <Link href="/jobs" className="text-accent underline underline-offset-2">{t.browse}</Link>
               </div>
             ) : (
               <div className="mt-5 grid gap-4 xl:grid-cols-2">
@@ -105,16 +164,16 @@ export default async function DashboardPage() {
 
           <div className="space-y-8">
             <section aria-labelledby="tracker-heading" className="rounded-2xl border border-line bg-white p-5">
-              <h2 id="tracker-heading" className="text-lg font-semibold">Applications</h2>
+              <h2 id="tracker-heading" className="text-lg font-semibold">{t.applications}</h2>
               {applications.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-2">Nothing yet. Open a job and use <strong>Apply with AI</strong>.</p>
+                <p className="mt-2 text-sm text-ink-2">{t.nothingYet} <strong>{t.applyAi}</strong>.</p>
               ) : (
                 <ul className="mt-3 divide-y divide-line">
                   {applications.map((a) => (
                     <li key={a.id} className="flex items-center justify-between gap-3 py-3">
                       <div className="min-w-0">
                         <Link href={`/jobs/${a.job_id}`} className="block truncate text-sm font-medium hover:underline">{a.title}</Link>
-                        <p className="truncate text-xs text-muted">{a.company} · {timeAgo(a.updated_at)}</p>
+                        <p className="truncate text-xs text-muted">{a.company} · {timeAgo(a.updated_at, locale)}</p>
                       </div>
                       <StatusSelect id={a.id} status={a.status} label={a.title} />
                     </li>
@@ -125,13 +184,13 @@ export default async function DashboardPage() {
 
             {gaps.length > 0 && (
               <section aria-labelledby="gaps-heading" className="rounded-2xl border border-line bg-white p-5">
-                <h2 id="gaps-heading" className="text-lg font-semibold">Skills worth learning</h2>
-                <p className="mt-1 text-xs text-muted">Missing from your near-miss matches (50–85 fit).</p>
+                <h2 id="gaps-heading" className="text-lg font-semibold">{t.gaps}</h2>
+                <p className="mt-1 text-xs text-muted">{t.gapsNote}</p>
                 <ul className="mt-3 space-y-2">
                   {gaps.map((g) => (
                     <li key={g.skill} className="flex items-center justify-between text-sm">
                       <span className="rounded-full bg-warn-soft px-2.5 py-0.5 text-xs font-medium text-warn">+ {skillLabel(g.skill)}</span>
-                      <span className="text-xs text-muted">{g.jobs} job{g.jobs === 1 ? "" : "s"}</span>
+                      <span className="text-xs text-muted">{t.jobs(g.jobs)}</span>
                     </li>
                   ))}
                 </ul>
@@ -139,9 +198,9 @@ export default async function DashboardPage() {
             )}
 
             <section aria-labelledby="saved-heading" className="rounded-2xl border border-line bg-white p-5">
-              <h2 id="saved-heading" className="text-lg font-semibold">Saved jobs</h2>
+              <h2 id="saved-heading" className="text-lg font-semibold">{t.saved}</h2>
               {saved.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-2">Tap ☆ Save on any job to keep it here.</p>
+                <p className="mt-2 text-sm text-ink-2">{t.savedEmpty}</p>
               ) : (
                 <ul className="mt-3 divide-y divide-line">
                   {saved.map((s) => (

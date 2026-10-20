@@ -5,6 +5,7 @@ import { hashPassword, passwordProblem } from "@/lib/password";
 import { safeReturnTo } from "@/lib/google-oauth";
 import { assertSameOrigin, startSession } from "@/lib/auth-forms";
 import { clientIp, isLockedOut, recordFailure } from "@/lib/rate-limit";
+import { say, localeFromRequest } from "@/i18n/server";
 
 const Body = z.object({
   name: z.string().trim().min(1, "Enter your name").max(120),
@@ -22,9 +23,9 @@ export const POST = route(async (req: Request) => {
   assertSameOrigin(req);
   const body = Body.parse(await readJson(req));
   const ip = clientIp(req);
-  if (await isLockedOut(body.email, ip)) throw new HttpError(429, "Too many attempts. Please wait 15 minutes and try again.");
+  if (await isLockedOut(body.email, ip)) throw new HttpError(429, say(req, "Too many attempts. Please wait 15 minutes and try again.", "För många försök. Vänta 15 minuter och försök igen."));
 
-  const weak = passwordProblem(body.password, body.email);
+  const weak = passwordProblem(body.password, body.email, localeFromRequest(req));
   if (weak) throw new HttpError(400, weak);
 
   const existing = await one<{ password_hash: string | null; google_id: string | null }>(
@@ -37,8 +38,8 @@ export const POST = route(async (req: Request) => {
     throw new HttpError(
       409,
       existing.google_id && !existing.password_hash
-        ? "This email already has an account. Use “Continue with Google”."
-        : "This email already has an account. Sign in instead.",
+        ? say(req, "This email already has an account. Use “Continue with Google”.", "Den här e-postadressen har redan ett konto. Använd ”Fortsätt med Google”.")
+        : say(req, "This email already has an account. Sign in instead.", "Den här e-postadressen har redan ett konto. Logga in i stället."),
     );
   }
 
@@ -46,7 +47,7 @@ export const POST = route(async (req: Request) => {
     "INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) ON CONFLICT (email) DO NOTHING RETURNING id",
     [body.name, body.email, await hashPassword(body.password)],
   );
-  if (!user) throw new HttpError(409, "This email already has an account. Sign in instead.");
+  if (!user) throw new HttpError(409, say(req, "This email already has an account. Sign in instead.", "Den här e-postadressen har redan ett konto. Logga in i stället."));
 
   // New accounts have no profile yet, so send them to set one up.
   const dest = safeReturnTo(body.returnTo);

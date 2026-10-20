@@ -1,9 +1,11 @@
 import { skillLabel } from "@/lib/format";
+import { getLocale } from "@/i18n/server";
 
 type Props = { matched?: string[]; partial?: string[]; missing?: string[]; max?: number };
 
 /** Green = you have it, outlined = related skill (partial credit), amber = missing. */
-export function SkillChips({ matched = [], partial = [], missing = [], max = 99 }: Props) {
+export async function SkillChips({ matched = [], partial = [], missing = [], max = 99 }: Props) {
+  const sv = (await getLocale()) === "sv";
   const items = [
     ...matched.map((s) => ({ s, kind: "m" as const })),
     ...partial.map((s) => ({ s, kind: "p" as const })),
@@ -23,13 +25,13 @@ export function SkillChips({ matched = [], partial = [], missing = [], max = 99 
                 ? "rounded-full border border-accent/40 px-2.5 py-1 text-xs font-medium text-accent"
                 : "rounded-full bg-warn-soft px-2.5 py-1 text-xs font-medium text-warn"
           }
-          title={kind === "m" ? "You have this" : kind === "p" ? "You have a related skill" : "Missing"}
+          title={kind === "m" ? (sv ? "Du har den här" : "You have this") : kind === "p" ? (sv ? "Du har en närliggande kompetens" : "You have a related skill") : sv ? "Saknas" : "Missing"}
         >
           {kind === "m" ? "✓ " : kind === "p" ? "≈ " : "+ "}
           {skillLabel(s)}
         </li>
       ))}
-      {more > 0 && <li className="px-1 py-1 text-xs text-muted">+{more} more</li>}
+      {more > 0 && <li className="px-1 py-1 text-xs text-muted">+{more} {sv ? "till" : "more"}</li>}
     </ul>
   );
 }

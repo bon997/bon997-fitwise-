@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { STATUS_LABEL } from "@/lib/format";
+import { labels } from "@/lib/format";
+import { useLocale } from "@/i18n/client";
 
 export function StatusSelect({ id, status, label }: { id: string; status: string; label: string }) {
+  const locale = useLocale();
   const router = useRouter();
   const [value, setValue] = useState(status);
   const [error, setError] = useState(false);
@@ -34,10 +36,10 @@ export function StatusSelect({ id, status, label }: { id: string; status: string
       value={value}
       onChange={(e) => change(e.target.value)}
       disabled={pending}
-      aria-label={`Status for ${label}`}
+      aria-label={`${locale === "sv" ? "Status för" : "Status for"} ${label}`}
       className={`rounded-lg border bg-white px-2 py-1 text-xs ${error ? "border-warn" : "border-line"}`}
     >
-      {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+      {Object.entries(labels(locale).status).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
     </select>
   );
 }

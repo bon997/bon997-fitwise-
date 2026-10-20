@@ -44,16 +44,17 @@ export async function burnPasswordCheck(password: string): Promise<void> {
 }
 
 /** Returns a reason the password is too weak, or null if it's acceptable. */
-export function passwordProblem(password: string, email?: string): string | null {
-  if (password.length < 10) return "Use at least 10 characters.";
-  if (password.length > 200) return "That password is too long.";
-  if (/^(.)\1+$/.test(password)) return "Don't use a single repeated character.";
+export function passwordProblem(password: string, email?: string, locale: "en" | "sv" = "en"): string | null {
+  const sv = locale === "sv";
+  if (password.length < 10) return sv ? "Använd minst 10 tecken." : "Use at least 10 characters.";
+  if (password.length > 200) return sv ? "Lösenordet är för långt." : "That password is too long.";
+  if (/^(.)\1+$/.test(password)) return sv ? "Använd inte samma tecken upprepat." : "Don't use a single repeated character.";
   const lower = password.toLowerCase();
   if (["password", "qwerty", "123456", "letmein", "fitwise"].some((w) => lower.includes(w))) {
-    return "That password is too easy to guess.";
+    return sv ? "Lösenordet är för lätt att gissa." : "That password is too easy to guess.";
   }
   if (email && lower.includes(email.toLowerCase().split("@")[0]) && email.split("@")[0].length >= 4) {
-    return "Don't include your email name in the password.";
+    return sv ? "Ta inte med namnet från din e-postadress i lösenordet." : "Don't include your email name in the password.";
   }
   return null;
 }

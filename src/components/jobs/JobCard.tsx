@@ -2,7 +2,8 @@ import Link from "next/link";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { SkillChips } from "./SkillChips";
 import { JobActions } from "./JobActions";
-import { timeAgo, TYPE_LABEL } from "@/lib/format";
+import { labels, postedAgo, reasonText } from "@/lib/format";
+import { getLocale } from "@/i18n/server";
 
 export type JobCardData = {
   id: string;
@@ -14,12 +15,14 @@ export type JobCardData = {
   salary_range: string | null;
   posted_at: Date | string | null;
   fit?: { score: number; matched_skills: string[]; missing_skills: string[]; breakdown?: Record<string, unknown> } | null;
-  personal?: { reasons: { text: string; positive: boolean }[]; boost: number } | null;
+  personal?: { reasons: { text: string; positive: boolean; code?: string; arg?: string }[]; boost: number } | null;
 };
 
-export function JobCard({ job, saved, signedIn }: { job: JobCardData; saved: boolean; signedIn: boolean }) {
+export async function JobCard({ job, saved, signedIn }: { job: JobCardData; saved: boolean; signedIn: boolean }) {
+  const locale = await getLocale();
+  const L = labels(locale);
   const partial = (job.fit?.breakdown?.partial_skills as string[] | undefined) ?? [];
-  const meta = [job.location, job.remote && !/remote/i.test(job.location ?? "") ? "Remote" : null, job.employment_type ? TYPE_LABEL[job.employment_type] : null]
+  const meta = [job.location, job.remote && !/remote|distans/i.test(job.location ?? "") ? L.remote : null, job.employment_type ? L.type[job.employment_type] : null]
     .filter(Boolean)
     .join(" · ");
   const reasons = job.personal?.reasons.slice(0, 2) ?? [];
@@ -36,10 +39,10 @@ export function JobCard({ job, saved, signedIn }: { job: JobCardData; saved: boo
           </h3>
           <p className="mt-1 text-sm text-ink-2">{meta}</p>
           <p className="mt-0.5 text-sm text-muted">
-            {[job.salary_range, job.posted_at ? `Posted ${timeAgo(job.posted_at)}` : null].filter(Boolean).join(" · ")}
+            {[job.salary_range, postedAgo(job.posted_at, locale)].filter(Boolean).join(" · ")}
           </p>
         </div>
-        {job.fit && <FitScoreRing score={job.fit.score} size={64} />}
+        {job.fit && <FitScoreRing score={job.fit.score} size={64} label={locale === "sv" ? "match" : "fit"} />}
       </div>
 
       {job.fit && (
@@ -53,7 +56,7 @@ export function JobCard({ job, saved, signedIn }: { job: JobCardData; saved: boo
           {reasons.map((r) => (
             <li key={r.text} className={r.positive ? "text-accent" : "text-warn"}>
               {r.positive ? "↑ " : "↓ "}
-              {r.text}
+              {reasonText(r, locale)}
             </li>
           ))}
         </ul>
@@ -62,7 +65,7 @@ export function JobCard({ job, saved, signedIn }: { job: JobCardData; saved: boo
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
         {signedIn ? <JobActions jobId={job.id} saved={saved} compact /> : <span />}
         <Link href={`/jobs/${job.id}`} className="text-sm font-medium text-ink hover:underline hover:underline-offset-4">
-          View &amp; apply →
+          {locale === "sv" ? "Visa och sök →" : "View & apply →"}
         </Link>
       </div>
     </article>

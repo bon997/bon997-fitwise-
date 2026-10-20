@@ -28,7 +28,7 @@ describe("personalize", () => {
     const prof = buildProfile({ ...empty, targetTitles: ["Frontend Engineer"] });
     const p = personalize(job(), prof);
     expect(p.boost).toBe(6);
-    expect(p.reasons).toEqual([{ text: "Matches a role you're targeting", positive: true }]);
+    expect(p.reasons).toEqual([{ text: "Matches a role you're targeting", positive: true, code: "target_role" }]);
     expect(personalize(job({ title: "Frontend Developer" }), prof).boost).toBe(6);
     expect(personalize(job({ title: "Data Engineer" }), prof).boost).toBe(0);
   });
@@ -37,7 +37,7 @@ describe("personalize", () => {
     const liked = [{ job: job({ title: "Frontend Developer", company: "Other" }), weight: 3 }];
     const p = personalize(job({ title: "Lead Frontend Developer" }), buildProfile({ ...empty, liked }));
     expect(p.boost).toBeGreaterThan(0);
-    expect(p.reasons).toContainEqual({ text: "Similar to jobs you saved or applied to", positive: true });
+    expect(p.reasons).toContainEqual({ text: "Similar to jobs you saved or applied to", positive: true, code: "similar_saved" });
     const unrelated = personalize(job({ title: "Payroll Specialist", skills: [{ name: "Excel", required: true }] }), buildProfile({ ...empty, liked }));
     expect(unrelated.boost).toBe(0);
   });
@@ -78,8 +78,8 @@ describe("personalize", () => {
     const liked = [{ job: job({ title: "Frontend Developer" }), weight: 3 }];
     const p = personalize(job({ title: "Junior Frontend Developer", salary_max: 400_000 }), buildProfile({ ...empty, salaryMin: 600_000, liked }));
     expect(p.reasons).toEqual([
-      { text: "Similar to jobs you saved or applied to", positive: true },
-      { text: "Pays below your minimum salary", positive: false },
+      { text: "Similar to jobs you saved or applied to", positive: true, code: "similar_saved" },
+      { text: "Pays below your minimum salary", positive: false, code: "below_salary" },
     ]);
   });
 
@@ -100,5 +100,13 @@ describe("personalize", () => {
     expect(p.boost).toBe(-MAX_BOOST);
     expect(forYouScore(10, p.boost)).toBe(0);
     expect(forYouScore(95, MAX_BOOST)).toBe(100);
+  });
+});
+
+describe("reasons in Swedish", () => {
+  it("translates coded reasons and keeps place names", async () => {
+    const { reasonText } = await import("@/lib/format");
+    expect(reasonText({ text: "x", code: "passed_city", arg: "Göteborg" }, "sv")).toBe("Du har valt bort jobb i Göteborg");
+    expect(reasonText({ text: "Matches a role you're targeting", code: "target_role" }, "en")).toBe("Matches a role you're targeting");
   });
 });

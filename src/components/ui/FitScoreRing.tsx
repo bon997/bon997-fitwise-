@@ -33,7 +33,7 @@ export function FitScoreRing({ score, size = 72, stroke = 6, label = "fit" }: Pr
         <span className="block text-lg font-semibold tabular-nums">{score}</span>
         <span className="text-[10px] uppercase tracking-wider text-muted">{label}</span>
       </div>
-      <span className="sr-only">{`Fit score ${score} out of 100`}</span>
+      <span className="sr-only">{label === "match" ? `Matchningspoäng ${score} av 100` : `Fit score ${score} out of 100`}</span>
     </div>
   );
 }
