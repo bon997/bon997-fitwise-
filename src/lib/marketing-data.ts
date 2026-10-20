@@ -3,16 +3,6 @@ import { defineT } from "@/i18n/config";
 
 export const MARKETING = defineT({
   en: {
-    exampleJob: {
-      title: "Senior Product Designer",
-      company: "Northwind Labs",
-      location: "Stockholm · Hybrid",
-      salary: "65–78k SEK / mo",
-      posted: "2 days ago",
-      score: 87,
-      matched: ["Figma", "Design systems", "User research", "Prototyping"],
-      missing: ["Motion design"],
-    },
     /** Short promises shown under the hero. */
     promises: ["Free during beta", "No credit card", "Your resume is never sold", "Delete your data any time"],
     /** Facts about how the product works (not usage claims, which we can't back up yet). */
@@ -35,16 +25,6 @@ export const MARKETING = defineT({
     ],
   },
   sv: {
-    exampleJob: {
-      title: "Senior produktdesigner",
-      company: "Northwind Labs",
-      location: "Stockholm · Hybrid",
-      salary: "65–78 tkr / mån",
-      posted: "för 2 dagar sedan",
-      score: 87,
-      matched: ["Figma", "Designsystem", "Användarresearch", "Prototyper"],
-      missing: ["Motion design"],
-    },
     promises: ["Gratis under beta", "Inget kreditkort", "Ditt CV säljs aldrig", "Radera din data när du vill"],
     stats: [
       { value: "5", label: "faktorer bakom varje matchningspoäng" },

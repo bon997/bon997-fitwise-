@@ -1,5 +1,5 @@
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { JobCardPreview } from "./JobCardPreview";
+import { HeroDemo } from "./HeroDemo";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 
@@ -48,7 +48,7 @@ export async function Hero() {
         <p className="mt-4 text-xs text-muted">{t.note}</p>
       </div>
       <div className="md:pl-6">
-        <JobCardPreview />
+        <HeroDemo />
       </div>
     </section>
   );
