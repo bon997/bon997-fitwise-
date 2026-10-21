@@ -391,7 +391,13 @@ function Radio({ name, value, label, checked }: { name: string; value: string; l
   );
 }
 
-const fold = (s: string) => s.toLocaleLowerCase("sv").normalize("NFD").replace(/[̀-ͯ]/g, "");
+const loose = (s: string) => s.toLocaleLowerCase("sv").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+// é = e always, but å, ä and ö are letters of their own in Swedish:
+const strict = (s: string) =>
+  s.toLocaleLowerCase("sv").replace(/[^åäö]/g, (c) => c.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+/** Type "ös" → Österåker, not Osby. Type "malmo" (no å/ä/ö on the keyboard) → still Malmö. */
+const searchMatch = (text: string, query: string) =>
+  /[åäö]/i.test(query) ? strict(text).includes(strict(query)) : loose(text).includes(loose(query));
 
 function PlacePicker({ places, selected, t }: { places: JobFacets["places"]; selected: string[]; t: (typeof T)["sv"] }) {
   const [find, setFind] = useState("");
@@ -433,11 +439,11 @@ function PlacePicker({ places, selected, t }: { places: JobFacets["places"]; sel
   }, [places, selected]);
 
   const isSel = (v: string) => selected.some((s) => s.toLowerCase() === v.toLowerCase());
-  const f = fold(find.trim());
+  const f = find.trim();
   const visible = groups
     .map((g) => {
-      const regionHit = !f || (g.region && fold(g.region).includes(f));
-      const towns = regionHit ? g.towns : g.towns.filter(([town]) => fold(town).includes(f));
+      const regionHit = !f || (g.region && searchMatch(g.region, f));
+      const towns = regionHit ? g.towns : g.towns.filter(([town]) => searchMatch(town, f));
       return { ...g, towns, show: regionHit || towns.length > 0 };
     })
     .filter((g) => g.show);
@@ -510,8 +516,8 @@ function SkillPicker({
   // A chosen skill that no longer appears in any ad stays in the list so it can be unticked.
   for (const s of sel) if (!mine.includes(s) && !popular.includes(s)) popular.unshift(s);
 
-  const f = fold(find.trim());
-  const match = (s: string) => !f || fold(s).includes(f) || fold(skillLabel(s)).includes(f);
+  const f = find.trim();
+  const match = (s: string) => !f || searchMatch(s, f) || searchMatch(skillLabel(s), f);
   const mineShown = mine.filter(match);
   const popularShown = popular.filter(match);
   const hidden = [...sel].filter((s) => !mineShown.includes(s) && !popularShown.includes(s));
