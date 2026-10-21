@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { skillLabel } from "@/lib/format";
 import { useLocale } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
+import { DrivePicker, type DriveConfig } from "./DrivePicker";
 
 const T = defineT({
   en: {
@@ -37,7 +38,8 @@ const T = defineT({
     skillsNote: "— the most important input for your fit score",
     remove: (s: string) => `Remove ${s}`,
     noSkills: "No skills yet.",
-    addPh: "Add skills, e.g. React, SQL, Figma",
+    addPh: "Add more skills (optional), e.g. Excel, SQL",
+    addPhNew: "Add your skills, e.g. Excel, SQL",
     addLabel: "Add skills",
     add: "Add",
     looking: "What you're looking for",
@@ -83,7 +85,8 @@ const T = defineT({
     skillsNote: "— det viktigaste för din matchningspoäng",
     remove: (s: string) => `Ta bort ${s}`,
     noSkills: "Inga kompetenser än.",
-    addPh: "Lägg till kompetenser, t.ex. Excel, SAP, inköp",
+    addPh: "Lägg till fler kompetenser (valfritt), t.ex. Excel, SAP",
+    addPhNew: "Lägg till dina kompetenser, t.ex. Excel, SAP",
     addLabel: "Lägg till kompetenser",
     add: "Lägg till",
     looking: "Vad du letar efter",
@@ -112,7 +115,7 @@ type Profile = {
 const list = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 const field = "w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ink/40";
 
-export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResume: boolean }) {
+export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; hasResume: boolean; drive?: DriveConfig | null }) {
   const t = T[useLocale()];
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -257,6 +260,14 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
             accept=".pdf,.docx,.doc,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
             onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         </label>
+        {drive && (
+          <DrivePicker
+            config={drive}
+            disabled={uploading}
+            onFile={upload}
+            onError={(text) => setUploadMsg({ kind: "err", text })}
+          />
+        )}
         {uploadMsg && (
           <p role={uploadMsg.kind === "err" ? "alert" : "status"} className={`mt-3 text-sm ${uploadMsg.kind === "ok" ? "text-accent" : "text-warn"}`}>
             {uploadMsg.text}
@@ -317,7 +328,7 @@ export function ProfileForm({ initial, hasResume }: { initial: Profile; hasResum
           <div className="mt-2 flex gap-2">
             <input value={skillInput} onChange={(e) => setSkillInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addSkills(skillInput); } }}
-              placeholder={t.addPh} aria-label={t.addLabel} className={field} />
+              placeholder={skills.length ? t.addPh : t.addPhNew} aria-label={t.addLabel} className={field} />
             <button type="button" onClick={() => addSkills(skillInput)} className="rounded-xl border border-ink/20 px-4 text-sm hover:border-ink/50">{t.add}</button>
           </div>
         </div>

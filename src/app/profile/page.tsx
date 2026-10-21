@@ -32,6 +32,14 @@ export async function generateMetadata() {
   return { title: T[await getLocale()].meta };
 }
 
+/** The Google Drive button appears only once its three settings exist in Vercel. */
+function driveConfig() {
+  const apiKey = process.env.GOOGLE_PICKER_API_KEY?.trim();
+  const appId = process.env.GOOGLE_PROJECT_NUMBER?.trim();
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  return apiKey && appId && clientId ? { apiKey, appId, clientId } : null;
+}
+
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?returnTo=/profile");
@@ -59,6 +67,7 @@ export default async function ProfilePage() {
         <div className="mt-8">
           <ProfileForm
             hasResume={Boolean(user.resume_text)}
+            drive={driveConfig()}
             initial={{
               name: user.name,
               skills: user.skills,
