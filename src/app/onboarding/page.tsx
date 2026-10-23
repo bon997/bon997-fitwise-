@@ -35,6 +35,7 @@ export default async function OnboardingPage() {
     jobTypes: p.job_types ?? [],
     mode: p.work_mode ?? null,
     locations: p.locations ?? [],
+    salaryMinYear: p.salary_min ?? null,
   };
 
   return <OnboardingFlow initial={initial} towns={towns.map((t) => t.town)} drive={driveConfig()} />;

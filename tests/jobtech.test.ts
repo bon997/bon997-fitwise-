@@ -35,3 +35,18 @@ describe("Platsbanken mapping", () => {
     expect(jobTechEmployment(null, null)).toBeNull();
   });
 });
+
+import { parseSwedishSalary } from "@/lib/sources/jobtech";
+describe("parseSwedishSalary", () => {
+  it("turns monthly kronor into yearly", () => {
+    expect(parseSwedishSalary("30 000 – 35 000 kr/mån")).toEqual({ salaryMin: 360000, salaryMax: 420000, salaryCurrency: "SEK" });
+    expect(parseSwedishSalary("Månadslön 28000 kr")).toMatchObject({ salaryMin: 336000, salaryMax: 336000 });
+    expect(parseSwedishSalary("32 tkr i månaden")).toMatchObject({ salaryMin: 384000 });
+  });
+  it("keeps yearly amounts and ignores text without numbers or hourly pay", () => {
+    expect(parseSwedishSalary("Årslön 480 000 kr")).toMatchObject({ salaryMin: 480000 });
+    expect(parseSwedishSalary("Fast månadslön")).toMatchObject({ salaryMin: null });
+    expect(parseSwedishSalary("150 kr/timme")).toMatchObject({ salaryMin: null });
+    expect(parseSwedishSalary(null)).toMatchObject({ salaryMin: null });
+  });
+});

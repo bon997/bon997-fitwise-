@@ -19,7 +19,10 @@ type Challenge = "no_reply" | "time" | "fit" | "start";
 type Level = "entry" | "mid" | "senior" | "lead" | "unsure";
 type JobType = "full_time" | "part_time" | "contract";
 type Mode = "remote" | "hybrid" | "onsite";
-type Step = "status" | "challenge" | "why" | "titles" | "level" | "levelInfo" | "types" | "mode" | "places" | "resume";
+type Step = "status" | "challenge" | "why" | "titles" | "level" | "levelInfo" | "types" | "mode" | "places" | "salary" | "review" | "resume" | "plan";
+/** Screens that explain rather than ask; they are not counted as questions. */
+const INFO_STEPS: Step[] = ["why", "levelInfo", "review", "plan"];
+const SALARY_PRESETS = [25000, 30000, 35000, 40000, 50000];
 
 const LEVEL_TO_SENIORITY: Record<Level, string | null> = { entry: "junior", mid: "mid", senior: "senior", lead: "lead", unsure: null };
 
@@ -87,6 +90,41 @@ const T = defineT({
       tooBig: "That file is too big. Upload a CV under 4 MB.",
       failed: (s: number) => `Upload failed (error ${s}). Try again, or skip for now.`,
     },
+    salary: {
+      q: "What's the lowest monthly salary you'd accept?",
+      sub: "Before tax, in SEK per month.",
+      label: "Minimum salary (SEK / month)",
+      kr: (n: number) => `${n.toLocaleString("sv-SE")} kr`,
+      note: "Many Swedish ads don't state a salary. This only moves jobs that do: ads paying less go down in \"For you\".",
+      skip: "Skip, salary doesn't decide for me",
+    },
+    review: {
+      q: "Almost there!",
+      sub: "Check your answers. Tap Edit to change one.",
+      edit: "Edit",
+      titles: "Jobs you're looking for",
+      level: "Experience level",
+      types: "Employment",
+      mode: "Way of working",
+      places: "Where",
+      salary: "Minimum salary",
+      none: "Not chosen",
+      anywhere: "Anywhere in Sweden",
+      perMonth: (n: number) => `${n.toLocaleString("sv-SE")} kr / month`,
+      counting: "Counting matching jobs…",
+      count: (n: number) => (n === 1 ? "1 open job matches your answers right now" : `${n.toLocaleString("sv-SE")} open jobs match your answers right now`),
+      zero: "No open jobs match all your answers right now. New jobs arrive every day, and you can widen your choices on the Jobs page.",
+      newest: "Newest:",
+      save: "Save and continue",
+    },
+    plan: {
+      q: "You're all set. Here's what happens next",
+      today: ["Today", "See your matches", "Every job gets a match score against your profile, with the skills you have and the ones you're missing."],
+      week: ["This week", "Apply where you fit", "Save jobs you like, and get a first-draft cover letter in Swedish or English. You read it, adjust it and send it yourself."],
+      later: ["Ongoing", "Keep track", "Mark jobs as applied and follow every application on your Overview. Your ranking learns from what you save and pass on."],
+      cta: "Show my matches",
+      ctaNoCv: "Browse jobs",
+    },
     saveFailed: "Couldn't save your answers. Check your connection and try again.",
   },
   sv: {
@@ -152,6 +190,41 @@ const T = defineT({
       tooBig: "Filen är för stor. Ladda upp ett CV under 4 MB.",
       failed: (s: number) => `Uppladdningen misslyckades (fel ${s}). Försök igen eller hoppa över.`,
     },
+    salary: {
+      q: "Vilken är den lägsta månadslön du kan tänka dig?",
+      sub: "Före skatt, i kronor per månad.",
+      label: "Lägsta lön (kr / månad)",
+      kr: (n: number) => `${n.toLocaleString("sv-SE")} kr`,
+      note: "Många svenska annonser anger ingen lön. Det här påverkar bara de som gör det: annonser med lägre lön flyttas ner i ”För dig”.",
+      skip: "Hoppa över, lönen avgör inte för mig",
+    },
+    review: {
+      q: "Nästan klart!",
+      sub: "Kontrollera dina svar. Tryck på Ändra för att byta.",
+      edit: "Ändra",
+      titles: "Jobb du letar efter",
+      level: "Erfarenhetsnivå",
+      types: "Anställningsform",
+      mode: "Arbetssätt",
+      places: "Var",
+      salary: "Lägsta lön",
+      none: "Inte valt",
+      anywhere: "Hela Sverige",
+      perMonth: (n: number) => `${n.toLocaleString("sv-SE")} kr / månad`,
+      counting: "Räknar matchande jobb…",
+      count: (n: number) => (n === 1 ? "1 ledigt jobb matchar dina svar just nu" : `${n.toLocaleString("sv-SE")} lediga jobb matchar dina svar just nu`),
+      zero: "Inga lediga jobb matchar alla dina svar just nu. Nya jobb kommer varje dag, och du kan bredda dina val på Jobb-sidan.",
+      newest: "Senaste:",
+      save: "Spara och fortsätt",
+    },
+    plan: {
+      q: "Klart! Så här går det vidare",
+      today: ["Idag", "Se dina matchningar", "Varje jobb får en matchningspoäng mot din profil, med kompetenserna du har och dem som saknas."],
+      week: ["Den här veckan", "Sök där du passar", "Spara jobb du gillar och få ett första utkast till personligt brev på svenska eller engelska. Du läser, justerar och skickar själv."],
+      later: ["Framöver", "Håll koll", "Markera jobb som sökta och följ varje ansökan i din Översikt. Din ranking lär sig av vad du sparar och väljer bort."],
+      cta: "Visa mina matchningar",
+      ctaNoCv: "Bläddra bland jobb",
+    },
     saveFailed: "Det gick inte att spara dina svar. Kontrollera anslutningen och försök igen.",
   },
 });
@@ -163,6 +236,8 @@ export type OnboardingInitial = {
   jobTypes: string[];
   mode: Mode | null;
   locations: string[];
+  /** Stored per year; asked per month. */
+  salaryMinYear: number | null;
 };
 
 export function OnboardingFlow({
@@ -187,17 +262,30 @@ export function OnboardingFlow({
   );
   const [mode, setMode] = useState<Mode | null>(initial.mode);
   const [places, setPlaces] = useState<string[] | "anywhere">(initial.locations.length ? initial.locations : []);
+  const [salary, setSalary] = useState<number | null>(initial.salaryMinYear ? Math.round(initial.salaryMinYear / 12) : null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
 
   const steps: Step[] = useMemo(
     () =>
-      ["status", "challenge", "why", "titles", "level", "levelInfo", "types", "mode", ...(mode === "remote" ? [] : ["places" as const]), "resume"] as Step[],
+      ["status", "challenge", "why", "titles", "level", "levelInfo", "types", "mode", ...(mode === "remote" ? [] : ["places" as const]), "salary", "review", "resume", "plan"] as Step[],
     [mode],
   );
   const [i, setI] = useState(0);
   const step = steps[Math.min(i, steps.length - 1)];
-  const next = () => setI((n) => Math.min(n + 1, steps.length - 1));
+  // After "Edit" on the review screen, answering goes straight back to the review.
+  const next = () => {
+    if (editing) {
+      setEditing(false);
+      setI(steps.indexOf("review"));
+    } else setI((n) => Math.min(n + 1, steps.length - 1));
+  };
+  const edit = (target: Step) => {
+    setEditing(true);
+    setI(steps.indexOf(target));
+  };
   const back = () => setI((n) => Math.max(0, n - 1));
   // Choosing a single answer moves on after a short beat, so the tick is seen.
   const pickThenNext = <V,>(set: (v: V) => void, v: V) => {
@@ -227,6 +315,7 @@ export function OnboardingFlow({
           remote_only: mode === "remote",
           locations: mode === "remote" || places === "anywhere" ? [] : places.slice(0, 10),
           search_status: status,
+          salary_min: salary ? salary * 12 : null,
           onboarded: true,
         },
       }),
@@ -239,7 +328,7 @@ export function OnboardingFlow({
     setError(null);
     try {
       await save();
-      next();
+      setI(steps.indexOf("resume"));
     } catch {
       setError(t.saveFailed);
     } finally {
@@ -253,8 +342,8 @@ export function OnboardingFlow({
   };
 
   const progress = Math.round(((i + 1) / steps.length) * 100);
-  const questionNo = steps.slice(0, i + 1).filter((s) => !["why", "levelInfo"].includes(s)).length;
-  const questionCount = steps.filter((s) => !["why", "levelInfo"].includes(s)).length;
+  const questionNo = steps.slice(0, i + 1).filter((s) => !INFO_STEPS.includes(s)).length;
+  const questionCount = steps.filter((s) => !INFO_STEPS.includes(s)).length;
 
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
@@ -281,7 +370,7 @@ export function OnboardingFlow({
 
       <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-16 pt-10 sm:pt-14">
         <div ref={top} tabIndex={-1} className="outline-none">
-          {!["why", "levelInfo"].includes(step) && <p className="text-center text-xs font-medium uppercase tracking-wider text-muted">{t.step(questionNo, questionCount)}</p>}
+          {!INFO_STEPS.includes(step) && <p className="text-center text-xs font-medium uppercase tracking-wider text-muted">{t.step(questionNo, questionCount)}</p>}
 
           {step === "status" && (
             <Question title={t.status.q} sub={t.status.sub}>
@@ -345,31 +434,50 @@ export function OnboardingFlow({
           )}
 
           {step === "places" && (
-            <PlacesStep t={t} towns={towns} places={places} setPlaces={setPlaces} saving={saving} onNext={toResume} />
+            <PlacesStep t={t} towns={towns} places={places} setPlaces={setPlaces} saving={saving} onNext={next} />
           )}
-          {step === "resume" && <ResumeStep t={t} drive={drive} onDone={() => finish()} onSkip={() => finish("/jobs")} />}
+          {step === "salary" && <SalaryStep t={t} salary={salary} setSalary={setSalary} onNext={next} />}
+          {step === "review" && (
+            <ReviewStep
+              t={t}
+              titles={titles}
+              level={level ? t.level[level][0] : null}
+              types={types === "any" ? [t.types.any] : (types ?? []).map((x) => t.types[x])}
+              mode={mode ? t.mode[mode] : null}
+              places={mode === "remote" ? null : places}
+              salary={salary}
+              query={{
+                titles: titles.flatMap((x) => {
+                  const o = TITLE_OPTIONS.find((y) => y.sv === x || y.en === x);
+                  return o ? [o.sv, o.en] : [x];
+                }),
+                places: mode === "remote" || places === "anywhere" ? [] : places,
+                types: types === "any" || !types ? [] : types,
+                remote: mode === "remote",
+              }}
+              saving={saving}
+              onEdit={edit}
+              onNext={toResume}
+            />
+          )}
+          {step === "resume" && (
+            <ResumeStep
+              t={t}
+              drive={drive}
+              onDone={() => {
+                setUploaded(true);
+                next();
+              }}
+              onSkip={next}
+            />
+          )}
+          {step === "plan" && <PlanStep t={t} cta={uploaded ? t.plan.cta : t.plan.ctaNoCv} onNext={() => finish(uploaded ? "/dashboard" : "/jobs")} />}
 
           {error && <p role="alert" className="mt-4 text-center text-sm text-warn">{error}</p>}
         </div>
       </main>
-      <SaveWhenRemote active={step === "resume" && mode === "remote"} save={save} onError={() => setError(t.saveFailed)} />
     </div>
   );
-}
-
-/** Remote users skip "places", whose Continue normally saves; save once on reaching the CV step. */
-function SaveWhenRemote({ active, save, onError }: { active: boolean; save: () => Promise<void>; onError: () => void }) {
-  const done = useRef(false);
-  useEffect(() => {
-    if (active && !done.current) {
-      done.current = true;
-      save().catch(() => {
-        done.current = false;
-        onError();
-      });
-    }
-  }, [active, save, onError]);
-  return null;
 }
 
 function Question({ title, sub, note, children }: { title: string; sub?: string; note?: string; children: React.ReactNode }) {
@@ -693,5 +801,178 @@ function ResumeStep({ t, drive, onDone, onSkip }: { t: Tx; drive: DriveConfig | 
       </button>
       <p className="text-center text-xs text-muted">{t.resume.note}</p>
     </Question>
+  );
+}
+
+function SalaryStep({ t, salary, setSalary, onNext }: { t: Tx; salary: number | null; setSalary: (v: number | null) => void; onNext: () => void }) {
+  const [text, setText] = useState(salary ? String(salary) : "");
+  const set = (v: string) => {
+    const digits = v.replace(/\D/g, "").slice(0, 7);
+    setText(digits);
+    setSalary(digits ? Number(digits) : null);
+  };
+  return (
+    <Question title={t.salary.q} sub={t.salary.sub} note={t.salary.note}>
+      <ul className="flex flex-wrap justify-center gap-2">
+        {SALARY_PRESETS.map((n) => (
+          <li key={n}>
+            <button
+              type="button"
+              aria-pressed={salary === n}
+              onClick={() => set(String(n))}
+              className={`rounded-full border px-4 py-2 text-sm font-medium tabular-nums ${
+                salary === n ? "border-accent bg-accent-soft text-accent" : "border-line bg-white hover:border-ink/40"
+              }`}
+            >
+              {t.salary.kr(n)}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <label className="block pt-2">
+        <span className="text-sm font-medium">{t.salary.label}</span>
+        <div className="mt-2 flex items-center rounded-2xl border border-line bg-white px-4 focus-within:border-ink/40">
+          <input
+            inputMode="numeric"
+            value={text ? Number(text).toLocaleString("sv-SE") : ""}
+            onChange={(e) => set(e.target.value)}
+            placeholder="32 000"
+            className="min-w-0 flex-1 bg-transparent py-3.5 text-lg tabular-nums outline-none placeholder:text-muted"
+          />
+          <span className="text-sm text-muted">kr / mån</span>
+        </div>
+      </label>
+      <Continue label={t.cont} disabled={!salary} onClick={onNext} />
+      <button
+        type="button"
+        onClick={() => {
+          set("");
+          onNext();
+        }}
+        className="w-full py-2 text-sm text-ink-2 underline underline-offset-2 hover:text-ink"
+      >
+        {t.salary.skip}
+      </button>
+    </Question>
+  );
+}
+
+type Preview = { count: number; examples: { id: string; title: string; company: string; location: string | null }[] };
+
+function ReviewStep({
+  t,
+  titles,
+  level,
+  types,
+  mode,
+  places,
+  salary,
+  query,
+  saving,
+  onEdit,
+  onNext,
+}: {
+  t: Tx;
+  titles: string[];
+  level: string | null;
+  types: string[];
+  mode: string | null;
+  places: string[] | "anywhere" | null;
+  salary: number | null;
+  query: { titles: string[]; places: string[]; types: string[]; remote: boolean };
+  saving: boolean;
+  onEdit: (s: Step) => void;
+  onNext: () => void;
+}) {
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const key = JSON.stringify(query);
+  useEffect(() => {
+    let live = true;
+    setPreview(null);
+    fetch("/api/onboarding/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: key })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => live && setPreview(d ?? { count: -1, examples: [] }))
+      .catch(() => live && setPreview({ count: -1, examples: [] }));
+    return () => {
+      live = false;
+    };
+  }, [key]);
+
+  const rows: { step: Step; label: string; value: string }[] = [
+    { step: "titles", label: t.review.titles, value: titles.join(" · ") || t.review.none },
+    { step: "level", label: t.review.level, value: level ?? t.review.none },
+    { step: "types", label: t.review.types, value: types.join(", ") || t.review.none },
+    { step: "mode", label: t.review.mode, value: mode ?? t.review.none },
+    ...(places === null ? [] : [{ step: "places" as Step, label: t.review.places, value: places === "anywhere" ? t.review.anywhere : places.join(", ") || t.review.none }]),
+    { step: "salary", label: t.review.salary, value: salary ? t.review.perMonth(salary) : t.review.none },
+  ];
+
+  return (
+    <section>
+      <h1 className="text-center font-display text-3xl leading-tight sm:text-4xl">{t.review.q}</h1>
+      <p className="mt-2 text-center text-ink-2">{t.review.sub}</p>
+
+      <div aria-live="polite" className="mt-6 rounded-2xl border border-accent/30 bg-accent-soft/50 p-4">
+        {!preview ? (
+          <p className="flex items-center gap-2 text-sm text-ink-2">
+            <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+            {t.review.counting}
+          </p>
+        ) : preview.count > 0 ? (
+          <>
+            <p className="font-semibold text-accent">{t.review.count(preview.count)}</p>
+            <p className="mt-2 text-xs font-medium uppercase tracking-wider text-muted">{t.review.newest}</p>
+            <ul className="mt-1 space-y-1 text-sm">
+              {preview.examples.map((e) => (
+                <li key={e.id} className="truncate">
+                  <span className="font-medium">{e.title}</span>
+                  <span className="text-muted"> · {e.company}{e.location ? ` · ${e.location.split(",")[0]}` : ""}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : preview.count === 0 ? (
+          <p className="text-sm text-ink-2">{t.review.zero}</p>
+        ) : null}
+      </div>
+
+      <dl className="mt-6 divide-y divide-line rounded-2xl border border-line bg-white">
+        {rows.map((r) => (
+          <div key={r.step} className="flex items-start justify-between gap-3 px-4 py-3.5">
+            <div className="min-w-0">
+              <dt className="text-xs font-semibold uppercase tracking-wider text-muted">{r.label}</dt>
+              <dd className="mt-1">{r.value}</dd>
+            </div>
+            <button type="button" onClick={() => onEdit(r.step)} className="shrink-0 text-sm text-accent underline underline-offset-2">
+              {t.review.edit}
+            </button>
+          </div>
+        ))}
+      </dl>
+      <Continue label={t.review.save} disabled={saving} onClick={onNext} />
+    </section>
+  );
+}
+
+function PlanStep({ t, cta, onNext }: { t: Tx; cta: string; onNext: () => void }) {
+  const items = [t.plan.today, t.plan.week, t.plan.later];
+  return (
+    <section>
+      <h1 className="text-center font-display text-3xl leading-tight sm:text-4xl">{t.plan.q}</h1>
+      <ol className="mt-8">
+        {items.map(([when, title, body], k) => (
+          <li key={when} className="relative flex gap-4 pb-7 last:pb-0">
+            {k < items.length - 1 && <span aria-hidden className="absolute left-[7px] top-5 h-full w-0.5 bg-line" />}
+            <span aria-hidden className={`relative mt-1 h-4 w-4 shrink-0 rounded-full ${k === 0 ? "bg-accent" : "border-2 border-line bg-paper"}`} />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-accent">{when}</p>
+              <p className="mt-1 font-semibold">{title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-ink-2">{body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <Continue label={cta} onClick={onNext} />
+    </section>
   );
 }

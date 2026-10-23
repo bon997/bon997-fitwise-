@@ -63,9 +63,7 @@ export function mapJobTechHit(h: JobTechHit): RawJob {
     requirements,
     responsibilities: [],
     salaryRange: h.salary_description?.trim() || null,
-    salaryMin: null,
-    salaryMax: null,
-    salaryCurrency: null,
+    ...parseSwedishSalary(h.salary_description),
     applyUrl: h.application_details?.url || h.webpage_url || null,
     postedAt: h.publication_date ? new Date(h.publication_date) : null,
   };
@@ -80,4 +78,25 @@ export function jobTechEmployment(hours?: string | null, kind?: string | null): 
   if (h.includes("heltid")) return "full_time";
   if (h.includes("deltid")) return "part_time";
   return null;
+}
+
+/**
+ * Numbers in a Swedish salary text → yearly SEK, so they compare with the user's minimum.
+ * "30 000 – 35 000 kr/mån" → 360 000–420 000. "Fast månadslön" (no number) → nothing.
+ * Hourly pay is skipped: hours per year vary too much to convert honestly.
+ */
+export function parseSwedishSalary(text?: string | null): { salaryMin: number | null; salaryMax: number | null; salaryCurrency: string | null } {
+  const none = { salaryMin: null, salaryMax: null, salaryCurrency: null };
+  if (!text) return none;
+  const t = text.toLowerCase().replace(/\u00a0/g, " ");
+  if (/tim(me|lön)|\/\s*h\b|per timme/.test(t)) return none;
+  // "30 000", "28000", or a short number followed by k / tkr / tusen ("32 tkr"); the k in "kr" is not "thousand".
+  const nums = [...t.matchAll(/(\d{1,3}(?:[ .]\d{3})+|\d{4,7}|\d{1,3}(?=\s*(?:k|tkr|tusen)\b))(?:\s*(k|tkr|tusen)\b)?/g)]
+    .map((m) => Number(m[1].replace(/[ .]/g, "")) * (m[2] ? 1000 : 1))
+    .filter((n) => n >= 10_000 && n <= 3_000_000);
+  if (nums.length === 0) return none;
+  const yearly = /år|annual|per year/.test(t) && !/mån/.test(t);
+  const toYear = (n: number) => (yearly || n > 200_000 ? n : n * 12);
+  const vals = nums.slice(0, 2).map(toYear);
+  return { salaryMin: Math.min(...vals), salaryMax: Math.max(...vals), salaryCurrency: "SEK" };
 }
