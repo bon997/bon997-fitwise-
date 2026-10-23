@@ -6,6 +6,7 @@ import { useLocale } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
 import { labels, skillLabel } from "@/lib/format";
 import type { JobFacets } from "@/lib/job-search";
+import { searchMatch } from "@/lib/search-match";
 
 const REGION = "r:";
 
@@ -390,14 +391,6 @@ function Radio({ name, value, label, checked }: { name: string; value: string; l
     </label>
   );
 }
-
-const loose = (s: string) => s.toLocaleLowerCase("sv").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-// é = e always, but å, ä and ö are letters of their own in Swedish:
-const strict = (s: string) =>
-  s.toLocaleLowerCase("sv").replace(/[^åäö]/g, (c) => c.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
-/** Type "ös" → Österåker, not Osby. Type "malmo" (no å/ä/ö on the keyboard) → still Malmö. */
-const searchMatch = (text: string, query: string) =>
-  /[åäö]/i.test(query) ? strict(text).includes(strict(query)) : loose(text).includes(loose(query));
 
 function PlacePicker({ places, selected, t }: { places: JobFacets["places"]; selected: string[]; t: (typeof T)["sv"] }) {
   const [find, setFind] = useState("");

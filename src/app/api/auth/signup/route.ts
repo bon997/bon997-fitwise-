@@ -49,7 +49,7 @@ export const POST = route(async (req: Request) => {
   );
   if (!user) throw new HttpError(409, say(req, "This email already has an account. Sign in instead.", "Den här e-postadressen har redan ett konto. Logga in i stället."));
 
-  // New accounts have no profile yet, so send them to set one up.
+  // New accounts start with the short onboarding questions.
   const dest = safeReturnTo(body.returnTo);
-  return startSession(req, user.id, dest === "/dashboard" ? "/profile" : dest);
+  return startSession(req, user.id, dest === "/dashboard" ? "/onboarding" : dest);
 });

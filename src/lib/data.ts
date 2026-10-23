@@ -23,7 +23,17 @@ export type UserRow = {
   experience: ExperienceItem[];
   years_experience: string | null; // pg returns numeric as string
   seniority: Seniority | null;
-  preferences: { locations?: string[]; remote_only?: boolean; target_titles?: string[]; salary_min?: number | null; suggested_roles?: string[] };
+  preferences: {
+    locations?: string[];
+    remote_only?: boolean;
+    target_titles?: string[];
+    salary_min?: number | null;
+    suggested_roles?: string[];
+    job_types?: string[];
+    work_mode?: "remote" | "hybrid" | "onsite" | null;
+    search_status?: "urgent" | "exploring" | "switching" | "open" | null;
+    onboarded?: boolean;
+  };
   resume_score: number | null;
   email_verified_at: Date | null;
   profile_updated_at: Date | null;

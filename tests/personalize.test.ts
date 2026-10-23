@@ -110,3 +110,28 @@ describe("reasons in Swedish", () => {
     expect(reasonText({ text: "Matches a role you're targeting", code: "target_role" }, "en")).toBe("Matches a role you're targeting");
   });
 });
+
+describe("job type preference", () => {
+  const base = { title: "Lagerarbetare", company: "Acme", location: "Malmö", seniority: null, skills: [], salary_min: null, salary_max: null };
+  const prof = buildProfile({ targetTitles: [], salaryMin: null, liked: [], dismissed: [], jobTypes: ["full_time"] });
+
+  it("nudges up jobs of a chosen type and down the others, with a reason", () => {
+    const yes = personalize({ ...base, employment_type: "full_time" }, prof);
+    const no = personalize({ ...base, employment_type: "part_time" }, prof);
+    expect(yes.boost).toBe(2);
+    expect(no.boost).toBe(-5);
+    expect(no.reasons[0]).toMatchObject({ code: "job_type_other", arg: "part_time", positive: false });
+  });
+
+  it("does nothing when the user chose no type or the job's type is unknown", () => {
+    const none = buildProfile({ targetTitles: [], salaryMin: null, liked: [], dismissed: [] });
+    expect(personalize({ ...base, employment_type: "part_time" }, none).boost).toBe(0);
+    expect(personalize({ ...base, employment_type: null }, prof).boost).toBe(0);
+  });
+
+  it("matches Swedish target titles with å ä ö as whole words", () => {
+    const p = buildProfile({ targetTitles: ["Inköpare"], salaryMin: null, liked: [], dismissed: [] });
+    expect(personalize({ ...base, title: "Inköpare till Volvo" }, p).reasons[0]?.code).toBe("target_role");
+    expect(personalize({ ...base, title: "Ink pare" }, p).reasons).toHaveLength(0);
+  });
+});

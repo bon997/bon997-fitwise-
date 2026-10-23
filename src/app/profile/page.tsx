@@ -17,6 +17,7 @@ const T = defineT({
     newIntro: "Two minutes here makes every match more accurate.",
     intro: "Everything here shapes your fit scores and your \"For you\" ranking.",
     signOut: "Sign out",
+    retake: "Answer the quick questions again",
   },
   sv: {
     meta: "Din profil — Fitwise",
@@ -25,6 +26,7 @@ const T = defineT({
     newIntro: "Två minuter här gör varje matchning mer träffsäker.",
     intro: "Allt här påverkar dina matchningspoäng och din ”För dig”-ranking.",
     signOut: "Logga ut",
+    retake: "Svara på snabbfrågorna igen",
   },
 });
 
@@ -56,6 +58,7 @@ export default async function ProfilePage() {
             <p className="mt-2 text-ink-2">
               {isNew ? t.newIntro : t.intro}
             </p>
+            <a href="/onboarding" className="mt-2 inline-block text-sm text-accent underline underline-offset-2">{t.retake}</a>
           </div>
           {user.resume_score != null && (
             <div className="shrink-0 text-center">

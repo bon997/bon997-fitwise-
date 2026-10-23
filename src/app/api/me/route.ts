@@ -23,6 +23,10 @@ const Patch = z
         remote_only: z.boolean(),
         target_titles: z.array(z.string().max(100)).max(10),
         salary_min: z.number().int().min(0).nullable(),
+        job_types: z.array(z.enum(["full_time", "part_time", "contract", "internship"])).max(4),
+        work_mode: z.enum(["remote", "hybrid", "onsite"]).nullable(),
+        search_status: z.enum(["urgent", "exploring", "switching", "open"]).nullable(),
+        onboarded: z.boolean(),
       })
       .partial(),
   })

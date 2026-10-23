@@ -30,15 +30,17 @@ export type SignalJob = {
 export type UserSignals = {
   targetTitles: string[];
   salaryMin: number | null;
+  /** Employment types the user wants (full_time, part_time, contract, internship); empty = any. */
+  jobTypes?: string[];
   liked: { job: SignalJob; weight: number }[]; // applied = 3, saved = 2
   dismissed: { job: SignalJob; reason: DismissReason }[];
 };
 
-export type PersonalJob = SignalJob & { salary_min: number | null; salary_max: number | null };
+export type PersonalJob = SignalJob & { salary_min: number | null; salary_max: number | null; employment_type?: string | null };
 
 export type ReasonCode =
   | "hidden_company" | "target_role" | "similar_saved" | "below_salary" | "meets_salary"
-  | "dismissed_role" | "passed_city" | "passed_level";
+  | "dismissed_role" | "passed_city" | "passed_level" | "job_type_match" | "job_type_other";
 /** `text` is English; `code` + `arg` let the UI show the reason in any language. */
 export type Reason = { text: string; positive: boolean; code?: ReasonCode; arg?: string };
 export type Personalization = { boost: number; reasons: Reason[]; hidden: boolean };
@@ -63,7 +65,7 @@ export function titleTokens(title: string): Set<string> {
     .replace(/\bfull[\s-]stack\b/g, "fullstack");
   return new Set(
     t
-      .split(/[^a-z0-9+#.]+/)
+      .split(/[^a-z0-9åäöéü+#.]+/)
       .map((t) => t.replace(/^\.+|\.+$/g, ""))
       .filter((t) => t.length > 1 && !STOP.has(t))
       .map((t) => TITLE_SYNONYMS[t] ?? t),
@@ -174,6 +176,18 @@ export function personalize(job: PersonalJob, p: PersonalProfile): Personalizati
   if (job.seniority && (p.badSeniority.get(job.seniority) ?? 0) >= 2) {
     boost -= 6;
     down("passed_level", `You've passed on ${job.seniority}-level roles`, job.seniority);
+  }
+
+  // 6. Employment type chosen during onboarding (explicit) — +2 / −5
+  const types = p.s.jobTypes ?? [];
+  if (types.length > 0 && job.employment_type) {
+    if (types.includes(job.employment_type)) {
+      boost += 2;
+      up("job_type_match", "The kind of employment you want");
+    } else {
+      boost -= 5;
+      down("job_type_other", `${job.employment_type.replace("_", "-")}, not the kind of job you chose`, job.employment_type);
+    }
   }
 
   return { boost: Math.max(-MAX_BOOST, Math.min(MAX_BOOST, boost)), reasons, hidden: false };

@@ -78,6 +78,9 @@ export default async function DashboardPage() {
   const locale = await getLocale();
   const t = T[locale];
 
+  // New users (email or Google) answer the onboarding questions first, once.
+  if (!hasProfile(user) && !user.preferences?.onboarded) redirect("/onboarding");
+
   if (!hasProfile(user)) {
     return (
       <>

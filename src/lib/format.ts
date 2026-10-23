@@ -77,6 +77,8 @@ export function reasonText(r: { text: string; code?: string; arg?: string }, loc
     case "dismissed_role": return "Liknar roller du valt bort";
     case "passed_city": return `Du har valt bort jobb i ${r.arg}`;
     case "passed_level": return `Du har valt bort roller på nivån ${level.toLowerCase()}`;
+    case "job_type_match": return "Den anställningsform du söker";
+    case "job_type_other": return `${(LABELS.sv.type as Record<string, string>)[r.arg ?? ""] ?? r.arg}, inte den anställningsform du valt`;
     default: return r.text;
   }
 }

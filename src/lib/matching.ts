@@ -200,6 +200,7 @@ export async function personalProfile(user: UserRow): Promise<{ profile: Persona
   const profile = buildProfile({
     targetTitles: prefs.target_titles ?? [],
     salaryMin: prefs.salary_min ?? null,
+    jobTypes: prefs.job_types ?? [],
     liked: rows.filter((r) => r.kind !== "dismissed").map((r) => ({ job: r, weight: r.kind === "applied" ? 3 : 2 })),
     dismissed: rows.filter((r) => r.kind === "dismissed").map((r) => ({ job: r, reason: r.reason ?? "other" })),
   });
