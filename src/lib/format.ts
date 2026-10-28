@@ -46,7 +46,7 @@ export const TYPE_LABEL = LABELS.en.type;
 export const STATUS_LABEL = LABELS.en.status;
 export const BREAKDOWN_LABEL = LABELS.en.breakdown;
 
-const ACRONYMS = new Set(["sap", "erp", "wms", "tms", "kpi", "kpis", "crm", "iso", "bi", "api", "hr", "it", "qa", "ux", "ui", "seo", "gdpr", "b2b", "b2c", "edi", "mrp", "plm", "aws", "gcp", "sla", "rfq", "rfp", "3pl", "fmcg", "vba", "ai", "ml"]);
+const ACRONYMS = new Set(["sap", "erp", "wms", "tms", "kpi", "kpis", "crm", "iso", "bi", "api", "hr", "it", "qa", "ux", "ui", "seo", "gdpr", "b2b", "b2c", "edi", "mrp", "plm", "aws", "gcp", "sla", "rfq", "rfp", "3pl", "fmcg", "vba", "ai", "ml", "css", "html", "php", "xml", "json", "ios", "sas", "spss", "gis", "cad", "plc", "hvac", "etl", "nlp", "cms", "itil", "pmp", "ifrs", "gaap", "aml", "kyc"]);
 
 /** Capitalize normalized skill names for display ("next.js" stays, "react" → "React"). */
 export function skillLabel(s: string): string {

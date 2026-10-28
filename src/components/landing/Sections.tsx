@@ -115,12 +115,12 @@ export async function Footer() {
     <footer className="border-t border-line">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <p>© {new Date().getFullYear()} Fitwise</p>
-        <ul className="flex flex-wrap gap-x-6 gap-y-2">
-          <li><Link href="/jobs" className="hover:text-ink">{t.jobs}</Link></li>
-          <li><Link href="/pricing" className="hover:text-ink">{t.pricing}</Link></li>
-          <li><Link href="/faq" className="hover:text-ink">{t.faq}</Link></li>
-          <li><Link href="/privacy" className="hover:text-ink">{t.privacy}</Link></li>
-          <li><Link href="/terms" className="hover:text-ink">{t.terms}</Link></li>
+        <ul className="-my-2 flex flex-wrap gap-x-6">
+          <li><Link href="/jobs" className="inline-block py-2 hover:text-ink">{t.jobs}</Link></li>
+          <li><Link href="/pricing" className="inline-block py-2 hover:text-ink">{t.pricing}</Link></li>
+          <li><Link href="/faq" className="inline-block py-2 hover:text-ink">{t.faq}</Link></li>
+          <li><Link href="/privacy" className="inline-block py-2 hover:text-ink">{t.privacy}</Link></li>
+          <li><Link href="/terms" className="inline-block py-2 hover:text-ink">{t.terms}</Link></li>
         </ul>
       </div>
     </footer>

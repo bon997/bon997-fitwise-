@@ -6,6 +6,7 @@ import { sql } from "@/lib/db";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Footer } from "@/components/landing/Sections";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
+import { computeResumeScore } from "@/lib/ai/fit-score";
 import { JobCard } from "@/components/jobs/JobCard";
 import { StatusSelect } from "@/components/dashboard/StatusSelect";
 import { labels, skillLabel, timeAgo } from "@/lib/format";
@@ -130,17 +131,21 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
         <h1 className="font-display text-4xl sm:text-5xl">{t.hi(first)}</h1>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="flex items-center gap-4 rounded-2xl border border-line bg-white p-5">
-            <FitScoreRing score={user.resume_score ?? 0} size={64} label="/ 100" />
+        <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className="col-span-3 flex items-center gap-4 rounded-2xl border border-line bg-white p-5 lg:col-span-1">
+            <FitScoreRing
+              score={user.resume_score ?? computeResumeScore({ skills: user.skills, experience: user.experience, yearsExperience: user.years_experience == null ? null : Number(user.years_experience) })}
+              size={64}
+              label="/ 100"
+            />
             <div>
               <p className="text-sm font-medium">{t.strength}</p>
               <Link href="/profile" className="text-xs text-accent underline underline-offset-2">{t.improve}</Link>
             </div>
           </div>
           {PIPELINE.map((s) => (
-            <div key={s} className="rounded-2xl border border-line bg-white p-5">
-              <p className="text-sm text-muted">{labels(locale).status[s]}</p>
+            <div key={s} className="min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-5">
+              <p className="truncate text-xs text-muted sm:text-sm">{labels(locale).status[s]}</p>
               <p className="mt-1 font-display text-4xl tabular-nums">{count(s)}</p>
             </div>
           ))}

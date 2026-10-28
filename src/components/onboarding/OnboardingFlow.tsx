@@ -604,7 +604,7 @@ function TitlesStep({ t, titles, setTitles, onNext }: { t: Tx; titles: string[];
     <Question title={t.titles.q}>
       <div>
         <label htmlFor="title-q" className="text-sm font-medium">{t.titles.label}</label>
-        <div className="mt-2 flex items-center gap-2 rounded-2xl border border-line bg-white px-4 focus-within:border-ink/40">
+        <div className="mt-2 flex items-center gap-2 rounded-2xl border border-line bg-white px-4 focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-accent-soft">
           <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth={2}>
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-4-4" strokeLinecap="round" />
@@ -831,7 +831,7 @@ function SalaryStep({ t, salary, setSalary, onNext }: { t: Tx; salary: number | 
       </ul>
       <label className="block pt-2">
         <span className="text-sm font-medium">{t.salary.label}</span>
-        <div className="mt-2 flex items-center rounded-2xl border border-line bg-white px-4 focus-within:border-ink/40">
+        <div className="mt-2 flex items-center rounded-2xl border border-line bg-white px-4 focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-accent-soft">
           <input
             inputMode="numeric"
             value={text ? Number(text).toLocaleString("sv-SE") : ""}

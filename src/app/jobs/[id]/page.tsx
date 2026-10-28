@@ -14,6 +14,7 @@ import { ApplyWithAI } from "@/components/jobs/ApplyWithAI";
 import { labels, postedAgo, reasonText, skillLabel } from "@/lib/format";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 const T = defineT({
   en: {
@@ -32,6 +33,7 @@ const T = defineT({
     signInRest: "to see your fit score and apply with AI.",
     open: "Open application page ↗",
     fit: "fit",
+    at: (title: string, company: string) => `${title} at ${company}`,
   },
   sv: {
     years: (n: number) => `${n}+ års erfarenhet`,
@@ -49,10 +51,37 @@ const T = defineT({
     signInRest: "för att se din matchningspoäng och söka med AI.",
     open: "Öppna ansökningssidan ↗",
     fit: "match",
+    at: (title: string, company: string) => `${title} hos ${company}`,
   },
 });
 
 type Props = { params: Promise<{ id: string }> };
+
+// schema.org's names for our employment types.
+const SCHEMA_TYPE: Record<string, string> = { full_time: "FULL_TIME", part_time: "PART_TIME", contract: "CONTRACTOR", internship: "INTERN" };
+
+/** One line of plain text from a job ad, for search results and link previews. */
+const snippet = (text: string, max = 155) => {
+  const flat = text.replace(/\s+/g, " ").trim();
+  return flat.length <= max ? flat : `${flat.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
+};
+
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params;
+  if (!UUID.test(id)) return {};
+  const [job, locale] = await Promise.all([getJob(id), getLocale()]);
+  if (!job) return {};
+  const title = `${T[locale].at(job.title, job.company)} — Fitwise`;
+  const description = snippet([job.location, job.salary_range, job.description || job.requirements].filter(Boolean).join(" · "));
+  // A page's openGraph replaces the site-wide one, so the shared image is named again here.
+  const images = ["/opengraph-image"];
+  return {
+    title,
+    description,
+    openGraph: { type: "website", siteName: "Fitwise", title, description, images },
+    twitter: { card: "summary_large_image", title, description, images },
+  };
+}
 
 export default async function JobPage({ params }: Props) {
   const { id } = await params;
@@ -90,6 +119,22 @@ export default async function JobPage({ params }: Props) {
     <>
       <AppHeader user={user} active="/jobs" />
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6">
+        {job.is_active && (
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "JobPosting",
+              title: job.title,
+              description: [job.requirements, job.description].filter(Boolean).join("\n\n") || job.title,
+              datePosted: (job.posted_at ?? job.created_at).toISOString(),
+              hiringOrganization: { "@type": "Organization", name: job.company },
+              ...(job.location ? { jobLocation: { "@type": "Place", address: { "@type": "PostalAddress", addressLocality: job.location, addressCountry: "SE" } } } : {}),
+              ...(job.remote ? { jobLocationType: "TELECOMMUTE", applicantLocationRequirements: { "@type": "Country", name: "Sweden" } } : {}),
+              ...(job.employment_type && SCHEMA_TYPE[job.employment_type] ? { employmentType: SCHEMA_TYPE[job.employment_type] } : {}),
+              directApply: false,
+            }}
+          />
+        )}
         <Link href="/jobs" className="text-sm text-muted hover:text-ink">{t.all}</Link>
 
         <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_380px]">

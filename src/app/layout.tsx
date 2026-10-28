@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
+import { siteUrl } from "@/components/seo/JsonLd";
 
 const META = defineT({
   en: {
@@ -33,8 +34,18 @@ const instrumentSerif = localFont({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  return META[await getLocale()];
+  const locale = await getLocale();
+  const { title, description } = META[locale];
+  return {
+    metadataBase: new URL(siteUrl()),
+    title,
+    description,
+    openGraph: { type: "website", siteName: "Fitwise", title, description, locale: locale === "sv" ? "sv_SE" : "en_GB" },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
+
+export const viewport: Viewport = { themeColor: "#1d6b52" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();

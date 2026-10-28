@@ -28,7 +28,7 @@ export async function Hero() {
   const t = T[await getLocale()];
   return (
     <section className="mx-auto grid max-w-6xl items-center gap-14 px-4 pb-20 pt-14 sm:px-6 md:grid-cols-[1.1fr_1fr] md:pt-24">
-      <div>
+      <div className="min-w-0">
         <p className="inline-flex items-center gap-2 rounded-full border border-line bg-white/60 px-3 py-1 text-xs text-ink-2">
           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
           {t.badge}
@@ -47,7 +47,7 @@ export async function Hero() {
         </div>
         <p className="mt-4 text-xs text-muted">{t.note}</p>
       </div>
-      <div className="md:pl-6">
+      <div className="min-w-0 md:pl-6">
         <HeroDemo />
       </div>
     </section>
