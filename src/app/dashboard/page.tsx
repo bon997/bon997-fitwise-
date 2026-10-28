@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { Footer } from "@/components/landing/Sections";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { computeResumeScore } from "@/lib/ai/fit-score";
+import { emailConfigured } from "@/lib/email";
 import { JobCard } from "@/components/jobs/JobCard";
 import { StatusSelect } from "@/components/dashboard/StatusSelect";
 import { labels, skillLabel, timeAgo } from "@/lib/format";
@@ -38,6 +39,11 @@ const T = defineT({
     jobs: (n: number) => `${n} job${n === 1 ? "" : "s"}`,
     saved: "Saved jobs",
     savedEmpty: "Tap ☆ Save on any job to keep it here.",
+    report: "Activity report for Arbetsförmedlingen →",
+    confirm: "Confirm your email to get your best new matches by email each week.",
+    confirmLink: "Set up job alerts →",
+    invite: "Want your best new matches by email once a week?",
+    inviteLink: "Turn on job alerts →",
   },
   sv: {
     meta: "Översikt — Fitwise",
@@ -63,6 +69,11 @@ const T = defineT({
     jobs: (n: number) => `${n} jobb`,
     saved: "Sparade jobb",
     savedEmpty: "Tryck på ☆ Spara på ett jobb för att samla det här.",
+    report: "Aktivitetsrapport till Arbetsförmedlingen →",
+    confirm: "Bekräfta din e-post så får du dina bästa nya matchningar med mejl varje vecka.",
+    confirmLink: "Ställ in jobbtips →",
+    invite: "Vill du få dina bästa nya matchningar med mejl en gång i veckan?",
+    inviteLink: "Slå på jobbtips →",
   },
 });
 
@@ -130,6 +141,13 @@ export default async function DashboardPage() {
       <AppHeader user={user} active="/dashboard" />
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
         <h1 className="font-display text-4xl sm:text-5xl">{t.hi(first)}</h1>
+        {emailConfigured() && (user.job_alerts ? !user.email_verified_at : !user.job_alert_checked_at) && (
+          // Alerts on but address unconfirmed, or an account from before alerts existed that hasn't chosen yet.
+          <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink-2">
+            {user.job_alerts ? t.confirm : t.invite}
+            <Link href="/profile#alerts-heading" className="font-medium text-accent hover:underline">{user.job_alerts ? t.confirmLink : t.inviteLink}</Link>
+          </p>
+        )}
 
         <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4">
           <div className="col-span-3 flex items-center gap-4 rounded-2xl border border-line bg-white p-5 lg:col-span-1">
@@ -188,6 +206,11 @@ export default async function DashboardPage() {
                     </li>
                   ))}
                 </ul>
+              )}
+              {applications.some((a) => a.status !== "draft") && (
+                <Link href="/activity-report" className="mt-3 inline-block border-t border-line pt-3 text-sm font-medium text-accent hover:underline">
+                  {t.report}
+                </Link>
               )}
             </section>
 

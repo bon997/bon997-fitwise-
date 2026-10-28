@@ -36,6 +36,10 @@ export type UserRow = {
   };
   resume_score: number | null;
   email_verified_at: Date | null;
+  job_alerts: boolean;
+  job_alert_checked_at: Date | null;
+  alerts_token: string;
+  locale: "sv" | "en" | null;
   profile_updated_at: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -86,7 +90,7 @@ export const JOB_LIST_COLUMNS = `j.id, j.title, j.company, j.location, j.remote,
   j.salary_range, j.salary_min, j.salary_max, j.salary_currency, j.posted_at, j.skills, j.apply_url, j.source`;
 
 export function publicUser(u: UserRow) {
-  const { password_hash: _p, google_id: _g, resume_text: _t, ...rest } = u;
+  const { password_hash: _p, google_id: _g, resume_text: _t, alerts_token: _a, ...rest } = u;
   return { ...rest, years_experience: num(u.years_experience) };
 }
 

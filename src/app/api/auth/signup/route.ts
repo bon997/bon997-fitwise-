@@ -1,11 +1,14 @@
+import { after } from "next/server";
 import { z } from "zod";
 import { route, readJson, HttpError } from "@/lib/http";
 import { one } from "@/lib/db";
 import { hashPassword, passwordProblem } from "@/lib/password";
-import { safeReturnTo } from "@/lib/google-oauth";
+import { appUrl, safeReturnTo } from "@/lib/google-oauth";
 import { assertSameOrigin, startSession } from "@/lib/auth-forms";
 import { clientIp, isLockedOut, recordFailure } from "@/lib/rate-limit";
 import { say, localeFromRequest } from "@/i18n/server";
+import { emailConfigured } from "@/lib/email";
+import { sendVerification } from "@/lib/email-verify";
 
 const Body = z.object({
   name: z.string().trim().min(1, "Enter your name").max(120),
@@ -48,6 +51,12 @@ export const POST = route(async (req: Request) => {
     [body.name, body.email, await hashPassword(body.password)],
   );
   if (!user) throw new HttpError(409, say(req, "This email already has an account. Sign in instead.", "Den här e-postadressen har redan ett konto. Logga in i stället."));
+
+  // Ask the new user to confirm their address; job alerts only go to confirmed ones.
+  if (emailConfigured()) {
+    const [base, locale] = [appUrl(req), localeFromRequest(req)];
+    after(() => sendVerification({ id: user.id, name: body.name, email: body.email }, base, locale).catch((e) => console.error("verification email failed", e)));
+  }
 
   // New accounts start with the short onboarding questions.
   const dest = safeReturnTo(body.returnTo);

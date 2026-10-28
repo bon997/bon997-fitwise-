@@ -6,6 +6,7 @@ import { EmailAuthForm } from "./EmailAuthForm";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
+import { emailConfigured } from "@/lib/email";
 
 const T = defineT({
   en: {
@@ -27,6 +28,7 @@ const T = defineT({
     and: "and",
     privacy: "Privacy Policy",
     googleNote: "With Google, we only read your name and email address.",
+    alertsNote: "New accounts get a weekly email with the best new jobs for them; turn it off any time.",
   },
   sv: {
     errors: {
@@ -47,6 +49,7 @@ const T = defineT({
     and: "och vår",
     privacy: "integritetspolicy",
     googleNote: "Med Google läser vi bara ditt namn och din e-postadress.",
+    alertsNote: "Nya konton får ett veckomejl med de bästa nya jobben för dem; stäng av när du vill.",
   },
 });
 
@@ -105,7 +108,7 @@ export async function AuthPage({ searchParams, mode = "signin" }: Props) {
 
         <p className="mt-6 text-center text-xs leading-relaxed text-muted">
           {t.agree} <Link href="/terms" className="underline underline-offset-2">{t.terms}</Link> {t.and}{" "}
-          <Link href="/privacy" className="underline underline-offset-2">{t.privacy}</Link>. {t.googleNote}
+          <Link href="/privacy" className="underline underline-offset-2">{t.privacy}</Link>. {t.googleNote}{mode === "signup" && emailConfigured() && <> {t.alertsNote}</>}
         </p>
       </div>
     </main>

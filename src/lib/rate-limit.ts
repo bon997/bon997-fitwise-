@@ -33,3 +33,11 @@ export async function recordFailure(email: string, ip: string): Promise<void> {
 export async function clearFailures(email: string): Promise<void> {
   await sql("DELETE FROM login_attempts WHERE email = $1", [email]);
 }
+
+/**
+ * Count a request toward the per-IP limit only, e.g. a password-reset request,
+ * which says nothing about whether that email's password is under attack.
+ */
+export async function recordIpAttempt(ip: string): Promise<void> {
+  await sql("INSERT INTO login_attempts (email, ip) VALUES (NULL, $1)", [ip]);
+}

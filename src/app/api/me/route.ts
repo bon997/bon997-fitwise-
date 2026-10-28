@@ -29,6 +29,7 @@ const Patch = z
         onboarded: z.boolean(),
       })
       .partial(),
+    job_alerts: z.boolean(),
   })
   .partial()
   .strict();
@@ -49,7 +50,8 @@ export const PATCH = route(async (req: Request) => {
 
   const updated = await one<UserRow>(
     `UPDATE users SET name = $2, skills = $3, years_experience = $4, seniority = $5, preferences = $6,
-       resume_score = $7, profile_updated_at = CASE WHEN $8 THEN now() ELSE profile_updated_at END
+       resume_score = $7, profile_updated_at = CASE WHEN $8 THEN now() ELSE profile_updated_at END,
+       job_alerts = coalesce($9, job_alerts)
      WHERE id = $1 RETURNING *`,
     [
       user.id,
@@ -60,6 +62,7 @@ export const PATCH = route(async (req: Request) => {
       JSON.stringify(prefs),
       computeResumeScore({ skills, experience: user.experience, yearsExperience: years }),
       affectsMatching,
+      body.job_alerts ?? null,
     ],
   );
   return ok({ user: publicUser(updated!) });

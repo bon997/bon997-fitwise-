@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useLocale } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
 
@@ -17,7 +18,7 @@ const T = defineT({
     show: "Show",
     min: "At least 10 characters.",
     wait: "Please wait…",
-    forgot: "Forgot your password? If it's a Gmail address, use “Continue with Google” above.",
+    forgot: "Forgot your password?",
     needName: "Enter your name.",
     badEmail: "Enter a valid email address.",
   },
@@ -33,7 +34,7 @@ const T = defineT({
     show: "Visa",
     min: "Minst 10 tecken.",
     wait: "Vänta…",
-    forgot: "Glömt lösenordet? Om det är en Gmail-adress, använd ”Fortsätt med Google” ovan.",
+    forgot: "Glömt lösenordet?",
     needName: "Skriv ditt namn.",
     badEmail: "Skriv en giltig e-postadress.",
   },
@@ -144,8 +145,8 @@ export function EmailAuthForm({ initialMode, returnTo }: { initialMode: Mode; re
       </button>
 
       {mode === "signin" && (
-        <p className="text-center text-xs text-muted">
-          {t.forgot}
+        <p className="text-center text-sm">
+          <Link href="/forgot-password" className="text-muted underline underline-offset-2 hover:text-ink">{t.forgot}</Link>
         </p>
       )}
     </form>

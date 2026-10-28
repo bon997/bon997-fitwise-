@@ -60,6 +60,7 @@ export default async function PrivacyPage() {
               <tr><td>Supabase</td><td>Databas (EU, Irland)</td><td>All konto- och profildata</td></tr>
               <tr><td>Anthropic</td><td>AI som läser CV:n och skriver personliga brev</td><td>CV-text, profil, jobbtext</td></tr>
               <tr><td>Google</td><td>Inloggning med ”Fortsätt med Google”</td><td>Namn och e-post</td></tr>
+              <tr><td>Resend (om aktiverat)</td><td>Skickar e-post: återställning av lösenord och jobbtips (som du kan stänga av)</td><td>E-postadress, namn, jobben i mejlet</td></tr>
               <tr><td>Pinecone (om aktiverat)</td><td>Matchning på innehåll</td><td>Sammanfattning av profilen</td></tr>
               <tr><td>Arbetsförmedlingen (JobTech)</td><td>Hämtar offentliga jobbannonser i Sverige</td><td>Inga personuppgifter</td></tr>
               <tr><td>SerpApi</td><td>Hämtar offentliga jobbannonser</td><td>Inga personuppgifter</td></tr>
@@ -142,6 +143,7 @@ export default async function PrivacyPage() {
             <tr><td>Supabase</td><td>Database (EU, Ireland)</td><td>All account and profile data</td></tr>
             <tr><td>Anthropic</td><td>AI that reads resumes and writes cover letters</td><td>Resume text, profile, job text</td></tr>
             <tr><td>Google</td><td>&ldquo;Continue with Google&rdquo; sign-in</td><td>Name and email</td></tr>
+            <tr><td>Resend (if enabled)</td><td>Sending email: password resets and job alerts (which you can turn off)</td><td>Email address, name, the jobs in the email</td></tr>
             <tr><td>Pinecone (if enabled)</td><td>Matching by meaning</td><td>Profile summary text</td></tr>
             <tr><td>Arbetsförmedlingen (JobTech)</td><td>Collecting public job listings in Sweden</td><td>No personal data</td></tr>
             <tr><td>SerpApi</td><td>Collecting public job listings</td><td>No personal data</td></tr>

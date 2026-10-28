@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { after } from "next/server";
+import { sql } from "@/lib/db";
 import type { UserRow } from "@/lib/data";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
@@ -10,7 +12,10 @@ const T = defineT({
 });
 
 export async function AppHeader({ user, active }: { user: UserRow | null; active?: string }) {
-  const t = T[await getLocale()];
+  const locale = await getLocale();
+  const t = T[locale];
+  // Emails (job alerts, password resets) follow the language the person uses the site in.
+  if (user && user.locale !== locale) after(() => sql("UPDATE users SET locale = $2 WHERE id = $1", [user.id, locale]));
   const nav = [
     { href: "/dashboard", label: t.dashboard, icon: ICONS.dashboard },
     { href: "/jobs", label: t.jobs, icon: ICONS.jobs },

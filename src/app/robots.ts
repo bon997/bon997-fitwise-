@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Signed-in and internal pages have nothing for search engines.
-      disallow: ["/api/", "/admin", "/dashboard", "/profile", "/onboarding"],
+      disallow: ["/api/", "/admin", "/dashboard", "/profile", "/onboarding", "/activity-report", "/reset-password", "/verify-email", "/unsubscribe"],
     },
     sitemap: `${siteUrl()}/sitemap.xml`,
   };
