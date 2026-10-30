@@ -223,5 +223,8 @@ describe("supply-chain skill matching", () => {
     expect(skillLabel("power bi")).toBe("Power BI");
     expect(skillLabel("s&op")).toBe("S&OP");
     expect(skillLabel("warehouse management")).toBe("Warehouse Management");
+    expect(skillLabel("css")).toBe("CSS");
+    expect(skillLabel("tailwind css")).toBe("Tailwind CSS");
+    expect(skillLabel("html")).toBe("HTML");
   });
 });

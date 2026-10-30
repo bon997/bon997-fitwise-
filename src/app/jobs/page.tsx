@@ -111,10 +111,10 @@ export default async function JobsPage({ searchParams }: { searchParams: SP }) {
           </p>
         )}
 
-        <p className="mt-6 text-sm text-muted" aria-live="polite">
+        <h2 className="mt-6 text-sm font-normal text-muted" aria-live="polite">
           {result.total === 0 ? t.none : t.count(result.total)}
           {params.sort === "for_you" && result.total > 0 && t.rankedForYou}
-        </p>
+        </h2>
 
         {result.total === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-line p-10 text-center text-ink-2">

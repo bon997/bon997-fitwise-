@@ -38,3 +38,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse, [class*="animate-[loadbar"] { animation: none; }
 }
+
+/* Phones: leave room for the signed-in bottom tab bar (AppHeader). */
+@media (max-width: 639px) {
+  body:has(#app-tabbar) {
+    --tabbar-h: calc(3.5rem + 1px + env(safe-area-inset-bottom));
+    padding-bottom: var(--tabbar-h);
+  }
+}

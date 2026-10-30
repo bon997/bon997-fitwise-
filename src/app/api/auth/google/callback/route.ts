@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { OAUTH_COOKIE, OAuthError, appUrl, exchangeCode, readOAuthCookie, upsertGoogleUser } from "@/lib/google-oauth";
 import { SESSION_COOKIE, SESSION_DAYS, cookieOptions, createSession, readCookie } from "@/lib/session";
+import { rememberLocale } from "@/lib/auth-forms";
 
 const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
   try {
     const profile = await exchangeCode(req, code, saved.verifier);
     const user = await upsertGoogleUser(profile);
-    const token = await createSession(user.id, req.headers.get("user-agent"));
+    const [token] = await Promise.all([createSession(user.id, req.headers.get("user-agent")), rememberLocale(req, user.id)]);
 
     const res = NextResponse.redirect(`${base}${saved.returnTo}`);
     res.cookies.set(SESSION_COOKIE, token, cookieOptions(SESSION_DAYS * 86_400));

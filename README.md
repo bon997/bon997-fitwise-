@@ -65,7 +65,27 @@ Weekly matches come from Pinecone nearest neighbours plus any recent job that sh
 - [ ] In Vercel, set `CONTACT_EMAIL` and `OPERATOR_NAME` (shown on the Privacy and Terms pages)
 - [ ] Have the Privacy Policy and Terms reviewed by someone qualified. They are a solid starting point, not legal advice.
 - [ ] Add real testimonials to `src/lib/marketing-data.ts` once users give permission. The section stays hidden until then.
-- [ ] Password reset by email needs an email service (e.g. Resend). Until then, Gmail users can sign in with Google.
+- [ ] Turn on email (password reset, email confirmation, weekly job alerts): see "Email" below.
+
+## Email
+
+Password reset, email confirmation and weekly job alerts send email through [Resend](https://resend.com) (free for 3,000 emails a month). Until it's set up, those features say they're unavailable and nothing else changes.
+
+1. Create a Resend account. Under **Domains**, add your domain, choose the **EU (Ireland)** region, and add the DNS records it shows you.
+2. Under **API Keys**, create a key with "Sending access".
+3. In Vercel, under **Settings → Environment Variables**, add:
+   - `RESEND_API_KEY`: the key
+   - `EMAIL_FROM`: e.g. `Fitwise <hej@yourdomain.se>` (must be on the verified domain)
+   - `CRON_SECRET`: any long random string (Vercel sends it to the scheduled job)
+4. Run the latest `db/schema.sql` in Supabase, then redeploy.
+
+**Job alerts** run daily at 06:00 UTC (`vercel.json`). Each run emails the people who haven't had an alert for a week: up to 5 jobs posted since their last one, with fit 55 or more, leaving out jobs they already saved or applied to. A week with nothing good sends nothing. Alerts go only to confirmed addresses (Google sign-in, or the link sent at sign-up), each email has a one-click unsubscribe (also as a `List-Unsubscribe` header), and the setting is on the profile page. An admin can run it by hand by opening `/api/cron/job-alerts`.
+
+**Password reset** links work once, for an hour, and at most 3 are sent per account per hour. The answer is the same whether or not the email has an account. Using a link confirms the email address, signs out every other device and signs in.
+
+## Activity report (aktivitetsrapport)
+
+`/activity-report` lists the applications a user marked as sent in a month, with the Platsbanken ad ID when there is one, ready to copy or download as a CSV that opens in Excel. It defaults to last month during the 1st–14th reporting window. Fitwise isn't connected to Arbetsförmedlingen and never sends anything itself.
 
 ## Email + password sign-in
 
@@ -103,7 +123,7 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 | `GET /api/jobs/:id` | optional | Job details, plus fit, saved and application state. |
 | `POST /api/jobs/ingest` | admin or cron | `{ source: serpapi\|rapidapi, query, location?, pages? }` → fetch, upsert, extract skills, embed. |
 | `POST /api/resume` | user | multipart `file` (PDF, DOCX or TXT, ≤ 5 MB) → parsed profile, suggested roles, improvements. |
-| `GET /api/me` / `PATCH /api/me` | user | Profile. PATCH lets the user fix skills, years, seniority and preferences. |
+| `GET /api/me` / `PATCH /api/me` | user | Profile. PATCH lets the user fix skills, years, seniority, preferences and `job_alerts`. |
 | `GET /api/match` | user | Weekly matches ranked by fit, plus skill gaps, suggested roles and resume score. |
 | `POST /api/fit-score` | user | `{ job_id, explain? }` → score, matched/missing skills, breakdown. |
 | `POST /api/cover-letter` | user | `{ job_id, tone?, notes?, save? }` → letter, saved to a draft application. |
@@ -113,6 +133,9 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 | `POST\|DELETE /api/jobs/:id/dismiss` | user | "Not interested" `{ reason }` / undo. Feeds personalization. |
 | `GET /api/me/export` | user | Download all of the user's data as JSON (GDPR). |
 | `DELETE /api/me` | user | `{ confirm: "DELETE" }` permanently deletes the account and resume file (GDPR). |
+| `GET /api/applications/report?month=YYYY-MM` | user | The month's sent applications as a CSV for Arbetsförmedlingen's activity report. |
+| `GET /api/cron/job-alerts` | cron or admin | Sends this run's weekly job alert emails. |
+| `POST /api/alerts/unsubscribe?t=…` | link token | Turns job alerts off (one-click unsubscribe). |
 | `GET /api/admin/stats` | admin | Totals, applications by status, ingestion runs. |
 
 **Auth:** routes read the `fw_session` cookie set at Google sign-in. For API testing in development only, `x-user-id: <uuid>` also works (seed users `…0001` user, `…0002` admin); it's ignored in production.
@@ -124,6 +147,9 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 | `GET /api/auth/google?returnTo=/path` | Redirects to Google's account picker |
 | `GET /api/auth/google/callback` | Google returns here; creates or links the user, starts a 30-day session |
 | `POST /api/auth/logout` | Ends the session |
+| `POST /api/auth/forgot` | `{ email }` emails a password reset link (same answer whether or not the account exists) |
+| `POST /api/auth/reset` | `{ token, password }` sets the new password and signs in |
+| `POST /api/auth/verify` | Sends the signed-in user a link to confirm their email |
 
 ## Sign in with Google — setup
 

@@ -208,3 +208,28 @@ CREATE TABLE IF NOT EXISTS ai_usage (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS ai_usage_user_kind ON ai_usage (user_id, kind, created_at);
+
+-- ── One-time email links (password reset, email confirmation) ──────────
+-- Like sessions, only a SHA-256 hash of each token is stored.
+CREATE TABLE IF NOT EXISTS email_tokens (
+  token_hash  text PRIMARY KEY,
+  user_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  purpose     text NOT NULL CHECK (purpose IN ('reset', 'verify')),
+  expires_at  timestamptz NOT NULL,
+  used_at     timestamptz,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS email_tokens_user ON email_tokens (user_id, purpose, created_at);
+
+-- ── Job alert emails ────────────────────────────────────────────────────
+-- Weekly, sent only to confirmed addresses. alerts_token is the key in every
+-- email's one-click "turn off" link (it can do nothing else).
+-- Accounts that existed before alerts start with them off (they never agreed to
+-- them); new accounts are told at sign-up and start with them on.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS job_alerts boolean NOT NULL DEFAULT false;
+ALTER TABLE users ALTER COLUMN job_alerts SET DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS job_alert_checked_at timestamptz;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS alerts_token text NOT NULL DEFAULT encode(gen_random_bytes(18), 'hex');
+CREATE UNIQUE INDEX IF NOT EXISTS users_alerts_token ON users (alerts_token);
+-- Language for emails: the one the person last used the site in.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locale text CHECK (locale IN ('sv', 'en'));

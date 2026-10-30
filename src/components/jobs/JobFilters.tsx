@@ -200,7 +200,7 @@ export function JobFilters({
       <label htmlFor="q" className="text-sm font-medium">
         {t.keywords}
       </label>
-      <div className="mt-2 flex overflow-hidden rounded-xl bg-white">
+      <div className="mt-2 flex overflow-hidden rounded-xl bg-white focus-within:ring-2 focus-within:ring-accent-soft focus-within:ring-offset-2 focus-within:ring-offset-ink">
         <input
           id="q"
           name="q"
@@ -208,12 +208,12 @@ export function JobFilters({
           placeholder={t.keywordsPh}
           className="min-w-0 flex-1 bg-white px-4 py-3 text-base text-ink outline-none placeholder:text-muted"
         />
-        <button className="flex shrink-0 items-center gap-2 bg-accent px-5 py-3 text-base font-medium text-paper hover:opacity-90 sm:px-8">
+        <button className="flex shrink-0 items-center gap-2 bg-accent px-4 py-3 min-[400px]:px-5 text-base font-medium text-paper hover:opacity-90 sm:px-8">
           <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-4-4" strokeLinecap="round" />
           </svg>
-          {t.search}
+          <span className="sr-only min-[400px]:not-sr-only">{t.search}</span>
         </button>
       </div>
       {values.location && <input type="hidden" name="location" value={values.location} />}

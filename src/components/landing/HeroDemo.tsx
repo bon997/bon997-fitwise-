@@ -197,7 +197,7 @@ export function HeroDemo() {
         <div className="mt-4 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wider text-muted">{job.company}</p>
-            <h3 className="mt-1 text-lg font-semibold leading-snug">{t.roles[job.id]}</h3>
+            <p className="mt-1 text-lg font-semibold leading-snug">{t.roles[job.id]}</p>
             <p className="mt-1 text-sm text-ink-2">{t.meta[job.id]}</p>
           </div>
           <div className="shrink-0">
@@ -226,7 +226,7 @@ export function HeroDemo() {
                   >
                     <span aria-hidden>{on ? "✓" : "+"}</span>
                     {t.skills[s.key]}
-                    {s.required && <span className="font-normal opacity-70">· {t.required}</span>}
+                    {s.required && <span className="font-normal">· {t.required}</span>}
                   </button>
                 </li>
               );

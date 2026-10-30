@@ -319,8 +319,8 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
             {skills.map((s) => (
               <li key={s} className="flex items-center gap-1 rounded-full bg-accent-soft py-1 pl-2.5 pr-1 text-xs font-medium text-accent">
                 {skillLabel(s)}
-                <button type="button" onClick={() => setSkills(skills.filter((k) => k !== s))} aria-label={t.remove(s)}
-                  className="grid h-4 w-4 place-items-center rounded-full hover:bg-accent/15">×</button>
+                <button type="button" onClick={() => setSkills(skills.filter((k) => k !== s))} aria-label={t.remove(skillLabel(s))}
+                  className="-my-1 grid h-6 w-6 place-items-center rounded-full text-sm hover:bg-accent/15">×</button>
               </li>
             ))}
             {skills.length === 0 && <li className="text-xs text-muted">{t.noSkills}</li>}
@@ -360,7 +360,7 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
         </div>
       </section>
 
-      <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-paper/95 px-4 py-4 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+      <div className="sticky bottom-[var(--tabbar-h,0px)] -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-paper/95 px-4 py-4 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
         <button disabled={pending || uploading} className="rounded-full bg-ink px-6 py-3 text-sm font-medium text-paper hover:bg-ink-2 disabled:opacity-60">
           {pending ? t.saving : t.save}
         </button>

@@ -6,6 +6,8 @@ import { Footer } from "@/components/landing/Sections";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { DataControls } from "@/components/profile/DataControls";
+import { AlertSettings } from "@/components/profile/AlertSettings";
+import { emailConfigured } from "@/lib/email";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 
@@ -82,6 +84,10 @@ export default async function ProfilePage() {
         </div>
 
         <div className="mt-10">
+          <AlertSettings initial={user.job_alerts} verified={Boolean(user.email_verified_at)} emailOn={emailConfigured()} />
+        </div>
+
+        <div className="mt-6">
           <DataControls />
         </div>
 
