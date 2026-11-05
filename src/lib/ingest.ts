@@ -11,7 +11,7 @@ import { extractJobSignals } from "./ai/extract-job";
 import { upsertJobs, jobEmbeddingText } from "./search/pinecone";
 import type { JobRow } from "./data";
 
-export type IngestRequest = { source: "serpapi" | "rapidapi" | "jobtech"; query: string; location?: string; pages?: number };
+export type IngestRequest = { source: "serpapi" | "rapidapi" | "jobtech"; query: string; location?: string; pages?: number; newestFirst?: boolean };
 
 async function fetchRaw(r: IngestRequest): Promise<RawJob[]> {
   const pages = Math.min(Math.max(r.pages ?? 1, 1), 5);
@@ -116,7 +116,14 @@ export async function hideDuplicateJobs(): Promise<number> {
   return rows.length;
 }
 
-export async function runIngest(r: IngestRequest) {
+export type ImportResult = { runId: string; fetched: number; inserted: number; updated: number; duplicates: number; needsEnrich: string[] };
+
+/**
+ * Fetch one search and store the jobs, without reading skills. Fast (no AI calls),
+ * so the nightly import can run many searches and read skills afterwards.
+ * Logged in ingest_runs like a manual import.
+ */
+export async function importJobs(r: IngestRequest): Promise<ImportResult> {
   const run = await one<{ id: string }>("INSERT INTO ingest_runs (source, query) VALUES ($1, $2) RETURNING id", [
     r.source,
     r.location ? `${r.query} @ ${r.location}` : r.query,
@@ -144,22 +151,30 @@ export async function runIngest(r: IngestRequest) {
       else updated++;
       if (res.changed) needsEnrich.push(res.id);
     }
-    // Also catch up on a few older jobs whose skills were never read (e.g. imported while the AI key was missing).
-    const backlog = await sql<{ id: string }>(
-      `SELECT id FROM jobs WHERE is_active AND skills = '[]'::jsonb AND NOT (id = ANY($1::uuid[]))
-       ORDER BY created_at DESC LIMIT 10`,
-      [needsEnrich],
-    );
-    const enrich = await enrichJobs([...needsEnrich, ...backlog.map((b) => b.id)]);
-    await hideDuplicateJobs();
-    // Keep the reason skills couldn't be read on the run, so it's still visible after a page reload.
-    const note = "enrich_error" in enrich && enrich.enrich_error ? `Skills not read: ${enrich.enrich_error}` : null;
-    await sql("UPDATE ingest_runs SET fetched=$2, inserted=$3, updated=$4, error=$5, finished_at=now() WHERE id=$1", [
-      run!.id, raw.length, inserted, updated, note,
+    await sql("UPDATE ingest_runs SET fetched=$2, inserted=$3, updated=$4, finished_at=now() WHERE id=$1", [
+      run!.id, raw.length, inserted, updated,
     ]);
-    return { runId: run!.id, fetched: raw.length, inserted, updated, duplicates, ...enrich };
+    return { runId: run!.id, fetched: raw.length, inserted, updated, duplicates, needsEnrich };
   } catch (e) {
     await sql("UPDATE ingest_runs SET error=$2, finished_at=now() WHERE id=$1", [run!.id, String(e).slice(0, 1000)]);
     throw e;
   }
+}
+
+/** A manual import from the admin page: fetch, store, then read skills right away. */
+export async function runIngest(r: IngestRequest) {
+  const { runId, needsEnrich, ...counts } = await importJobs(r);
+  // Also catch up on a few older jobs whose skills were never read (e.g. imported while the AI key was missing).
+  const backlog = await sql<{ id: string }>(
+    `SELECT id FROM jobs WHERE is_active AND skills = '[]'::jsonb AND NOT (id = ANY($1::uuid[]))
+     ORDER BY created_at DESC LIMIT 10`,
+    [needsEnrich],
+  );
+  const enrich = await enrichJobs([...needsEnrich, ...backlog.map((b) => b.id)]);
+  await hideDuplicateJobs();
+  // Keep the reason skills couldn't be read on the run, so it's still visible after a page reload.
+  if ("enrich_error" in enrich && enrich.enrich_error) {
+    await sql("UPDATE ingest_runs SET error=$2 WHERE id=$1", [runId, `Skills not read: ${enrich.enrich_error}`]);
+  }
+  return { runId, ...counts, ...enrich };
 }
