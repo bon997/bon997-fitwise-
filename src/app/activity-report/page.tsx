@@ -11,11 +11,11 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    meta: "Activity report — Fitwise",
+    meta: "Activity report — JobFitwise",
     back: "← Dashboard",
     title: "Activity report",
     intro:
-      "If you're registered with Arbetsförmedlingen, you report the jobs you applied for each month, between the 1st and the 14th of the following month. Here are the applications you marked as sent in Fitwise, ready to copy.",
+      "If you're registered with Arbetsförmedlingen, you report the jobs you applied for each month, between the 1st and the 14th of the following month. Here are the applications you marked as sent in JobFitwise, ready to copy.",
     prev: "← Previous month",
     next: "Next month →",
     count: (n: number) => `${n} application${n === 1 ? "" : "s"}`,
@@ -33,15 +33,15 @@ const T = defineT({
     how: "How to send it",
     step1: "Sign in at arbetsformedlingen.se and open your activity report (Aktivitetsrapport).",
     step2: "Add each application: job title, employer and date are what they ask for. The Platsbanken ad ID helps when you have it.",
-    step3: "Add any applications you sent outside Fitwise yourself; this list only knows about jobs you tracked here.",
-    note: "Fitwise isn't connected to Arbetsförmedlingen and never sends anything for you.",
+    step3: "Add any applications you sent outside JobFitwise yourself; this list only knows about jobs you tracked here.",
+    note: "JobFitwise isn't connected to Arbetsförmedlingen and never sends anything for you.",
   },
   sv: {
-    meta: "Aktivitetsrapport — Fitwise",
+    meta: "Aktivitetsrapport — JobFitwise",
     back: "← Översikt",
     title: "Aktivitetsrapport",
     intro:
-      "Är du inskriven på Arbetsförmedlingen rapporterar du varje månad vilka jobb du sökt, mellan den 1:a och 14:e månaden efter. Här är ansökningarna du markerat som skickade i Fitwise, redo att kopiera.",
+      "Är du inskriven på Arbetsförmedlingen rapporterar du varje månad vilka jobb du sökt, mellan den 1:a och 14:e månaden efter. Här är ansökningarna du markerat som skickade i JobFitwise, redo att kopiera.",
     prev: "← Förra månaden",
     next: "Nästa månad →",
     count: (n: number) => `${n} ${n === 1 ? "ansökan" : "ansökningar"}`,
@@ -59,8 +59,8 @@ const T = defineT({
     how: "Så skickar du den",
     step1: "Logga in på arbetsformedlingen.se och öppna din aktivitetsrapport.",
     step2: "Lägg till varje ansökan: tjänst, arbetsgivare och datum är det de frågar efter. Platsbankens annons-ID hjälper när det finns.",
-    step3: "Lägg själv till ansökningar du skickat utanför Fitwise; listan känner bara till jobb du följt här.",
-    note: "Fitwise är inte kopplat till Arbetsförmedlingen och skickar aldrig något åt dig.",
+    step3: "Lägg själv till ansökningar du skickat utanför JobFitwise; listan känner bara till jobb du följt här.",
+    note: "JobFitwise är inte kopplat till Arbetsförmedlingen och skickar aldrig något åt dig.",
   },
 });
 

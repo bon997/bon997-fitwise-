@@ -48,24 +48,24 @@ export async function resetPassword(token: string, password: string, locale: Loc
 
 const COPY = {
   en: {
-    subject: "Reset your Fitwise password",
+    subject: "Reset your JobFitwise password",
     pre: "Choose a new password. The link works for one hour.",
     hi: (n: string | null) => (n ? `Hi ${n},` : "Hi,"),
-    body: "Someone (hopefully you) asked to reset the password for your Fitwise account. Choose a new one here:",
+    body: "Someone (hopefully you) asked to reset the password for your JobFitwise account. Choose a new one here:",
     button: "Choose a new password",
     expiry: `The link works once, for ${RESET_MINUTES} minutes.`,
     ignore: "If you didn't ask for this, ignore this email. Your password stays the same.",
-    footer: "You got this email because a password reset was requested for this address on Fitwise.",
+    footer: "You got this email because a password reset was requested for this address on JobFitwise.",
   },
   sv: {
-    subject: "Återställ ditt lösenord på Fitwise",
+    subject: "Återställ ditt lösenord på JobFitwise",
     pre: "Välj ett nytt lösenord. Länken fungerar i en timme.",
     hi: (n: string | null) => (n ? `Hej ${n},` : "Hej,"),
-    body: "Någon (förhoppningsvis du) har bett om att återställa lösenordet till ditt Fitwise-konto. Välj ett nytt här:",
+    body: "Någon (förhoppningsvis du) har bett om att återställa lösenordet till ditt JobFitwise-konto. Välj ett nytt här:",
     button: "Välj ett nytt lösenord",
     expiry: `Länken fungerar en gång, i ${RESET_MINUTES} minuter.`,
     ignore: "Har du inte bett om detta kan du strunta i mejlet. Ditt lösenord förblir detsamma.",
-    footer: "Du får det här mejlet för att någon begärt en lösenordsåterställning för den här adressen på Fitwise.",
+    footer: "Du får det här mejlet för att någon begärt en lösenordsåterställning för den här adressen på JobFitwise.",
   },
 };
 

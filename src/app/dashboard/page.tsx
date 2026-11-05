@@ -16,7 +16,7 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    meta: "Dashboard — Fitwise",
+    meta: "Dashboard — JobFitwise",
     welcome: (n?: string) => `Welcome${n ? `, ${n}` : ""}.`,
     intro: "Add your resume or a few skills and we'll score every job against them, then learn what you like as you go.",
     step1: "Upload your resume, or type your skills.",
@@ -46,7 +46,7 @@ const T = defineT({
     inviteLink: "Turn on job alerts →",
   },
   sv: {
-    meta: "Översikt — Fitwise",
+    meta: "Översikt — JobFitwise",
     welcome: (n?: string) => `Välkommen${n ? `, ${n}` : ""}.`,
     intro: "Lägg till ditt CV eller några kompetenser så matchar vi varje jobb mot dem och lär oss vad du gillar efter hand.",
     step1: "Ladda upp ditt CV eller skriv in dina kompetenser.",

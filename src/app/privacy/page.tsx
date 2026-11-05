@@ -6,7 +6,7 @@ import { getLocale } from "@/i18n/server";
 const UPDATED = { en: "20 October 2026", sv: "20 oktober 2026" };
 
 export async function generateMetadata() {
-  return { title: (await getLocale()) === "sv" ? "Integritetspolicy — Fitwise" : "Privacy Policy — Fitwise" };
+  return { title: (await getLocale()) === "sv" ? "Integritetspolicy — JobFitwise" : "Privacy Policy — JobFitwise" };
 }
 
 export default async function PrivacyPage() {

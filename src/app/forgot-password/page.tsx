@@ -8,7 +8,7 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    meta: "Forgot password — Fitwise",
+    meta: "Forgot password — JobFitwise",
     title: "Forgot your password?",
     sub: "Enter the email you signed up with and we'll send you a link to choose a new one.",
     off: "Password reset by email isn't switched on yet.",
@@ -17,7 +17,7 @@ const T = defineT({
     back: "← Back to sign in",
   },
   sv: {
-    meta: "Glömt lösenordet — Fitwise",
+    meta: "Glömt lösenordet — JobFitwise",
     title: "Glömt lösenordet?",
     sub: "Skriv e-postadressen du registrerade dig med så skickar vi en länk där du väljer ett nytt.",
     off: "Återställning via e-post är inte påslagen än.",

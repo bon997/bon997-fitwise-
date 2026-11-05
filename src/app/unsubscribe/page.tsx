@@ -5,7 +5,7 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    meta: "Job alerts — Fitwise",
+    meta: "Job alerts — JobFitwise",
     title: "Turn off job alerts?",
     sub: "You'll stop getting the weekly email with new jobs that fit you. Your account stays as it is.",
     button: "Turn off job alerts",
@@ -14,10 +14,10 @@ const T = defineT({
     bad: "This link doesn't work",
     badSub: "It may be from an old email. Sign in and change job alerts on your profile instead.",
     profile: "Go to my profile",
-    home: "Back to Fitwise",
+    home: "Back to JobFitwise",
   },
   sv: {
-    meta: "Jobbtips — Fitwise",
+    meta: "Jobbtips — JobFitwise",
     title: "Stänga av jobbtips?",
     sub: "Du slutar få veckomejlet med nya jobb som passar dig. Ditt konto påverkas inte.",
     button: "Stäng av jobbtips",
@@ -26,7 +26,7 @@ const T = defineT({
     bad: "Länken fungerar inte",
     badSub: "Den kan komma från ett gammalt mejl. Logga in och ändra jobbtips på din profil i stället.",
     profile: "Till min profil",
-    home: "Tillbaka till Fitwise",
+    home: "Tillbaka till JobFitwise",
   },
 });
 

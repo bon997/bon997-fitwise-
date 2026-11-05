@@ -26,7 +26,7 @@ export async function Navbar() {
           <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-sm font-sans font-semibold text-paper">
             f
           </span>
-          Fitwise
+          JobFitwise
         </Link>
         <ul className="hidden items-center gap-8 text-sm text-ink-2 md:flex">
           {links.map((l) => (

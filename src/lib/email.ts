@@ -35,7 +35,7 @@ export const esc = (s: string | null | undefined) =>
   (s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 /**
- * The shared look of every Fitwise email: plain, readable in any client, with
+ * The shared look of every JobFitwise email: plain, readable in any client, with
  * inline styles only (many email apps strip <style>). `body` must already be escaped HTML.
  */
 export function emailLayout({ preheader, body, footer }: { preheader: string; body: string; footer: string }): string {
@@ -44,7 +44,7 @@ export function emailLayout({ preheader, body, footer }: { preheader: string; bo
 <span style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(preheader)}</span>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ee"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-<tr><td style="padding:0 4px 20px;font-size:20px;font-family:Georgia,serif"><span style="display:inline-block;width:26px;height:26px;line-height:26px;border-radius:13px;background:#1d6b52;color:#f5f3ee;text-align:center;font-size:14px;font-family:Arial,sans-serif;font-weight:bold;vertical-align:middle">f</span>&nbsp; Fitwise</td></tr>
+<tr><td style="padding:0 4px 20px;font-size:20px;font-family:Georgia,serif"><span style="display:inline-block;width:26px;height:26px;line-height:26px;border-radius:13px;background:#1d6b52;color:#f5f3ee;text-align:center;font-size:14px;font-family:Arial,sans-serif;font-weight:bold;vertical-align:middle">f</span>&nbsp; JobFitwise</td></tr>
 <tr><td style="background:#ffffff;border:1px solid #dcd8cf;border-radius:16px;padding:28px 24px;font-size:15px;line-height:1.55">${body}</td></tr>
 <tr><td style="padding:20px 4px;font-size:12px;line-height:1.5;color:#5c6068">${footer}</td></tr>
 </table></td></tr></table></body></html>`;

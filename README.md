@@ -1,4 +1,4 @@
-# Fitwise — AI job matching platform
+# JobFitwise — AI job matching platform
 
 Next.js (App Router) + Tailwind CSS v4 + TypeScript. Backend runs as Next.js route handlers (Node runtime), Postgres/Supabase for data, Claude API for AI, Pinecone for semantic search, SerpAPI/RapidAPI for listings.
 
@@ -75,7 +75,7 @@ Password reset, email confirmation and weekly job alerts send email through [Res
 2. Under **API Keys**, create a key with "Sending access".
 3. In Vercel, under **Settings → Environment Variables**, add:
    - `RESEND_API_KEY`: the key
-   - `EMAIL_FROM`: e.g. `Fitwise <hej@jobfitwise.se>` (must be on the verified domain)
+   - `EMAIL_FROM`: e.g. `JobFitwise <hej@jobfitwise.se>` (must be on the verified domain)
    - `CRON_SECRET`: any long random string (Vercel sends it to the scheduled job)
 4. Run the latest `db/schema.sql` in Supabase, then redeploy.
 
@@ -90,14 +90,14 @@ The domain is registered with Loopia; the site is hosted on Vercel.
 
 1. **Vercel**: Project → Settings → Domains → add `jobfitwise.se` and `www.jobfitwise.se` (redirect www to the bare domain). Vercel shows the DNS records to use.
 2. **Loopia**: Loopia Kundzon → Domäner → `jobfitwise.se` → DNS-editor. Add the records Vercel shows (usually an `A` record on `@` to `76.76.21.21` and a `CNAME` on `www` to `cname.vercel-dns.com`), and remove Loopia's default parking records for `@` and `www`.
-3. **Vercel env vars**: `APP_URL=https://jobfitwise.se`, `EMAIL_FROM=Fitwise <hej@jobfitwise.se>`.
+3. **Vercel env vars**: `APP_URL=https://jobfitwise.se`, `EMAIL_FROM=JobFitwise <hej@jobfitwise.se>`.
 4. **Google Cloud Console**: on the OAuth client, add origin `https://jobfitwise.se` and redirect URI `https://jobfitwise.se/api/auth/google/callback`.
 5. **Resend**: Domains → add `jobfitwise.se` (EU region) and add its SPF/DKIM records in the same Loopia DNS-editor.
 6. Redeploy, then test Google sign-in and a password reset email on https://jobfitwise.se.
 
 ## Activity report (aktivitetsrapport)
 
-`/activity-report` lists the applications a user marked as sent in a month, with the Platsbanken ad ID when there is one, ready to copy or download as a CSV that opens in Excel. It defaults to last month during the 1st–14th reporting window. Fitwise isn't connected to Arbetsförmedlingen and never sends anything itself.
+`/activity-report` lists the applications a user marked as sent in a month, with the Platsbanken ad ID when there is one, ready to copy or download as a CSV that opens in Excel. It defaults to last month during the 1st–14th reporting window. JobFitwise isn't connected to Arbetsförmedlingen and never sends anything itself.
 
 ## Email + password sign-in
 

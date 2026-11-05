@@ -9,8 +9,8 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    metaTitle: "FAQ — Fitwise",
-    metaDescription: "How Fitwise scores your fit, where jobs come from, what happens to your resume, and more.",
+    metaTitle: "FAQ — JobFitwise",
+    metaDescription: "How JobFitwise scores your fit, where jobs come from, what happens to your resume, and more.",
     eyebrow: "FAQ",
     title: "Questions, answered.",
     stillTitle: "Still have a question?",
@@ -19,8 +19,8 @@ const T = defineT({
     noInbox: "We're setting up a support inbox. In the meantime, everything about your data can be managed from your Profile page.",
   },
   sv: {
-    metaTitle: "Vanliga frågor — Fitwise",
-    metaDescription: "Hur Fitwise räknar ut din matchning, var jobben kommer ifrån, vad som händer med ditt CV och mer.",
+    metaTitle: "Vanliga frågor — JobFitwise",
+    metaDescription: "Hur JobFitwise räknar ut din matchning, var jobben kommer ifrån, vad som händer med ditt CV och mer.",
     eyebrow: "Vanliga frågor",
     title: "Frågor och svar.",
     stillTitle: "Har du fler frågor?",

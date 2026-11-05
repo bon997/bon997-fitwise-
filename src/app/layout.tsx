@@ -8,12 +8,12 @@ import { siteUrl } from "@/components/seo/JsonLd";
 
 const META = defineT({
   en: {
-    title: "Fitwise — AI job matching that tells you where you fit",
-    description: "Upload your resume once. Fitwise scores every job against your skills, explains the gaps, and drafts the cover letter.",
+    title: "JobFitwise — AI job matching that tells you where you fit",
+    description: "Upload your resume once. JobFitwise scores every job against your skills, explains the gaps, and drafts the cover letter.",
   },
   sv: {
-    title: "Fitwise — AI-matchning som visar var du passar in",
-    description: "Ladda upp ditt CV en gång. Fitwise jämför varje jobb med dina kompetenser, visar vad som saknas och skriver utkast till personligt brev.",
+    title: "JobFitwise — AI-matchning som visar var du passar in",
+    description: "Ladda upp ditt CV en gång. JobFitwise jämför varje jobb med dina kompetenser, visar vad som saknas och skriver utkast till personligt brev.",
   },
 });
 
@@ -40,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(siteUrl()),
     title,
     description,
-    openGraph: { type: "website", siteName: "Fitwise", title, description, locale: locale === "sv" ? "sv_SE" : "en_GB" },
+    openGraph: { type: "website", siteName: "JobFitwise", title, description, locale: locale === "sv" ? "sv_SE" : "en_GB" },
     twitter: { card: "summary_large_image", title, description },
   };
 }

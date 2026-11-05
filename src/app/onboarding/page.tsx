@@ -5,7 +5,7 @@ import { getLocale } from "@/i18n/server";
 import { OnboardingFlow, type OnboardingInitial } from "@/components/onboarding/OnboardingFlow";
 
 export async function generateMetadata() {
-  return { title: (await getLocale()) === "sv" ? "Kom igång — Fitwise" : "Get started — Fitwise" };
+  return { title: (await getLocale()) === "sv" ? "Kom igång — JobFitwise" : "Get started — JobFitwise" };
 }
 
 /** Same rule as the profile page: the Drive button appears once its settings exist. */
