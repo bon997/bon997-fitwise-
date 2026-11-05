@@ -83,6 +83,16 @@ Password reset, email confirmation and weekly job alerts send email through [Res
 
 **Password reset** links work once, for an hour, and at most 3 are sent per account per hour. The answer is the same whether or not the email has an account. Using a link confirms the email address, signs out every other device and signs in.
 
+## Daily imports (no manual work)
+
+On the admin page, **Daily imports** keeps a list of saved searches (what, where, source, about 10/20/30 jobs a night). Every night at 03:00 UTC (`vercel.json`, needs `CRON_SECRET`) one run:
+
+1. runs each enabled search, the longest-waiting first, asking Platsbanken for the newest ads first (it falls back to the default order if the API ever refuses that),
+2. reads skills with Claude for the new jobs, then for older ones still waiting, while time is left,
+3. hides duplicate ads, and ads posted more than `JOB_MAX_AGE_DAYS` (default 45) days ago.
+
+It stays inside one 60-second run on every Vercel plan; searches that didn't fit go first the next night. A search for a source without its key (SerpApi for Google Jobs) is skipped with a note instead of failing. "Run all now" runs it straight away.
+
 ## Activity report (aktivitetsrapport)
 
 `/activity-report` lists the applications a user marked as sent in a month, with the Platsbanken ad ID when there is one, ready to copy or download as a CSV that opens in Excel. It defaults to last month during the 1st–14th reporting window. Fitwise isn't connected to Arbetsförmedlingen and never sends anything itself.
@@ -135,6 +145,8 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 | `DELETE /api/me` | user | `{ confirm: "DELETE" }` permanently deletes the account and resume file (GDPR). |
 | `GET /api/applications/report?month=YYYY-MM` | user | The month's sent applications as a CSV for Arbetsförmedlingen's activity report. |
 | `GET /api/cron/job-alerts` | cron or admin | Sends this run's weekly job alert emails. |
+| `GET /api/cron/import-jobs` | cron or admin | Runs the saved daily searches (see Daily imports). |
+| `GET\|POST\|PATCH\|DELETE /api/admin/import-searches` | admin | List, save, pause/resume or remove daily searches. |
 | `POST /api/alerts/unsubscribe?t=…` | link token | Turns job alerts off (one-click unsubscribe). |
 | `GET /api/admin/stats` | admin | Totals, applications by status, ingestion runs. |
 
