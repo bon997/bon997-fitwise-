@@ -28,7 +28,7 @@ export async function AppHeader({ user, active }: { user: UserRow | null; active
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href={user ? "/dashboard" : "/"} className="flex shrink-0 items-center gap-2 font-display text-xl tracking-tight">
             <span className="grid h-6 w-6 place-items-center rounded-full bg-accent font-sans text-xs font-semibold text-paper">f</span>
-            <span>Fitwise</span>
+            <span>JobFitwise</span>
           </Link>
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             {user && (

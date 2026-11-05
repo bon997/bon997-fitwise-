@@ -9,7 +9,7 @@ const T = defineT({
   en: {
     failed: (s: number) => `Import failed (${s})`,
     title: "Import real jobs",
-    intro: "Search a job board and add the results to Fitwise. Each import adds about 10 jobs. Platsbanken (Sweden) is free; Google Jobs uses one search from your SerpApi plan.",
+    intro: "Search a job board and add the results to JobFitwise. Each import adds about 10 jobs. Platsbanken (Sweden) is free; Google Jobs uses one search from your SerpApi plan.",
     noAi: "ANTHROPIC_API_KEY isn't set, so imported jobs won't get skills extracted and fit scores will be weak.",
     whatPh: "e.g. frontend developer", what: "What jobs",
     wherePh: "e.g. Stockholm", where: "Where",
@@ -24,7 +24,7 @@ const T = defineT({
   sv: {
     failed: (s: number) => `Importen misslyckades (${s})`,
     title: "Importera riktiga jobb",
-    intro: "Sök på en jobbsajt och lägg till resultaten i Fitwise. Varje import lägger till ungefär 10 jobb. Platsbanken är gratis; Google Jobs använder en sökning från din SerpApi-plan.",
+    intro: "Sök på en jobbsajt och lägg till resultaten i JobFitwise. Varje import lägger till ungefär 10 jobb. Platsbanken är gratis; Google Jobs använder en sökning från din SerpApi-plan.",
     noAi: "ANTHROPIC_API_KEY saknas, så importerade jobb får inga kompetenser utlästa och matchningen blir svag.",
     whatPh: "t.ex. inköpare", what: "Vilka jobb",
     wherePh: "t.ex. Stockholm", where: "Var",

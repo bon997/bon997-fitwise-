@@ -12,7 +12,7 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    meta: "Find jobs — Fitwise",
+    meta: "Find jobs — JobFitwise",
     title: "Find jobs",
     signIn: "Sign in",
     signInRest: "and add your resume to see your fit score on every job.",
@@ -28,7 +28,7 @@ const T = defineT({
     page: (p: number, n: number) => `Page ${p} of ${n}`,
   },
   sv: {
-    meta: "Hitta jobb — Fitwise",
+    meta: "Hitta jobb — JobFitwise",
     title: "Hitta jobb",
     signIn: "Logga in",
     signInRest: "och lägg till ditt CV för att se din matchningspoäng på varje jobb.",

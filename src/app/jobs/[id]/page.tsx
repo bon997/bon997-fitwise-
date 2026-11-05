@@ -71,14 +71,14 @@ export async function generateMetadata({ params }: Props) {
   if (!UUID.test(id)) return {};
   const [job, locale] = await Promise.all([getJob(id), getLocale()]);
   if (!job) return {};
-  const title = `${T[locale].at(job.title, job.company)} — Fitwise`;
+  const title = `${T[locale].at(job.title, job.company)} — JobFitwise`;
   const description = snippet([job.location, job.salary_range, job.description || job.requirements].filter(Boolean).join(" · "));
   // A page's openGraph replaces the site-wide one, so the shared image is named again here.
   const images = ["/opengraph-image"];
   return {
     title,
     description,
-    openGraph: { type: "website", siteName: "Fitwise", title, description, images },
+    openGraph: { type: "website", siteName: "JobFitwise", title, description, images },
     twitter: { card: "summary_large_image", title, description, images },
   };
 }

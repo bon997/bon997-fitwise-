@@ -9,11 +9,11 @@ const L = AI_DAILY_LIMITS;
 
 const T = defineT({
   en: {
-    metaTitle: "Pricing — Fitwise",
-    metaDescription: "Fitwise is free while in beta: fit scores, personalized matches, AI cover letters and an application tracker.",
+    metaTitle: "Pricing — JobFitwise",
+    metaDescription: "JobFitwise is free while in beta: fit scores, personalized matches, AI cover letters and an application tracker.",
     eyebrow: "Pricing",
     title: "Free while we're in beta.",
-    intro: "Everything Fitwise does today is free. A paid plan with extras will come later, and the free plan will stay.",
+    intro: "Everything JobFitwise does today is free. A paid plan with extras will come later, and the free plan will stay.",
     free: "Free",
     available: "Available now",
     price: "0 kr",
@@ -37,11 +37,11 @@ const T = defineT({
     tellUs: "Tell us",
   },
   sv: {
-    metaTitle: "Priser — Fitwise",
-    metaDescription: "Fitwise är gratis under beta: matchningspoäng, personliga matchningar, AI-skrivna personliga brev och ansökningsöversikt.",
+    metaTitle: "Priser — JobFitwise",
+    metaDescription: "JobFitwise är gratis under beta: matchningspoäng, personliga matchningar, AI-skrivna personliga brev och ansökningsöversikt.",
     eyebrow: "Priser",
     title: "Gratis under betan.",
-    intro: "Allt Fitwise gör i dag är gratis. En betalversion med extra funktioner kommer senare, och gratisversionen finns kvar.",
+    intro: "Allt JobFitwise gör i dag är gratis. En betalversion med extra funktioner kommer senare, och gratisversionen finns kvar.",
     free: "Gratis",
     available: "Tillgänglig nu",
     price: "0 kr",

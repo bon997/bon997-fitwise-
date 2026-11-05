@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 import { getLocale } from "@/i18n/server";
 
 export async function generateMetadata() {
-  return { title: (await getLocale()) === "sv" ? "Användarvillkor — Fitwise" : "Terms of Use — Fitwise" };
+  return { title: (await getLocale()) === "sv" ? "Användarvillkor — JobFitwise" : "Terms of Use — JobFitwise" };
 }
 
 export default async function TermsPage() {

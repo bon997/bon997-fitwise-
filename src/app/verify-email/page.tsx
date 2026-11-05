@@ -7,7 +7,7 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    meta: "Confirm email — Fitwise",
+    meta: "Confirm email — JobFitwise",
     ok: "Email confirmed",
     okSub: "Thanks. Your weekly job matches will arrive by email. You can turn them off on your profile or from any email.",
     bad: "This link has expired or was already used",
@@ -16,7 +16,7 @@ const T = defineT({
     signIn: "Sign in",
   },
   sv: {
-    meta: "Bekräfta e-post — Fitwise",
+    meta: "Bekräfta e-post — JobFitwise",
     ok: "E-posten är bekräftad",
     okSub: "Tack. Dina veckovisa jobbmatchningar kommer med e-post. Du kan stänga av dem på din profil eller från vilket mejl som helst.",
     bad: "Länken har gått ut eller redan använts",

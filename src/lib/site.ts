@@ -3,7 +3,7 @@
  * via environment variables) without hunting through pages.
  */
 export const site = {
-  name: "Fitwise",
+  name: "JobFitwise",
   /** Shown on the Privacy and Terms pages. Set CONTACT_EMAIL in your hosting environment. */
   contactEmail: process.env.CONTACT_EMAIL || null,
   /** Legal name of whoever runs the site (you, or your company). Set OPERATOR_NAME. */

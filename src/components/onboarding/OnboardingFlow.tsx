@@ -48,9 +48,9 @@ const T = defineT({
       start: "I'm not sure where to start",
     },
     why: {
-      no_reply: ["Apply where you have a real chance.", "Before you apply, Fitwise shows your match score and the skills you're missing. You put your effort into the jobs that fit, and send fewer, stronger applications."],
+      no_reply: ["Apply where you have a real chance.", "Before you apply, JobFitwise shows your match score and the skills you're missing. You put your effort into the jobs that fit, and send fewer, stronger applications."],
       time: ["Minutes per application, not hours.", "Upload your CV once. Every job gets a match score, and one click writes a first draft of the cover letter from your real experience. You read it, adjust it and send it."],
-      fit: ["Every job, scored against you.", "Fitwise compares each job's requirements with your skills, experience, level and location, and explains the score. Filter by town, skill and job type, like on Platsbanken."],
+      fit: ["Every job, scored against you.", "JobFitwise compares each job's requirements with your skills, experience, level and location, and explains the score. Filter by town, skill and job type, like on Platsbanken."],
       start: ["We'll show you where to start.", "Upload your CV and we'll suggest roles you fit right now, rank matching jobs for you, and point out the skills worth learning next."],
     },
     titles: {
@@ -148,9 +148,9 @@ const T = defineT({
       start: "Jag vet inte var jag ska börja",
     },
     why: {
-      no_reply: ["Sök där du har en verklig chans.", "Innan du söker visar Fitwise din matchningspoäng och vilka kompetenser som saknas. Du lägger kraften på jobben som passar och skickar färre, starkare ansökningar."],
+      no_reply: ["Sök där du har en verklig chans.", "Innan du söker visar JobFitwise din matchningspoäng och vilka kompetenser som saknas. Du lägger kraften på jobben som passar och skickar färre, starkare ansökningar."],
       time: ["Minuter per ansökan, inte timmar.", "Ladda upp ditt CV en gång. Varje jobb får en matchningspoäng, och ett klick skriver ett första utkast till personligt brev utifrån din riktiga erfarenhet. Du läser, justerar och skickar."],
-      fit: ["Varje jobb, jämfört med dig.", "Fitwise jämför varje jobbs krav med dina kompetenser, din erfarenhet, nivå och ort, och förklarar poängen. Filtrera på ort, kompetens och anställningsform, som på Platsbanken."],
+      fit: ["Varje jobb, jämfört med dig.", "JobFitwise jämför varje jobbs krav med dina kompetenser, din erfarenhet, nivå och ort, och förklarar poängen. Filtrera på ort, kompetens och anställningsform, som på Platsbanken."],
       start: ["Vi visar var du kan börja.", "Ladda upp ditt CV så föreslår vi roller du passar för nu, rankar jobben som matchar dig och visar vilka kompetenser som är värda att lära sig."],
     },
     titles: {
@@ -359,7 +359,7 @@ export function OnboardingFlow({
           </button>
           <span className="flex items-center gap-2 font-display text-xl">
             <span className="grid h-6 w-6 place-items-center rounded-full bg-accent font-sans text-xs font-semibold text-paper">f</span>
-            Fitwise
+            JobFitwise
           </span>
           <LanguageSwitcher />
         </div>

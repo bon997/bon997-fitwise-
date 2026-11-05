@@ -13,7 +13,7 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    meta: "Your profile — Fitwise",
+    meta: "Your profile — JobFitwise",
     newTitle: "Let's set you up",
     title: "Your profile",
     newIntro: "Two minutes here makes every match more accurate.",
@@ -22,7 +22,7 @@ const T = defineT({
     retake: "Answer the quick questions again",
   },
   sv: {
-    meta: "Din profil — Fitwise",
+    meta: "Din profil — JobFitwise",
     newTitle: "Nu sätter vi igång",
     title: "Din profil",
     newIntro: "Två minuter här gör varje matchning mer träffsäker.",

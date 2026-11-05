@@ -1,4 +1,4 @@
-/** Languages the site speaks. Swedish first: Fitwise is built for the Swedish job market. */
+/** Languages the site speaks. Swedish first: JobFitwise is built for the Swedish job market. */
 export const LOCALES = ["sv", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";

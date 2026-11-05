@@ -7,7 +7,7 @@ import { defineT } from "@/i18n/config";
 
 const T = defineT({
   en: {
-    meta: "Choose a new password — Fitwise",
+    meta: "Choose a new password — JobFitwise",
     title: "Choose a new password",
     sub: "You'll be signed out on every other device.",
     expired: "This link has expired or was already used. Links work once, for one hour.",
@@ -15,7 +15,7 @@ const T = defineT({
     back: "← Back to sign in",
   },
   sv: {
-    meta: "Välj ett nytt lösenord — Fitwise",
+    meta: "Välj ett nytt lösenord — JobFitwise",
     title: "Välj ett nytt lösenord",
     sub: "Du loggas ut på alla andra enheter.",
     expired: "Länken har gått ut eller redan använts. Länkar fungerar en gång, i en timme.",

@@ -1,4 +1,4 @@
--- Fitwise database schema (PostgreSQL 14+ / Supabase)
+-- JobFitwise database schema (PostgreSQL 14+ / Supabase)
 -- Apply with: psql "$DATABASE_URL" -f db/schema.sql
 -- Re-runnable: everything uses IF NOT EXISTS / OR REPLACE.
 

@@ -8,7 +8,7 @@ const T = defineT({
   en: {
     email: "Email",
     send: "Email me a reset link",
-    sent: (e: string) => `If ${e} has a Fitwise account, a reset link is on its way. It works for one hour. Check your spam folder if it hasn't arrived in a few minutes.`,
+    sent: (e: string) => `If ${e} has a JobFitwise account, a reset link is on its way. It works for one hour. Check your spam folder if it hasn't arrived in a few minutes.`,
     password: "New password",
     confirm: "Repeat the new password",
     min: "At least 10 characters.",
@@ -24,7 +24,7 @@ const T = defineT({
   sv: {
     email: "E-post",
     send: "Skicka en återställningslänk",
-    sent: (e: string) => `Om ${e} har ett Fitwise-konto är en länk på väg. Den fungerar i en timme. Titta i skräpposten om den inte kommit inom några minuter.`,
+    sent: (e: string) => `Om ${e} har ett JobFitwise-konto är en länk på väg. Den fungerar i en timme. Titta i skräpposten om den inte kommit inom några minuter.`,
     password: "Nytt lösenord",
     confirm: "Upprepa det nya lösenordet",
     min: "Minst 10 tecken.",

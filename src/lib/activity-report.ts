@@ -79,7 +79,7 @@ export function reportRows(userId: string, m: ReportMonth): Promise<ReportRow[]>
 }
 
 const SOURCE_LABEL: Record<string, string> = { jobtech: "Platsbanken" };
-export const sourceLabel = (s: string) => SOURCE_LABEL[s] ?? "Fitwise";
+export const sourceLabel = (s: string) => SOURCE_LABEL[s] ?? "JobFitwise";
 
 const HEADERS: Record<Locale, string[]> = {
   sv: ["Datum", "Tjänst", "Arbetsgivare", "Ort", "Annons-ID", "Var annonsen fanns", "Länk", "Status"],

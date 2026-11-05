@@ -3,8 +3,8 @@ import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 
 const T = defineT({
-  en: { meta: "Page not found — Fitwise", title: "This page doesn't fit.", body: "The link may be old, or the job may have been removed.", jobs: "Browse jobs", home: "Home" },
-  sv: { meta: "Sidan hittades inte — Fitwise", title: "Den här sidan passar inte in.", body: "Länken kan vara gammal, eller så har jobbet tagits bort.", jobs: "Se jobb", home: "Startsida" },
+  en: { meta: "Page not found — JobFitwise", title: "This page doesn't fit.", body: "The link may be old, or the job may have been removed.", jobs: "Browse jobs", home: "Home" },
+  sv: { meta: "Sidan hittades inte — JobFitwise", title: "Den här sidan passar inte in.", body: "Länken kan vara gammal, eller så har jobbet tagits bort.", jobs: "Se jobb", home: "Startsida" },
 });
 
 export async function generateMetadata() {

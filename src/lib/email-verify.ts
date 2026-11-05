@@ -12,24 +12,24 @@ export const VERIFY_DAYS = 7;
 
 const COPY = {
   en: {
-    subject: "Confirm your email for Fitwise",
+    subject: "Confirm your email for JobFitwise",
     pre: "One click and your weekly job matches can reach you.",
     hi: (n: string | null) => (n ? `Hi ${n},` : "Hi,"),
     body: "Confirm this is your email address and we'll send you the best new jobs for you once a week. You can turn that off any time.",
     button: "Confirm my email",
     expiry: `The link works for ${VERIFY_DAYS} days.`,
-    ignore: "If you didn't create a Fitwise account, ignore this email and nothing more will be sent.",
-    footer: "You got this email because someone signed up for Fitwise with this address.",
+    ignore: "If you didn't create a JobFitwise account, ignore this email and nothing more will be sent.",
+    footer: "You got this email because someone signed up for JobFitwise with this address.",
   },
   sv: {
-    subject: "Bekräfta din e-post för Fitwise",
+    subject: "Bekräfta din e-post för JobFitwise",
     pre: "Ett klick så kan dina veckovisa jobbmatchningar nå dig.",
     hi: (n: string | null) => (n ? `Hej ${n},` : "Hej,"),
     body: "Bekräfta att det här är din e-postadress så skickar vi de bästa nya jobben för dig en gång i veckan. Du kan stänga av det när du vill.",
     button: "Bekräfta min e-post",
     expiry: `Länken fungerar i ${VERIFY_DAYS} dagar.`,
-    ignore: "Har du inte skapat ett Fitwise-konto kan du strunta i mejlet, så skickas inget mer.",
-    footer: "Du får det här mejlet för att någon registrerat sig på Fitwise med den här adressen.",
+    ignore: "Har du inte skapat ett JobFitwise-konto kan du strunta i mejlet, så skickas inget mer.",
+    footer: "Du får det här mejlet för att någon registrerat sig på JobFitwise med den här adressen.",
   },
 };
 

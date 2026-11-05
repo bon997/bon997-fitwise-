@@ -7,7 +7,7 @@ import { timeAgo } from "@/lib/format";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 
-export const metadata = { title: "Admin — Fitwise" };
+export const metadata = { title: "Admin — JobFitwise" };
 
 const T = defineT({
   en: {

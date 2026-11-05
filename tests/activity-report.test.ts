@@ -57,7 +57,7 @@ describe("activity report export", () => {
     const csv = reportCsv([row({ title: 'Säljare "B2B"', company: "=HYPERLINK(1)", ad_id: null, source: "serpapi" })], "en", (s) => s);
     expect(csv).toContain('"Säljare ""B2B"""');
     expect(csv).toContain(`"'=HYPERLINK(1)"`);
-    expect(csv).toContain('"";"Fitwise"');
+    expect(csv).toContain('"";"JobFitwise"');
   });
 
   it("makes a pasteable text list", () => {

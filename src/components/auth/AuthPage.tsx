@@ -72,7 +72,7 @@ export async function AuthPage({ searchParams, mode = "signin" }: Props) {
         </div>
         <Link href="/" className="flex items-center justify-center gap-2 font-display text-3xl tracking-tight">
           <span className="grid h-8 w-8 place-items-center rounded-full bg-accent font-sans text-sm font-semibold text-paper">f</span>
-          Fitwise
+          JobFitwise
         </Link>
 
         <div className="mt-8 rounded-2xl border border-line bg-white p-6 shadow-[0_20px_50px_-30px_rgba(21,23,28,0.35)] sm:p-8">

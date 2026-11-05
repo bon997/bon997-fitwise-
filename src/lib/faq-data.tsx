@@ -11,7 +11,7 @@ const n = (x: number, locale: "sv-SE" | "en-GB") => x.toLocaleString(locale);
 
 /**
  * The FAQ, in the order people ask. The first seven also appear on the home page.
- * Answers must stay true to what Fitwise does today — update them when features change.
+ * Answers must stay true to what JobFitwise does today — update them when features change.
  */
 export const FAQ = defineT({
   en: (f: FaqFacts): Faq[] => [
@@ -20,7 +20,7 @@ export const FAQ = defineT({
       q: "Do you apply to jobs for me automatically?",
       a: (
         <p>
-          No, and that&apos;s on purpose. Fitwise finds the jobs that fit you and drafts a cover letter from your real
+          No, and that&apos;s on purpose. JobFitwise finds the jobs that fit you and drafts a cover letter from your real
           experience. You read it, change what you like, and send the application yourself on the employer&apos;s site.
           Then tap &ldquo;I&apos;ve applied&rdquo; to track it. Mass auto-applying tends to send weak applications to the
           wrong jobs; we&apos;d rather help you send fewer, better ones.
@@ -34,7 +34,7 @@ export const FAQ = defineT({
         <>
           <p>
             We collect public listings from Platsbanken (Arbetsförmedlingen&apos;s job board) and Google Jobs
-            {f.activeJobs ? <>, and there are <strong>{n(f.activeJobs, "en-GB")} open jobs</strong> on Fitwise right now</> : ""}.
+            {f.activeJobs ? <>, and there are <strong>{n(f.activeJobs, "en-GB")} open jobs</strong> on JobFitwise right now</> : ""}.
             Each ad is read by AI to pull out the skills it asks for.
           </p>
           <p className="mt-3">
@@ -47,10 +47,10 @@ export const FAQ = defineT({
     },
     {
       id: "guarantee",
-      q: "Can Fitwise promise that I'll get a job?",
+      q: "Can JobFitwise promise that I'll get a job?",
       a: (
         <p>
-          No. Nobody honest can. The decision is always the employer&apos;s. What Fitwise does is help you spend your time
+          No. Nobody honest can. The decision is always the employer&apos;s. What JobFitwise does is help you spend your time
           on jobs you actually fit, show which skills you&apos;re missing, and give you a strong first draft of each
           letter, so every application you send is a good one.
         </p>
@@ -58,10 +58,10 @@ export const FAQ = defineT({
     },
     {
       id: "cost",
-      q: "Does Fitwise cost anything?",
+      q: "Does JobFitwise cost anything?",
       a: (
         <p>
-          Nothing. Fitwise is free during the beta and we never ask for a card. To keep it free, AI features have daily
+          Nothing. JobFitwise is free during the beta and we never ask for a card. To keep it free, AI features have daily
           limits: {AI_DAILY_LIMITS.cover_letter} cover letters and {AI_DAILY_LIMITS.resume_parse} resume uploads per day.
           Searching jobs and fit scores are unlimited. If paid plans ever come, we&apos;ll tell you well in advance and
           you&apos;ll choose; nothing is charged without your agreement. See <Link href="/pricing">Pricing</Link>.
@@ -70,10 +70,10 @@ export const FAQ = defineT({
     },
     {
       id: "cancel",
-      q: "Can I stop using Fitwise whenever I want?",
+      q: "Can I stop using JobFitwise whenever I want?",
       a: (
         <p>
-          There&apos;s no subscription to cancel, so you can simply stop using Fitwise and keep your account. If you want
+          There&apos;s no subscription to cancel, so you can simply stop using JobFitwise and keep your account. If you want
           to leave for good, use &ldquo;Delete my account&rdquo; on your <Link href="/profile">Profile</Link> page. That
           removes your profile, resume, applications and saved jobs immediately, so download your data first if you want
           a copy.
@@ -103,7 +103,7 @@ export const FAQ = defineT({
       a: (
         <p>
           Employers never see it, and we never sell it. It&apos;s used only to match you with jobs and draft your letters.
-          The few services that run Fitwise (hosting, the database and the AI that reads your resume) handle it only for
+          The few services that run JobFitwise (hosting, the database and the AI that reads your resume) handle it only for
           that. Your data is encrypted in transit and at rest and stored in the EU (Ireland). You can download everything
           we hold about you, or delete your whole account, at any time from your Profile page. Details, including the full
           list of services, are in our{" "}
@@ -150,7 +150,7 @@ export const FAQ = defineT({
     },
     {
       id: "language",
-      q: "Can I use Fitwise in Swedish or English?",
+      q: "Can I use JobFitwise in Swedish or English?",
       a: (
         <p>
           Both. Switch with the SV / EN buttons at the top of every page. Cover letters can be written in either language,
@@ -175,7 +175,7 @@ export const FAQ = defineT({
       q: "Söker ni jobb åt mig automatiskt?",
       a: (
         <p>
-          Nej, och det är med flit. Fitwise hittar jobben som passar dig och skriver ett utkast till personligt brev utifrån
+          Nej, och det är med flit. JobFitwise hittar jobben som passar dig och skriver ett utkast till personligt brev utifrån
           din riktiga erfarenhet. Du läser, ändrar det du vill och skickar ansökan själv på arbetsgivarens sida. Tryck sedan
           på ”Jag har sökt” för att följa upp den. Automatiska massansökningar skickar oftast svaga ansökningar till fel
           jobb; vi hjälper dig hellre att skicka färre och bättre.
@@ -189,7 +189,7 @@ export const FAQ = defineT({
         <>
           <p>
             Vi hämtar offentliga annonser från Platsbanken (Arbetsförmedlingen) och Google Jobs
-            {f.activeJobs ? <>, och just nu finns <strong>{n(f.activeJobs, "sv-SE")} lediga jobb</strong> på Fitwise</> : ""}.
+            {f.activeJobs ? <>, och just nu finns <strong>{n(f.activeJobs, "sv-SE")} lediga jobb</strong> på JobFitwise</> : ""}.
             Varje annons läses av AI som plockar ut vilka kompetenser som efterfrågas.
           </p>
           <p className="mt-3">
@@ -202,10 +202,10 @@ export const FAQ = defineT({
     },
     {
       id: "guarantee",
-      q: "Kan Fitwise lova att jag får jobb?",
+      q: "Kan JobFitwise lova att jag får jobb?",
       a: (
         <p>
-          Nej. Det kan ingen ärlig tjänst lova, beslutet är alltid arbetsgivarens. Det Fitwise gör är att hjälpa dig lägga
+          Nej. Det kan ingen ärlig tjänst lova, beslutet är alltid arbetsgivarens. Det JobFitwise gör är att hjälpa dig lägga
           tiden på jobb du faktiskt passar för, visa vilka kompetenser du saknar och ge dig ett starkt första utkast till
           varje brev, så att varje ansökan du skickar är en bra ansökan.
         </p>
@@ -213,10 +213,10 @@ export const FAQ = defineT({
     },
     {
       id: "cost",
-      q: "Kostar Fitwise något?",
+      q: "Kostar JobFitwise något?",
       a: (
         <p>
-          Ingenting. Fitwise är gratis under betan och vi ber aldrig om kortuppgifter. För att det ska förbli gratis har
+          Ingenting. JobFitwise är gratis under betan och vi ber aldrig om kortuppgifter. För att det ska förbli gratis har
           AI-funktionerna dagliga gränser: {AI_DAILY_LIMITS.cover_letter} personliga brev och {AI_DAILY_LIMITS.resume_parse}{" "}
           CV-uppladdningar per dag. Jobbsökning och matchningspoäng är obegränsade. Om det någon gång blir betalplaner
           berättar vi det i god tid och du väljer själv; inget dras utan att du har godkänt det. Se{" "}
@@ -226,10 +226,10 @@ export const FAQ = defineT({
     },
     {
       id: "cancel",
-      q: "Kan jag sluta använda Fitwise när jag vill?",
+      q: "Kan jag sluta använda JobFitwise när jag vill?",
       a: (
         <p>
-          Det finns inget abonnemang att säga upp, så du kan helt enkelt sluta använda Fitwise och behålla kontot. Vill du
+          Det finns inget abonnemang att säga upp, så du kan helt enkelt sluta använda JobFitwise och behålla kontot. Vill du
           lämna för gott använder du ”Radera mitt konto” på din <Link href="/profile">profilsida</Link>. Då raderas din
           profil, ditt CV, dina ansökningar och sparade jobb direkt, så ladda ner din data först om du vill ha en kopia.
         </p>
@@ -258,7 +258,7 @@ export const FAQ = defineT({
       a: (
         <p>
           Arbetsgivare ser det aldrig, och vi säljer det aldrig. Det används bara för att matcha dig med jobb och skriva
-          dina brev. De få tjänster som driver Fitwise (webbhotell, databas och AI:n som läser ditt CV) hanterar det bara
+          dina brev. De få tjänster som driver JobFitwise (webbhotell, databas och AI:n som läser ditt CV) hanterar det bara
           för det. Din data krypteras både under överföring och när den lagras, och sparas inom EU (Irland). Du kan ladda
           ner allt vi har om dig, eller radera hela kontot, när du vill från din profilsida. Mer information, med hela
           listan över tjänster, finns i vår{" "}
@@ -305,7 +305,7 @@ export const FAQ = defineT({
     },
     {
       id: "language",
-      q: "Kan jag använda Fitwise på svenska eller engelska?",
+      q: "Kan jag använda JobFitwise på svenska eller engelska?",
       a: (
         <p>
           Båda. Byt med knapparna SV / EN högst upp på varje sida. Personliga brev kan skrivas på båda språken, beroende på
