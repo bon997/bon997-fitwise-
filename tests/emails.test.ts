@@ -22,7 +22,7 @@ describe("email basics", () => {
 
 describe("password reset email", () => {
   it("is in the reader's language and carries the link in both parts", () => {
-    const link = "https://fitwise.se/reset-password?token=abc";
+    const link = "https://jobfitwise.se/reset-password?token=abc";
     const sv = resetEmail({ name: "Anna Svensson", link, locale: "sv" });
     expect(sv.subject).toBe("Återställ ditt lösenord på Fitwise");
     expect(sv.text).toContain("Hej Anna,");
@@ -38,14 +38,14 @@ describe("password reset email", () => {
 
 describe("confirm email", () => {
   it("links to the confirmation page", () => {
-    const e = verifyEmail({ name: "Ali", link: "https://fitwise.se/verify-email?token=t", locale: "en" });
+    const e = verifyEmail({ name: "Ali", link: "https://jobfitwise.se/verify-email?token=t", locale: "en" });
     expect(e.subject).toBe("Confirm your email for Fitwise");
-    expect(e.html).toContain('href="https://fitwise.se/verify-email?token=t"');
+    expect(e.html).toContain('href="https://jobfitwise.se/verify-email?token=t"');
   });
 });
 
 describe("job alert email", () => {
-  const base = "https://fitwise.se";
+  const base = "https://jobfitwise.se";
   const token = "a".repeat(36);
 
   it("counts jobs in the subject, in both languages", () => {

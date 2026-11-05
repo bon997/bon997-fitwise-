@@ -75,13 +75,25 @@ Password reset, email confirmation and weekly job alerts send email through [Res
 2. Under **API Keys**, create a key with "Sending access".
 3. In Vercel, under **Settings → Environment Variables**, add:
    - `RESEND_API_KEY`: the key
-   - `EMAIL_FROM`: e.g. `Fitwise <hej@yourdomain.se>` (must be on the verified domain)
+   - `EMAIL_FROM`: e.g. `Fitwise <hej@jobfitwise.se>` (must be on the verified domain)
    - `CRON_SECRET`: any long random string (Vercel sends it to the scheduled job)
 4. Run the latest `db/schema.sql` in Supabase, then redeploy.
 
 **Job alerts** run daily at 06:00 UTC (`vercel.json`). Each run emails the people who haven't had an alert for a week: up to 5 jobs posted since their last one, with fit 55 or more, leaving out jobs they already saved or applied to. A week with nothing good sends nothing. Alerts go only to confirmed addresses (Google sign-in, or the link sent at sign-up), each email has a one-click unsubscribe (also as a `List-Unsubscribe` header), and the setting is on the profile page. An admin can run it by hand by opening `/api/cron/job-alerts`.
 
 **Password reset** links work once, for an hour, and at most 3 are sent per account per hour. The answer is the same whether or not the email has an account. Using a link confirms the email address, signs out every other device and signs in.
+
+
+## Domain: jobfitwise.se
+
+The domain is registered with Loopia; the site is hosted on Vercel.
+
+1. **Vercel**: Project → Settings → Domains → add `jobfitwise.se` and `www.jobfitwise.se` (redirect www to the bare domain). Vercel shows the DNS records to use.
+2. **Loopia**: Loopia Kundzon → Domäner → `jobfitwise.se` → DNS-editor. Add the records Vercel shows (usually an `A` record on `@` to `76.76.21.21` and a `CNAME` on `www` to `cname.vercel-dns.com`), and remove Loopia's default parking records for `@` and `www`.
+3. **Vercel env vars**: `APP_URL=https://jobfitwise.se`, `EMAIL_FROM=Fitwise <hej@jobfitwise.se>`.
+4. **Google Cloud Console**: on the OAuth client, add origin `https://jobfitwise.se` and redirect URI `https://jobfitwise.se/api/auth/google/callback`.
+5. **Resend**: Domains → add `jobfitwise.se` (EU region) and add its SPF/DKIM records in the same Loopia DNS-editor.
+6. Redeploy, then test Google sign-in and a password reset email on https://jobfitwise.se.
 
 ## Activity report (aktivitetsrapport)
 
@@ -162,7 +174,7 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 5. Copy the **Client ID** and **Client secret** into `.env.local` as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Set `APP_URL=http://localhost:3000`, and add your Gmail to `ADMIN_EMAILS` to get the admin role.
 6. Run `npm run db:setup` (adds the `sessions` table), then `npm run dev`, and open `/login`.
 
-When you deploy, add your real domain's origin and `https://<domain>/api/auth/google/callback` to the same client, set `APP_URL` to it, and publish the app under **Audience** so anyone can sign in.
+When you deploy, add `https://jobfitwise.se` as an origin and `https://jobfitwise.se/api/auth/google/callback` as a redirect URI to the same client, set `APP_URL=https://jobfitwise.se`, and publish the app under **Audience** so anyone can sign in.
 
 How it works: authorization-code flow with PKCE and a `state` check. It requests only the `openid email profile` scopes, and the ID token's issuer, audience, expiry and `email_verified` are checked. An existing account with the same email is linked rather than duplicated, and a mismatched Google account is refused. The database stores only a SHA-256 hash of each session token.
 

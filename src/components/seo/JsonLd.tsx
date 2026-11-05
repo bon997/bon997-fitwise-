@@ -19,4 +19,4 @@ export function plainText(node: ReactNode): string {
 }
 
 /** Public address of the site, for absolute URLs in structured data. */
-export const siteUrl = () => (process.env.APP_URL?.trim().replace(/\/+$/, "") || "https://bon997-fitwise.vercel.app");
+export const siteUrl = () => (process.env.APP_URL?.trim().replace(/\/+$/, "") || "https://jobfitwise.se");
