@@ -1,3 +1,4 @@
+import { Suspense, cache } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
@@ -5,12 +6,16 @@ import { hasProfile, recommendJobs, skillGaps } from "@/lib/matching";
 import { sql } from "@/lib/db";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Footer } from "@/components/landing/Sections";
-import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { computeResumeScore } from "@/lib/ai/fit-score";
 import { emailConfigured } from "@/lib/email";
 import { JobCard } from "@/components/jobs/JobCard";
 import { StatusSelect } from "@/components/dashboard/StatusSelect";
 import { labels, skillLabel, timeAgo } from "@/lib/format";
+import { NextActionCard, NextActionSkeleton } from "@/components/dashboard/NextAction";
+import { ProfileStrength } from "@/components/dashboard/ProfileStrength";
+import { bestProfileStep, nextAction, profileChecklist } from "@/lib/next-action";
+import type { Locale } from "@/i18n/config";
+import type { UserRow } from "@/lib/data";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 
@@ -24,8 +29,6 @@ const T = defineT({
     step3: "Get matches ranked for you every week.",
     setup: "Set up my profile",
     hi: (n?: string) => `Hi${n ? ` ${n}` : ""}.`,
-    strength: "Profile strength",
-    improve: "Improve it",
     matches: "Your matches this week",
     seeAll: "See all →",
     rankedBy: "Ranked by your fit, your preferences, and the jobs you've saved or passed on.",
@@ -54,8 +57,6 @@ const T = defineT({
     step3: "Få matchningar rankade för dig varje vecka.",
     setup: "Skapa min profil",
     hi: (n?: string) => `Hej${n ? ` ${n}` : ""}.`,
-    strength: "Profilstyrka",
-    improve: "Förbättra den",
     matches: "Veckans matchningar",
     seeAll: "Visa alla →",
     rankedBy: "Rankade efter din matchning, dina önskemål och de jobb du sparat eller valt bort.",
@@ -80,6 +81,88 @@ const T = defineT({
 export async function generateMetadata() {
   return { title: T[await getLocale()].meta };
 }
+
+/**
+ * Matches and skill gaps load once per request and stream in behind Suspense,
+ * so the greeting, profile and tracker paint immediately. Gaps are read only
+ * after recommendJobs has stored this visit's fit scores — reading them in
+ * parallel missed brand-new scores, so a first visit showed no gaps.
+ */
+const loadMatches = cache(async (user: UserRow) => {
+  const matches = await recommendJobs(user, { limit: 6, days: 14 });
+  const gaps = await skillGaps(user.id, 5);
+  return { matches, gaps };
+});
+
+async function ActionSection({ user, appliedIds, locale }: { user: UserRow; appliedIds: Set<string>; locale: Locale }) {
+  const { matches, gaps } = await loadMatches(user);
+  const strength = resumeStrength(user);
+  const checklist = checklistFor(user);
+  const action = nextAction({
+    matches: matches.map((m) => ({ id: m.job.id, title: m.job.title, company: m.job.company, score: m.fit.score, applied: appliedIds.has(m.job.id) })),
+    strength, checklist, gaps,
+  });
+  return <NextActionCard action={action} profileStep={bestProfileStep(checklist)} topGap={gaps[0] ?? null} locale={locale} />;
+}
+
+async function MatchesList({ user, savedIds, locale }: { user: UserRow; savedIds: Set<string>; locale: Locale }) {
+  const t = T[locale];
+  const { matches } = await loadMatches(user);
+  if (matches.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-line p-8 text-center text-ink-2">
+        {t.noMatches} <Link href="/jobs" className="text-accent underline underline-offset-2">{t.browse}</Link>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-5 grid gap-4 xl:grid-cols-2">
+      {matches.map((m) => (
+        <JobCard key={m.job.id} job={{ ...m.job, fit: m.fit, personal: m.personal }} saved={savedIds.has(m.job.id)} signedIn />
+      ))}
+    </div>
+  );
+}
+
+function MatchesSkeleton() {
+  return (
+    <div aria-hidden className="mt-5 grid gap-4 xl:grid-cols-2">
+      {[0, 1, 2, 3].map((i) => <div key={i} className="h-[284px] animate-pulse rounded-2xl border border-line bg-white/60" />)}
+    </div>
+  );
+}
+
+async function GapsSection({ user, locale }: { user: UserRow; locale: Locale }) {
+  const t = T[locale];
+  const { gaps } = await loadMatches(user);
+  if (gaps.length === 0) return null;
+  return (
+    <section aria-labelledby="gaps-heading" className="rounded-2xl border border-line bg-white p-5">
+      <h2 id="gaps-heading" className="text-lg font-semibold">{t.gaps}</h2>
+      <p className="mt-1 text-xs text-muted">{t.gapsNote}</p>
+      <ul className="mt-3 space-y-2">
+        {gaps.map((g) => (
+          <li key={g.skill} className="flex items-center justify-between text-sm">
+            <Link href={`/jobs?q=${encodeURIComponent(g.skill)}`} className="rounded-full bg-warn-soft px-2.5 py-0.5 text-xs font-medium text-warn hover:underline">+ {skillLabel(g.skill)}</Link>
+            <span className="text-xs text-muted">{t.jobs(g.jobs)}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+const resumeStrength = (user: UserRow) =>
+  user.resume_score ?? computeResumeScore({ skills: user.skills, experience: user.experience, yearsExperience: user.years_experience == null ? null : Number(user.years_experience) });
+
+const checklistFor = (user: UserRow) =>
+  profileChecklist({
+    skills: user.skills,
+    experience: user.experience,
+    yearsExperience: user.years_experience == null ? null : Number(user.years_experience),
+    locations: user.preferences?.locations ?? [],
+    remoteOnly: Boolean(user.preferences?.remote_only),
+  });
 
 const PIPELINE = ["applied", "interviewing", "offer"] as const;
 
@@ -115,9 +198,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const [matches, gaps, applications, saved] = await Promise.all([
-    recommendJobs(user, { limit: 6, days: 14 }),
-    skillGaps(user.id, 5),
+  const [applications, saved] = await Promise.all([
     sql<{ id: string; status: string; updated_at: Date; job_id: string; title: string; company: string; score: number | null }>(
       `SELECT a.id, a.status, a.updated_at, j.id AS job_id, j.title, j.company, f.score
        FROM applications a JOIN jobs j ON j.id = a.job_id
@@ -133,6 +214,7 @@ export default async function DashboardPage() {
       [user.id],
     ),
   ]);
+  const appliedIds = new Set(applications.filter((a) => a.status !== "draft").map((a) => a.job_id));
   const savedIds = new Set(saved.map((s) => s.id));
   const count = (s: string) => applications.filter((a) => a.status === s).length;
 
@@ -149,49 +231,37 @@ export default async function DashboardPage() {
           </p>
         )}
 
-        <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4">
-          <div className="col-span-3 flex items-center gap-4 rounded-2xl border border-line bg-white p-5 lg:col-span-1">
-            <FitScoreRing
-              score={user.resume_score ?? computeResumeScore({ skills: user.skills, experience: user.experience, yearsExperience: user.years_experience == null ? null : Number(user.years_experience) })}
-              size={64}
-              label="/ 100"
-            />
-            <div>
-              <p className="text-sm font-medium">{t.strength}</p>
-              <Link href="/profile" className="text-xs text-accent underline underline-offset-2">{t.improve}</Link>
-            </div>
-          </div>
-          {PIPELINE.map((s) => (
-            <div key={s} className="min-w-0 rounded-2xl border border-line bg-white p-4 sm:p-5">
-              <p className="truncate text-xs text-muted sm:text-sm">{labels(locale).status[s]}</p>
-              <p className="mt-1 font-display text-4xl tabular-nums">{count(s)}</p>
-            </div>
-          ))}
-        </div>
+        <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
+          <div className="min-w-0 space-y-12">
+            <Suspense fallback={<NextActionSkeleton />}>
+              <ActionSection user={user} appliedIds={appliedIds} locale={locale} />
+            </Suspense>
 
-        <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_340px]">
-          <section aria-labelledby="matches-heading" className="min-w-0">
-            <div className="flex items-baseline justify-between gap-4">
-              <h2 id="matches-heading" className="font-display text-3xl">{t.matches}</h2>
-              <Link href="/jobs?sort=for_you" className="shrink-0 text-sm text-ink-2 hover:text-ink">{t.seeAll}</Link>
-            </div>
-            <p className="mt-1 text-sm text-muted">{t.rankedBy}</p>
-            {matches.length === 0 ? (
-              <div className="mt-5 rounded-2xl border border-dashed border-line p-8 text-center text-ink-2">
-                {t.noMatches} <Link href="/jobs" className="text-accent underline underline-offset-2">{t.browse}</Link>
+            <section aria-labelledby="matches-heading" className="min-w-0">
+              <div className="flex items-baseline justify-between gap-4">
+                <h2 id="matches-heading" className="font-display text-3xl">{t.matches}</h2>
+                <Link href="/jobs?sort=for_you" className="shrink-0 text-sm text-ink-2 hover:text-ink">{t.seeAll}</Link>
               </div>
-            ) : (
-              <div className="mt-5 grid gap-4 xl:grid-cols-2">
-                {matches.map((m) => (
-                  <JobCard key={m.job.id} job={{ ...m.job, fit: m.fit, personal: m.personal }} saved={savedIds.has(m.job.id)} signedIn />
-                ))}
-              </div>
-            )}
-          </section>
+              <p className="mt-1 text-sm text-muted">{t.rankedBy}</p>
+              <Suspense fallback={<MatchesSkeleton />}>
+                <MatchesList user={user} savedIds={savedIds} locale={locale} />
+              </Suspense>
+            </section>
+          </div>
 
           <div className="space-y-8">
+            <ProfileStrength strength={resumeStrength(user)} checklist={checklistFor(user)} locale={locale} />
+
             <section aria-labelledby="tracker-heading" className="rounded-2xl border border-line bg-white p-5">
               <h2 id="tracker-heading" className="text-lg font-semibold">{t.applications}</h2>
+              <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+                {PIPELINE.map((s) => (
+                  <div key={s} className="rounded-xl bg-paper px-2 py-2">
+                    <dt className="truncate text-xs text-muted">{labels(locale).status[s]}</dt>
+                    <dd className="font-display text-2xl tabular-nums">{count(s)}</dd>
+                  </div>
+                ))}
+              </dl>
               {applications.length === 0 ? (
                 <p className="mt-2 text-sm text-ink-2">{t.nothingYet} <strong>{t.applyAi}</strong>.</p>
               ) : (
@@ -214,20 +284,9 @@ export default async function DashboardPage() {
               )}
             </section>
 
-            {gaps.length > 0 && (
-              <section aria-labelledby="gaps-heading" className="rounded-2xl border border-line bg-white p-5">
-                <h2 id="gaps-heading" className="text-lg font-semibold">{t.gaps}</h2>
-                <p className="mt-1 text-xs text-muted">{t.gapsNote}</p>
-                <ul className="mt-3 space-y-2">
-                  {gaps.map((g) => (
-                    <li key={g.skill} className="flex items-center justify-between text-sm">
-                      <span className="rounded-full bg-warn-soft px-2.5 py-0.5 text-xs font-medium text-warn">+ {skillLabel(g.skill)}</span>
-                      <span className="text-xs text-muted">{t.jobs(g.jobs)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+            <Suspense fallback={null}>
+              <GapsSection user={user} locale={locale} />
+            </Suspense>
 
             <section aria-labelledby="saved-heading" className="rounded-2xl border border-line bg-white p-5">
               <h2 id="saved-heading" className="text-lg font-semibold">{t.saved}</h2>
