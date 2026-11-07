@@ -7,6 +7,7 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 import { emailConfigured } from "@/lib/email";
+import { LogoMark } from "@/components/brand/LogoMark";
 
 const T = defineT({
   en: {
@@ -71,7 +72,7 @@ export async function AuthPage({ searchParams, mode = "signin" }: Props) {
           <LanguageSwitcher />
         </div>
         <Link href="/" className="flex items-center justify-center gap-2 font-display text-3xl tracking-tight">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-accent font-sans text-sm font-semibold text-paper">f</span>
+          <LogoMark size={32} />
           JobFitwise
         </Link>
 

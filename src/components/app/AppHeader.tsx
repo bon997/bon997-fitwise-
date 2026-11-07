@@ -5,6 +5,7 @@ import type { UserRow } from "@/lib/data";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { LogoMark } from "@/components/brand/LogoMark";
 
 const T = defineT({
   en: { dashboard: "Dashboard", jobs: "Jobs", profile: "Profile", admin: "Admin", signOut: "Sign out", signIn: "Sign in", help: "Help and FAQ" },
@@ -27,7 +28,7 @@ export async function AppHeader({ user, active }: { user: UserRow | null; active
       <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href={user ? "/dashboard" : "/"} className="flex shrink-0 items-center gap-2 font-display text-xl tracking-tight">
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-accent font-sans text-xs font-semibold text-paper">f</span>
+            <LogoMark size={26} />
             <span>JobFitwise</span>
           </Link>
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
