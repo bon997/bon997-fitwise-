@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { DrivePicker, type DriveConfig } from "@/components/profile/DrivePicker";
 import { POPULAR_TITLES, TITLE_OPTIONS, type TitleOption } from "@/lib/onboarding-data";
 import { searchMatch } from "@/lib/search-match";
+import { LogoMark } from "@/components/brand/LogoMark";
 
 /**
  * Onboarding: one question per screen. Every answer is saved to the profile and used:
@@ -358,7 +359,7 @@ export function OnboardingFlow({
             <span aria-hidden>←</span> {t.back}
           </button>
           <span className="flex items-center gap-2 font-display text-xl">
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-accent font-sans text-xs font-semibold text-paper">f</span>
+            <LogoMark size={26} />
             JobFitwise
           </span>
           <LanguageSwitcher />

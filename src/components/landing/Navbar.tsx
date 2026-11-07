@@ -4,6 +4,7 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { getCurrentUser } from "@/lib/auth";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
+import { LogoMark } from "@/components/brand/LogoMark";
 
 const T = defineT({
   en: { jobs: "Find jobs", how: "How it works", pricing: "Pricing", faq: "FAQ", dashboard: "Dashboard", login: "Log in", start: "Get started" },
@@ -23,9 +24,7 @@ export async function Navbar() {
     <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/85 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2 font-display text-2xl tracking-tight">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-sm font-sans font-semibold text-paper">
-            f
-          </span>
+          <LogoMark size={30} />
           JobFitwise
         </Link>
         <ul className="hidden items-center gap-8 text-sm text-ink-2 md:flex">
