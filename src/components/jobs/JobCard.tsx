@@ -18,6 +18,12 @@ export type JobCardData = {
   personal?: { reasons: { text: string; positive: boolean; code?: string; arg?: string }[]; boost: number } | null;
 };
 
+const READY_STYLE = {
+  ready: "bg-accent text-paper",
+  almost: "bg-warn-soft text-warn",
+  stretch: "bg-paper-2 text-ink-2",
+} as const;
+
 export async function JobCard({ job, saved, signedIn }: { job: JobCardData; saved: boolean; signedIn: boolean }) {
   const locale = await getLocale();
   const L = labels(locale);
@@ -26,6 +32,8 @@ export async function JobCard({ job, saved, signedIn }: { job: JobCardData; save
     .filter(Boolean)
     .join(" · ");
   const reasons = job.personal?.reasons.slice(0, 2) ?? [];
+  const readiness = job.fit?.breakdown?.readiness as keyof typeof READY_STYLE | undefined;
+  const lowConfidence = job.fit?.breakdown?.confidence === "low";
 
   return (
     <article className="rounded-2xl border border-line bg-white p-5 transition-shadow hover:shadow-[0_12px_30px_-20px_rgba(21,23,28,0.4)]">
@@ -42,7 +50,15 @@ export async function JobCard({ job, saved, signedIn }: { job: JobCardData; save
             {[job.salary_range, postedAgo(job.posted_at, locale)].filter(Boolean).join(" · ")}
           </p>
         </div>
-        {job.fit && <FitScoreRing score={job.fit.score} size={64} label={locale === "sv" ? "match" : "fit"} />}
+        {job.fit && (
+          <div className="flex shrink-0 flex-col items-center gap-1.5">
+            <FitScoreRing score={job.fit.score} size={64} label={locale === "sv" ? "match" : "fit"} />
+            {readiness && (
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${READY_STYLE[readiness]}`}>{L.readinessShort[readiness]}</span>
+            )}
+            {lowConfidence && <span className="text-[11px] text-muted">{L.confidence.low}</span>}
+          </div>
+        )}
       </div>
 
       {job.fit && (

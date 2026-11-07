@@ -67,11 +67,12 @@ export const POST = route(async (req: Request) => {
     `UPDATE users SET
        name = coalesce(name, $2), resume_url = coalesce($3, resume_url), resume_text = $4,
        skills = $5, experience = $6, years_experience = $7, seniority = $8,
-       resume_score = $9, preferences = $10, profile_updated_at = now()
+       resume_score = $9, preferences = $10, education = $11, profile_updated_at = now()
      WHERE id = $1 RETURNING *`,
     [
       user.id, parsed.name, resumeUrl, text, JSON.stringify(parsed.skills), JSON.stringify(parsed.experience),
       parsed.years_experience, parsed.seniority, parsed.resume_score, JSON.stringify(prefs),
+      JSON.stringify(parsed.education),
     ],
   );
 

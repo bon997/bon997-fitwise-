@@ -99,7 +99,10 @@ async function ActionSection({ user, appliedIds, locale }: { user: UserRow; appl
   const strength = resumeStrength(user);
   const checklist = checklistFor(user);
   const action = nextAction({
-    matches: matches.map((m) => ({ id: m.job.id, title: m.job.title, company: m.job.company, score: m.fit.score, applied: appliedIds.has(m.job.id) })),
+    matches: matches.map((m) => ({
+      id: m.job.id, title: m.job.title, company: m.job.company, score: m.fit.score,
+      ready: m.fit.breakdown.readiness === "ready", applied: appliedIds.has(m.job.id),
+    })),
     strength, checklist, gaps,
   });
   return <NextActionCard action={action} profileStep={bestProfileStep(checklist)} topGap={gaps[0] ?? null} locale={locale} />;
@@ -162,6 +165,7 @@ const checklistFor = (user: UserRow) =>
     yearsExperience: user.years_experience == null ? null : Number(user.years_experience),
     locations: user.preferences?.locations ?? [],
     remoteOnly: Boolean(user.preferences?.remote_only),
+    education: user.education ?? [],
   });
 
 const PIPELINE = ["applied", "interviewing", "offer"] as const;

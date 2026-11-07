@@ -8,7 +8,7 @@
  */
 
 export type ChecklistItem = {
-  key: "skills" | "roles" | "described" | "dated" | "years" | "places";
+  key: "skills" | "roles" | "described" | "dated" | "years" | "education" | "places";
   done: boolean;
   /** Profile-strength points still available from this step (0 when done or unscored). */
   gain: number;
@@ -25,6 +25,7 @@ export function profileChecklist(p: {
   yearsExperience: number | null;
   locations: string[];
   remoteOnly: boolean;
+  education?: unknown[];
 }): ChecklistItem[] {
   const roles = p.experience.slice(0, 5);
   const skills = Math.min(p.skills.length, 15);
@@ -37,7 +38,9 @@ export function profileChecklist(p: {
     { key: "described", done: described >= 3, gain: (3 - described) * 8, have: described, want: 3 },
     { key: "dated", done: dated, gain: dated ? 0 : 8 },
     { key: "years", done: p.yearsExperience != null, gain: p.yearsExperience != null ? 0 : 7 },
-    // Not part of profile strength, but the location part of every fit score depends on it.
+    // Not part of profile strength, but parts of every fit score depend on them:
+    // education is 20 of 100 points wherever an ad asks for a degree.
+    { key: "education", done: (p.education?.length ?? 0) > 0, gain: 0 },
     { key: "places", done: p.locations.length > 0 || p.remoteOnly, gain: 0 },
   ];
 }
@@ -48,8 +51,6 @@ export function bestProfileStep(items: ChecklistItem[]): ChecklistItem | null {
   if (open.length === 0) return null;
   return [...open].sort((a, b) => b.gain - a.gain)[0];
 }
-
-export const READY_SCORE = 80;
 
 export type NextAction =
   | { kind: "apply"; jobId: string; title: string; company: string; score: number; ready: number }
@@ -63,14 +64,15 @@ export type NextAction =
  * fixing the profile comes first. Then the most common missing skill. Then browse.
  */
 export function nextAction(input: {
-  matches: { id: string; title: string; company: string; score: number; applied: boolean }[];
+  /** `ready` = the fit score's readiness is "ready" (80+ and no missing must-have). */
+  matches: { id: string; title: string; company: string; score: number; ready: boolean; applied: boolean }[];
   strength: number;
   checklist: ChecklistItem[];
   gaps: { skill: string; jobs: number }[];
 }): NextAction {
   const step = bestProfileStep(input.checklist);
   const thin = input.strength < 30 && step != null && step.gain >= 8;
-  const ready = input.matches.filter((m) => m.score >= READY_SCORE && !m.applied);
+  const ready = input.matches.filter((m) => m.ready && !m.applied);
   if (ready.length > 0 && !thin) {
     const top = ready[0];
     return { kind: "apply", jobId: top.id, title: top.title, company: top.company, score: top.score, ready: ready.length };

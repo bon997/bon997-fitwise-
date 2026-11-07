@@ -70,3 +70,15 @@ VALUES
    '[{"name":"figma","required":true},{"name":"user research","required":true},{"name":"prototyping","required":true}]',
    'mid', 3, NULL, NULL, NULL, NULL, 'manual', 'seed-9', now() - interval '5 days', 'https://example.com/jobs/seed-9')
 ON CONFLICT (source, external_id) DO NOTHING;
+
+-- Education (fit score part, 20 points). Older seeds left these empty.
+UPDATE users SET education = '[{"level":"bachelor","field":"computer science"}]'
+ WHERE email = 'demo@fitwise.dev' AND education = '[]'::jsonb;
+UPDATE jobs SET education = CASE title
+    WHEN 'Product Engineer'          THEN '{"level":"bachelor","field":"computer science","equivalent_ok":true}'
+    WHEN 'Senior Frontend Engineer'  THEN '{"level":"bachelor","field":null,"equivalent_ok":true}'
+    WHEN 'UX Designer'               THEN '{"level":"bachelor","field":"interaction design","equivalent_ok":false}'
+    WHEN 'Lead Frontend Engineer'    THEN '{"level":"master","field":"computer science","equivalent_ok":false}'
+    ELSE '{"level":null,"field":null,"equivalent_ok":false}'
+  END::jsonb
+ WHERE education IS NULL;

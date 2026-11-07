@@ -78,6 +78,7 @@ export default async function ProfilePage() {
               skills: user.skills,
               years_experience: num(user.years_experience),
               seniority: user.seniority,
+              education: user.education ?? [],
               preferences: user.preferences ?? {},
             }}
           />

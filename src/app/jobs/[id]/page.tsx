@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getJob, fitForJob, hasProfile, personalProfile } from "@/lib/matching";
+import { getJob, fitForJob, hasProfile, personalProfile, toFitJob, toFitProfile } from "@/lib/matching";
 import { personalize } from "@/lib/ai/personalize";
 import { one } from "@/lib/db";
 import { UUID } from "@/lib/http";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Footer } from "@/components/landing/Sections";
-import { FitScoreRing } from "@/components/ui/FitScoreRing";
-import { SkillChips } from "@/components/jobs/SkillChips";
+import { FitDetails } from "@/components/jobs/FitDetails";
+import { bestImprovement } from "@/lib/ai/fit-score";
 import { JobActions } from "@/components/jobs/JobActions";
 import { ApplyWithAI } from "@/components/jobs/ApplyWithAI";
 import { labels, postedAgo, reasonText, skillLabel } from "@/lib/format";
@@ -27,6 +27,7 @@ const T = defineT({
     about: "About the role",
     yourFit: "Your fit",
     howScore: "How is this calculated?",
+    seeFit: "See why",
     addSkills: "Add your skills",
     addSkillsRest: "to see how well you match this job.",
     signIn: "Sign in",
@@ -45,6 +46,7 @@ const T = defineT({
     about: "Om rollen",
     yourFit: "Din matchning",
     howScore: "Hur räknas poängen?",
+    seeFit: "Se varför",
     addSkills: "Lägg till dina kompetenser",
     addSkillsRest: "för att se hur väl du matchar jobbet.",
     signIn: "Logga in",
@@ -102,8 +104,11 @@ export default async function JobPage({ params }: Props) {
     profile ? personalProfile(user!) : null,
   ]);
   const why = personal ? personalize(job, personal.profile) : null;
-  const breakdown = (fit?.breakdown ?? {}) as Record<string, number | null | string[]>;
+  const breakdown = fit?.breakdown ?? {};
   const partial = (breakdown.partial_skills as string[] | undefined) ?? [];
+  // Re-scored in code with each missing skill added; free and instant.
+  const semantic = (breakdown.details as { semantic?: number | null } | undefined)?.semantic;
+  const improvement = fit && user ? bestImprovement(toFitProfile(user), toFitJob(job), semantic == null ? null : semantic / 100) : null;
   const required = job.skills.filter((s) => s.required);
   const niceToHave = job.skills.filter((s) => !s.required);
 
@@ -146,6 +151,15 @@ export default async function JobPage({ params }: Props) {
               {[job.salary_range, postedAgo(job.posted_at, locale)].filter(Boolean).join(" · ")}
             </p>
             {user && <div className="mt-4"><JobActions jobId={job.id} saved={Boolean(saved)} /></div>}
+            {fit && typeof breakdown.readiness === "string" && (
+              // Phones: the fit card sits below the ad, so give the verdict up top.
+              <a href="#fit-heading" className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm lg:hidden">
+                <span>
+                  <strong className="tabular-nums">{fit.score}</strong> {t.fit} · {L.readiness[breakdown.readiness]}
+                </span>
+                <span className="text-accent">{t.seeFit} ↓</span>
+              </a>
+            )}
 
             {job.responsibilities.length > 0 && (
               <section className="mt-10">
@@ -185,27 +199,15 @@ export default async function JobPage({ params }: Props) {
               </div>
               {fit ? (
                 <>
-                  <div className="mt-4 flex items-center gap-5">
-                    <FitScoreRing score={fit.score} size={88} stroke={8} label={t.fit} />
-                    <dl className="flex-1 space-y-1.5">
-                      {Object.entries(L.breakdown).map(([k, label]) => {
-                        const v = breakdown[k];
-                        if (typeof v !== "number") return null;
-                        return (
-                          <div key={k} className="grid grid-cols-[84px_1fr_28px] items-center gap-2 text-xs">
-                            <dt className="text-muted">{label}</dt>
-                            <dd className="h-1.5 overflow-hidden rounded-full bg-line" aria-hidden>
-                              <div className="h-full rounded-full bg-accent" style={{ width: `${v}%` }} />
-                            </dd>
-                            <dd className="text-right tabular-nums text-ink-2">{v}</dd>
-                          </div>
-                        );
-                      })}
-                    </dl>
-                  </div>
-                  <div className="mt-5">
-                    <SkillChips matched={fit.matched_skills} partial={partial} missing={fit.missing_skills} />
-                  </div>
+                  <FitDetails
+                    score={fit.score}
+                    breakdown={breakdown}
+                    matched={fit.matched_skills}
+                    partial={partial}
+                    missing={fit.missing_skills}
+                    improvement={improvement}
+                    locale={locale}
+                  />
                   {why && why.reasons.length > 0 && (
                     <ul className="mt-4 space-y-1 border-t border-line pt-4 text-xs">
                       {why.reasons.map((r) => (

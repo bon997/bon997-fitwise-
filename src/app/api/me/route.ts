@@ -3,7 +3,7 @@ import { route, ok, readJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
 import { one } from "@/lib/db";
 import { normalizeSkills } from "@/lib/ai/skills";
-import { computeResumeScore, SENIORITY } from "@/lib/ai/fit-score";
+import { computeResumeScore, EDUCATION, SENIORITY } from "@/lib/ai/fit-score";
 import { publicUser, num, type UserRow } from "@/lib/data";
 import { SESSION_COOKIE } from "@/lib/session";
 import { deleteResumeFile } from "@/lib/storage";
@@ -17,6 +17,7 @@ const Patch = z
     skills: z.array(z.string().max(60)).max(100),
     years_experience: z.number().min(0).max(60).nullable(),
     seniority: z.enum(SENIORITY).nullable(),
+    education: z.array(z.object({ level: z.enum(EDUCATION), field: z.string().trim().max(100).nullable() })).max(5),
     preferences: z
       .object({
         locations: z.array(z.string().max(100)).max(10),
@@ -46,12 +47,13 @@ export const PATCH = route(async (req: Request) => {
   const years = body.years_experience !== undefined ? body.years_experience : num(user.years_experience);
   const prefs = body.preferences ? { ...user.preferences, ...body.preferences } : user.preferences;
   const affectsMatching =
-    body.skills !== undefined || body.years_experience !== undefined || body.seniority !== undefined || body.preferences !== undefined;
+    body.skills !== undefined || body.years_experience !== undefined || body.seniority !== undefined ||
+    body.preferences !== undefined || body.education !== undefined;
 
   const updated = await one<UserRow>(
     `UPDATE users SET name = $2, skills = $3, years_experience = $4, seniority = $5, preferences = $6,
        resume_score = $7, profile_updated_at = CASE WHEN $8 THEN now() ELSE profile_updated_at END,
-       job_alerts = coalesce($9, job_alerts)
+       job_alerts = coalesce($9, job_alerts), education = $10
      WHERE id = $1 RETURNING *`,
     [
       user.id,
@@ -63,6 +65,7 @@ export const PATCH = route(async (req: Request) => {
       computeResumeScore({ skills, experience: user.experience, yearsExperience: years }),
       affectsMatching,
       body.job_alerts ?? null,
+      JSON.stringify(body.education ?? user.education ?? []),
     ],
   );
   return ok({ user: publicUser(updated!) });

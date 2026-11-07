@@ -1,5 +1,5 @@
 /** Row types (as returned by pg) and the public JSON shapes the API exposes. */
-import type { JobSkill, Seniority } from "./ai/fit-score";
+import type { Education, JobEducation, JobSkill, Seniority } from "./ai/fit-score";
 
 export type ExperienceItem = {
   title: string;
@@ -23,6 +23,8 @@ export type UserRow = {
   experience: ExperienceItem[];
   years_experience: string | null; // pg returns numeric as string
   seniority: Seniority | null;
+  /** Highest first; from the resume or the profile form. */
+  education: Education[];
   preferences: {
     locations?: string[];
     remote_only?: boolean;
@@ -58,6 +60,8 @@ export type JobRow = {
   skills: JobSkill[];
   seniority: Seniority | null;
   min_years: string | null;
+  /** What the ad asks for; null = not yet read by the extractor. */
+  education: JobEducation | null;
   salary_range: string | null;
   salary_min: number | null;
   salary_max: number | null;
@@ -78,7 +82,8 @@ export type FitScoreRow = {
   score: number;
   matched_skills: string[];
   missing_skills: string[];
-  breakdown: Record<string, number | null>;
+  /** The four parts + stored extras (partial_skills, missing_required, confidence, readiness, details). */
+  breakdown: Record<string, unknown>;
   explanation: string | null;
   computed_at: Date;
 };
