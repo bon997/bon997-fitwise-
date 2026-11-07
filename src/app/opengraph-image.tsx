@@ -14,7 +14,7 @@ export default async function OpengraphImage() {
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 80, background: "#f5f3ee", color: "#15171c" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 44 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={mark} width={72} height={72} alt="" />
+          <img src={mark} width={93} height={64} alt="" />
           JobFitwise
         </div>
         <div style={{ display: "flex", flexDirection: "column", fontSize: 84, lineHeight: 1.05 }}>
