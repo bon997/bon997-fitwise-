@@ -18,12 +18,32 @@ export function toFitProfile(u: UserRow): FitProfile {
     skills: u.skills,
     yearsExperience: num(u.years_experience),
     seniority: u.seniority,
+    education: u.education ?? [],
     preferences: u.preferences ?? {},
   };
 }
 
-export function toFitJob(j: Pick<JobRow, "skills" | "min_years" | "seniority" | "location" | "remote">): FitJob {
-  return { skills: j.skills, minYears: num(j.min_years), seniority: j.seniority, location: j.location, remote: j.remote };
+/** Columns the score needs from a job. */
+export const FIT_JOB_COLUMNS = "id, skills, min_years, seniority, location, remote, education, employment_type";
+type FitJobRow = Pick<JobRow, "id" | "skills" | "min_years" | "seniority" | "location" | "remote" | "education" | "employment_type">;
+
+export function toFitJob(j: Omit<FitJobRow, "id">): FitJob {
+  return {
+    skills: j.skills, minYears: num(j.min_years), seniority: j.seniority, location: j.location, remote: j.remote,
+    education: j.education, employmentType: j.employment_type,
+  };
+}
+
+/** What is stored in fit_scores.breakdown: the four parts plus the extras the UI needs. */
+export function storedBreakdown(r: FitResult) {
+  return {
+    ...r.breakdown,
+    partial_skills: r.partialSkills,
+    missing_required: r.missingRequired,
+    confidence: r.confidence,
+    readiness: r.readiness,
+    details: r.details,
+  };
 }
 
 export function profileText(u: UserRow): string {
@@ -36,7 +56,7 @@ export const hasProfile = (u: UserRow) => u.skills.length > 0;
 /** Score many jobs for one user and persist. Returns job id → result. */
 export async function scoreAndStore(
   user: UserRow,
-  jobs: Pick<JobRow, "id" | "skills" | "min_years" | "seniority" | "location" | "remote">[],
+  jobs: FitJobRow[],
   knownSemantic = new Map<string, number>(),
 ): Promise<Map<string, FitResult>> {
   const out = new Map<string, FitResult>();
@@ -67,7 +87,7 @@ export async function scoreAndStore(
       results.map((r) => r.score),
       results.map((r) => JSON.stringify(r.matchedSkills)),
       results.map((r) => JSON.stringify(r.missingSkills)),
-      results.map((r) => JSON.stringify({ ...r.breakdown, partial_skills: r.partialSkills })),
+      results.map((r) => JSON.stringify(storedBreakdown(r))),
     ],
   );
   return out;
@@ -75,14 +95,15 @@ export async function scoreAndStore(
 
 /** Fresh cached scores for these jobs; computes and stores any that are missing or stale. */
 /** Bump when the scoring rules change, so cached scores are recomputed. */
-const SCORING_CHANGED_AT = "2026-10-19T20:40:00Z";
+const SCORING_CHANGED_AT = "2026-11-07T22:00:00Z"; // 40/30/20/10 with education, confidence, readiness
 
 export async function fitScoresFor(user: UserRow, jobIds: string[]): Promise<Map<string, FitScoreRow>> {
   if (jobIds.length === 0 || !hasProfile(user)) return new Map();
 
   const rows = await sql<FitScoreRow & { fresh: boolean }>(
     `SELECT f.*, (f.computed_at >= coalesce($3::timestamptz, '-infinity') AND f.computed_at >= j.updated_at
-                  AND f.computed_at >= $4::timestamptz) AS fresh
+                  AND f.computed_at >= $4::timestamptz
+                  AND f.breakdown ? 'readiness') AS fresh  -- older formula's rows lack it, whenever stored
      FROM fit_scores f JOIN jobs j ON j.id = f.job_id
      WHERE f.user_id = $1 AND f.job_id = ANY($2::uuid[])`,
     [user.id, jobIds, user.profile_updated_at, SCORING_CHANGED_AT],
@@ -92,7 +113,7 @@ export async function fitScoresFor(user: UserRow, jobIds: string[]): Promise<Map
   const stale = jobIds.filter((id) => !cached.has(id));
   if (stale.length) {
     const jobs = await sql<JobRow>(
-      "SELECT id, skills, min_years, seniority, location, remote FROM jobs WHERE id = ANY($1::uuid[])",
+      `SELECT ${FIT_JOB_COLUMNS} FROM jobs WHERE id = ANY($1::uuid[])`,
       [stale],
     );
     await scoreAndStore(user, jobs);
@@ -110,7 +131,7 @@ export async function fitForJob(user: UserRow, job: JobRow, opts: { explain?: bo
   const row = (await fitScoresFor(user, [job.id])).get(job.id) ?? null;
   if (!row || !opts.explain || row.explanation) return row;
 
-  const { partial_skills, ...breakdown } = row.breakdown as Record<string, unknown>;
+  const b = row.breakdown;
   const explanation = await explainFit({
     jobTitle: job.title,
     company: job.company,
@@ -118,8 +139,14 @@ export async function fitForJob(user: UserRow, job: JobRow, opts: { explain?: bo
       score: row.score,
       matchedSkills: row.matched_skills,
       missingSkills: row.missing_skills,
-      partialSkills: (partial_skills as string[]) ?? [],
-      breakdown: breakdown as unknown as FitResult["breakdown"],
+      partialSkills: (b.partial_skills as string[]) ?? [],
+      missingRequired: (b.missing_required as string[]) ?? [],
+      breakdown: {
+        skills: (b.skills as number | null) ?? null,
+        experience: (b.experience as number | null) ?? null,
+        education: (b.education as number | null) ?? null,
+        location: (b.location as number | null) ?? null,
+      },
     },
   });
   await sql("UPDATE fit_scores SET explanation = $3 WHERE user_id = $1 AND job_id = $2", [user.id, job.id, explanation]);
@@ -144,7 +171,7 @@ export async function recommendJobs(user: UserRow, opts: { limit?: number; days?
     : new Map<string, number>();
 
   const candidates = await sql<JobRow>(
-    `SELECT id, skills, min_years, seniority, location, remote FROM jobs j
+    `SELECT ${FIT_JOB_COLUMNS} FROM jobs j
      WHERE j.is_active AND coalesce(j.posted_at, j.created_at) >= $2
        AND ($4::boolean IS FALSE OR j.remote)
        AND (j.id = ANY($3::uuid[]) OR EXISTS (
@@ -170,7 +197,7 @@ export async function recommendJobs(user: UserRow, opts: { limit?: number; days?
       const p = personalize(job, personal.profile);
       return {
         job,
-        fit: { score: r.score, matched_skills: r.matchedSkills, missing_skills: r.missingSkills, breakdown: r.breakdown },
+        fit: { score: r.score, matched_skills: r.matchedSkills, missing_skills: r.missingSkills, breakdown: storedBreakdown(r) },
         personal: { boost: p.boost, reasons: p.reasons, for_you: forYouScore(r.score, p.boost) },
         hidden: p.hidden,
       };

@@ -117,12 +117,21 @@ export const FAQ = defineT({
       a: (
         <>
           <p>
-            Five parts: your skills compared with the job&apos;s skills (45%), how closely your background matches the role
-            (20%), years of experience (15%), level (10%) and location (10%). Required skills count double, and a related
-            skill (for example PostgreSQL when a job asks for SQL) earns half credit.
+            Four parts, out of 100 points: <strong>skills 40</strong>, <strong>experience 30</strong>,{" "}
+            <strong>education 20</strong> and <strong>location &amp; work type 10</strong>. Skills compares your skills with
+            the job&apos;s (must-haves count double, a related skill such as PostgreSQL for SQL earns half) and how closely your
+            background matches the ad. Experience is your years against the years asked, plus level; it counts in full when at least half the
+            job&apos;s skills match, since years in an unrelated field count for less. Education is your highest
+            degree against the one the ad asks for; a foreign degree counts at its Swedish level.
           </p>
           <p className="mt-3">
-            Missing a required skill caps the score, because you can&apos;t be a near-perfect fit without the must-haves.
+            A part the ad says nothing about is left out and the others are scaled up, so missing information never counts
+            against you. Missing a must-have skill caps the score, because you can&apos;t be a near-perfect fit without it.
+          </p>
+          <p className="mt-3">
+            Next to the score you see <strong>confidence</strong> (how much information the score rests on) and{" "}
+            <strong>readiness</strong>: <em>Ready</em> is 80+ with every must-have, <em>Almost</em> is 65+ with at most one
+            must-have missing, <em>Stretch</em> is the rest.
           </p>
         </>
       ),
@@ -272,12 +281,21 @@ export const FAQ = defineT({
       a: (
         <>
           <p>
-            Fem delar: dina kompetenser jämfört med jobbets (45 %), hur väl din bakgrund matchar rollen (20 %), antal års
-            erfarenhet (15 %), nivå (10 %) och ort (10 %). Krav-kompetenser väger dubbelt, och en närliggande kompetens (till
-            exempel PostgreSQL när jobbet kräver SQL) ger halv poäng.
+            Fyra delar, av 100 poäng: <strong>kompetenser 40</strong>, <strong>erfarenhet 30</strong>,{" "}
+            <strong>utbildning 20</strong> och <strong>ort &amp; anställningsform 10</strong>. Kompetenser jämför dina
+            kompetenser med jobbets (krav väger dubbelt, en närliggande kompetens som PostgreSQL för SQL ger halv poäng) och hur
+            väl din bakgrund stämmer med annonsen. Erfarenhet är dina år mot de år som efterfrågas, plus nivå; den räknas fullt ut när minst hälften av
+            jobbets kompetenser stämmer, eftersom år inom ett annat område väger mindre. Utbildning är din
+            högsta examen mot den annonsen kräver; en utländsk examen räknas på sin svenska nivå.
           </p>
           <p className="mt-3">
+            En del som annonsen inte nämner räknas bort och de andra skalas upp, så information som saknas drar aldrig ner dig.
             Saknar du en krav-kompetens begränsas poängen, eftersom du inte kan vara en nästan perfekt match utan grundkraven.
+          </p>
+          <p className="mt-3">
+            Bredvid poängen ser du <strong>säkerhet</strong> (hur mycket information poängen bygger på) och{" "}
+            <strong>läge</strong>: <em>Redo</em> är 80+ med alla krav, <em>Nästan</em> är 65+ med högst ett krav som saknas,{" "}
+            <em>Utmaning</em> är resten.
           </p>
         </>
       ),

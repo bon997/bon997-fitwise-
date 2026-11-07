@@ -2,7 +2,7 @@ import { z } from "zod";
 import mammoth from "mammoth";
 import { structured, asDocument, MODELS } from "./claude";
 import { normalizeSkills } from "./skills";
-import { SENIORITY, computeResumeScore } from "./fit-score";
+import { EDUCATION, SENIORITY, computeResumeScore } from "./fit-score";
 
 const ResumeSchema = z.object({
   name: z.string().nullable(),
@@ -19,6 +19,15 @@ const ResumeSchema = z.object({
   ),
   years_experience: z.number().nullable().describe("Total professional years, excluding overlap and education"),
   seniority: z.enum(SENIORITY).nullable(),
+  education: z
+    .array(
+      z.object({
+        level: z.enum(EDUCATION).describe("gymnasium (upper secondary), vocational (yrkeshögskola/YH or similar), bachelor, master, phd. A foreign degree maps to its nearest Swedish level."),
+        field: z.string().nullable().describe("Field of study, short (e.g. 'computer science')"),
+      }),
+    )
+    .describe("Completed formal education, highest first. Leave out courses and certificates; empty if none is stated.")
+    .transform((xs) => xs.slice(0, 5)),
   suggested_roles: z
     .array(z.string())
     .describe("Up to 6 job titles this person is a realistic fit for now")

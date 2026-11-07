@@ -7,7 +7,7 @@ import { searchSerpApi } from "./sources/serpapi";
 import { searchJSearch } from "./sources/rapidapi";
 import { searchJobTech } from "./sources/jobtech";
 import type { RawJob } from "./sources/types";
-import { extractJobSignals } from "./ai/extract-job";
+import { extractJobEducation, extractJobSignals } from "./ai/extract-job";
 import { upsertJobs, jobEmbeddingText } from "./search/pinecone";
 import type { JobRow } from "./data";
 
@@ -80,9 +80,10 @@ export async function enrichJobs(ids: string[]): Promise<{ enriched: number; fai
       await sql(
         `UPDATE jobs SET skills = $2, seniority = $3, min_years = $4,
            remote = remote OR $5,
-           responsibilities = CASE WHEN jsonb_array_length(responsibilities) = 0 THEN $6 ELSE responsibilities END
+           responsibilities = CASE WHEN jsonb_array_length(responsibilities) = 0 THEN $6 ELSE responsibilities END,
+           education = $7
          WHERE id = $1`,
-        [j.id, JSON.stringify(x.skills), x.seniority, x.min_years, x.remote, JSON.stringify(x.responsibilities)],
+        [j.id, JSON.stringify(x.skills), x.seniority, x.min_years, x.remote, JSON.stringify(x.responsibilities), JSON.stringify(x.education)],
       );
       enriched++;
     } catch (e) {
@@ -100,6 +101,32 @@ export async function enrichJobs(ids: string[]): Promise<{ enriched: number; fai
   if (ready.length) await sql("UPDATE jobs SET embedded_at = now() WHERE id = ANY($1::uuid[])", [ready.map((j) => j.id)]);
   // The first failure reason is returned so the admin page can say why (bad key, no credit…).
   return { enriched, failed, ...(firstError ? { enrich_error: firstError } : {}) };
+}
+
+/**
+ * Read the education requirement of active jobs imported before education was
+ * scored (education IS NULL). A few per run keeps cost and run time small;
+ * changing a job bumps updated_at, so its fit scores recompute on next view.
+ */
+export async function backfillJobEducation(limit = 40): Promise<{ education_read: number; education_failed: number }> {
+  const jobs = await sql<JobRow>(
+    `SELECT * FROM jobs WHERE is_active AND education IS NULL AND skills <> '[]'::jsonb
+     ORDER BY posted_at DESC NULLS LAST LIMIT $1`,
+    [limit],
+  );
+  let read = 0;
+  let failed = 0;
+  await pool(jobs, 5, async (j) => {
+    try {
+      const education = await extractJobEducation(j);
+      await sql("UPDATE jobs SET education = $2 WHERE id = $1", [j.id, JSON.stringify(education)]);
+      read++;
+    } catch (e) {
+      failed++;
+      console.error(`education ${j.id} failed`, e);
+    }
+  });
+  return { education_read: read, education_failed: failed };
 }
 
 /** Keep the oldest of identical active listings (same title, company and place); hide the rest. */
@@ -151,13 +178,14 @@ export async function runIngest(r: IngestRequest) {
       [needsEnrich],
     );
     const enrich = await enrichJobs([...needsEnrich, ...backlog.map((b) => b.id)]);
+    const education = await backfillJobEducation().catch(() => ({ education_read: 0, education_failed: 0 }));
     await hideDuplicateJobs();
     // Keep the reason skills couldn't be read on the run, so it's still visible after a page reload.
     const note = "enrich_error" in enrich && enrich.enrich_error ? `Skills not read: ${enrich.enrich_error}` : null;
     await sql("UPDATE ingest_runs SET fetched=$2, inserted=$3, updated=$4, error=$5, finished_at=now() WHERE id=$1", [
       run!.id, raw.length, inserted, updated, note,
     ]);
-    return { runId: run!.id, fetched: raw.length, inserted, updated, duplicates, ...enrich };
+    return { runId: run!.id, fetched: raw.length, inserted, updated, duplicates, ...enrich, ...education };
   } catch (e) {
     await sql("UPDATE ingest_runs SET error=$2, finished_at=now() WHERE id=$1", [run!.id, String(e).slice(0, 1000)]);
     throw e;

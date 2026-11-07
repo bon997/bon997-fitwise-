@@ -34,6 +34,12 @@ const T = defineT({
     level: "Level",
     notSet: "Not set",
     intern: "Intern", junior: "Junior", mid: "Mid-level", senior: "Senior", lead: "Lead", executive: "Executive",
+    edu: "Highest education",
+    eduNone: "None / not set",
+    gymnasium: "Upper secondary (gymnasium)", vocational: "Vocational (YH)", bachelor: "Bachelor's", master: "Master's", phd: "PhD",
+    eduField: "Field of study",
+    eduFieldPh: "e.g. Computer science",
+    eduNote: "Many Swedish ads ask for a degree. A foreign degree counts at its Swedish level — UHR can assess it for free.",
     skills: "Skills",
     skillsNote: "— the most important input for your fit score",
     remove: (s: string) => `Remove ${s}`,
@@ -81,6 +87,12 @@ const T = defineT({
     level: "Nivå",
     notSet: "Inte angiven",
     intern: "Praktikant", junior: "Junior", mid: "Mellannivå", senior: "Senior", lead: "Lead / ledande", executive: "Chef / ledning",
+    edu: "Högsta utbildning",
+    eduNone: "Ingen / inte angiven",
+    gymnasium: "Gymnasium", vocational: "Yrkeshögskola (YH)", bachelor: "Kandidat / högskoleexamen", master: "Master / magister", phd: "Doktorsexamen",
+    eduField: "Ämne / inriktning",
+    eduFieldPh: "t.ex. Datavetenskap",
+    eduNote: "Många annonser kräver examen. En utländsk examen räknas på sin svenska nivå — UHR bedömer den gratis.",
     skills: "Kompetenser",
     skillsNote: "— det viktigaste för din matchningspoäng",
     remove: (s: string) => `Ta bort ${s}`,
@@ -109,6 +121,7 @@ type Profile = {
   skills: string[];
   years_experience: number | null;
   seniority: string | null;
+  education: { level: string; field: string | null }[];
   preferences: { locations?: string[]; remote_only?: boolean; target_titles?: string[]; salary_min?: number | null; suggested_roles?: string[] };
 };
 
@@ -132,6 +145,8 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
   const [skillInput, setSkillInput] = useState("");
   const [years, setYears] = useState(initial.years_experience?.toString() ?? "");
   const [seniority, setSeniority] = useState(initial.seniority ?? "");
+  const [eduLevel, setEduLevel] = useState(initial.education[0]?.level ?? "");
+  const [eduField, setEduField] = useState(initial.education[0]?.field ?? "");
   const [titles, setTitles] = useState((initial.preferences.target_titles ?? []).join(", "));
   const [locations, setLocations] = useState((initial.preferences.locations ?? []).join(", "));
   const [remoteOnly, setRemoteOnly] = useState(Boolean(initial.preferences.remote_only));
@@ -181,6 +196,8 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
       setSkills(u.skills);
       setYears(u.years_experience?.toString() ?? "");
       setSeniority(u.seniority ?? "");
+      setEduLevel(u.education?.[0]?.level ?? "");
+      setEduField(u.education?.[0]?.field ?? "");
       setTitles((u.preferences.target_titles ?? []).join(", "));
       setTips({ improvements: body.improvements ?? [], roles: body.suggested_roles ?? [] });
       setUploadMsg({ kind: "ok", text: t.read });
@@ -207,6 +224,8 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
           skills: allSkills,
           years_experience: years === "" ? null : Number(years),
           seniority: seniority || null,
+          // The form edits the highest entry; any lower ones read from a resume are kept.
+          education: eduLevel ? [{ level: eduLevel, field: eduField.trim() || null }, ...initial.education.slice(1)] : [],
           preferences: {
             target_titles: list(titles),
             locations: list(locations),
@@ -311,6 +330,21 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
               ))}
             </select>
           </label>
+          <label className="block text-sm sm:col-span-1">
+            <span className="text-ink-2">{t.edu}</span>
+            <select value={eduLevel} onChange={(e) => setEduLevel(e.target.value)} className={`${field} mt-1.5`}>
+              <option value="">{t.eduNone}</option>
+              {(["gymnasium", "vocational", "bachelor", "master", "phd"] as const).map((v) => (
+                <option key={v} value={v}>{t[v]}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm sm:col-span-2">
+            <span className="text-ink-2">{t.eduField}</span>
+            <input value={eduField} onChange={(e) => setEduField(e.target.value)} maxLength={100} placeholder={t.eduFieldPh}
+              disabled={!eduLevel} className={`${field} mt-1.5 disabled:bg-paper disabled:text-muted`} />
+          </label>
+          <p className="text-xs text-muted sm:col-span-3">{t.eduNote}</p>
         </div>
 
         <div className="mt-5">

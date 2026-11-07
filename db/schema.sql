@@ -233,3 +233,11 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS alerts_token text NOT NULL DEFAULT en
 CREATE UNIQUE INDEX IF NOT EXISTS users_alerts_token ON users (alerts_token);
 -- Language for emails: the one the person last used the site in.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS locale text CHECK (locale IN ('sv', 'en'));
+
+-- ── Education in the fit score (Skills 40 · Experience 30 · Education 20 · Location 10) ──
+-- users.education: [{"level": "bachelor", "field": "computer science"}, ...] highest first,
+--   levels: gymnasium | vocational (YH) | bachelor | master | phd
+-- jobs.education:  {"level": "bachelor" | null, "field": ..., "equivalent_ok": true}
+--   NULL = not read yet (a daily catch-up reads older jobs); level null = none stated.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS education jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE jobs  ADD COLUMN IF NOT EXISTS education jsonb;

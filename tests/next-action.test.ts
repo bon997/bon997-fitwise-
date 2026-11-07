@@ -20,6 +20,7 @@ describe("profileChecklist", () => {
     const items = profileChecklist({ ...demo, locations: [], remoteOnly: false });
     expect(bestProfileStep(items)?.key).toBe("described"); // 3 described roles = +24, beats 8 more skills = +20
     expect(items.find((i) => i.key === "places")?.done).toBe(false);
+    expect(items.find((i) => i.key === "education")?.done).toBe(false);
   });
 
   it("has nothing left for a complete profile", () => {
@@ -29,6 +30,7 @@ describe("profileChecklist", () => {
       yearsExperience: 6,
       locations: [],
       remoteOnly: true,
+      education: [{ level: "bachelor", field: null }],
     };
     expect(bestProfileStep(profileChecklist(full))).toBeNull();
   });
@@ -36,11 +38,16 @@ describe("profileChecklist", () => {
 
 describe("nextAction", () => {
   const checklist = profileChecklist({ ...demo, locations: ["Stockholm"], remoteOnly: false });
-  const job = (id: string, score: number, applied = false) => ({ id, title: `Job ${id}`, company: "Acme", score, applied });
+  const job = (id: string, score: number, applied = false, ready = score >= 80) => ({ id, title: `Job ${id}`, company: "Acme", score, ready, applied });
 
   it("sends you to a strong match you haven't applied to", () => {
     const a = nextAction({ matches: [job("a", 92, true), job("b", 86), job("c", 81), job("d", 60)], strength: 40, checklist, gaps: [] });
     expect(a).toMatchObject({ kind: "apply", jobId: "b", ready: 2 });
+  });
+
+  it("skips a high score that is missing a must-have", () => {
+    const a = nextAction({ matches: [job("x", 88, false, false), job("y", 82)], strength: 40, checklist, gaps: [] });
+    expect(a).toMatchObject({ kind: "apply", jobId: "y", ready: 1 });
   });
 
   it("fixes a very thin profile before anything else", () => {
@@ -53,7 +60,7 @@ describe("nextAction", () => {
     const done = profileChecklist({
       skills: Array.from({ length: 15 }, (_, i) => `s${i}`),
       experience: Array.from({ length: 3 }, () => ({ start: "2020-01", summary: "x".repeat(80) })),
-      yearsExperience: 6, locations: ["Malmö"], remoteOnly: false,
+      yearsExperience: 6, locations: ["Malmö"], remoteOnly: false, education: [{ level: "master", field: null }],
     });
     const a = nextAction({ matches: [job("a", 70)], strength: 100, checklist: done, gaps: [{ skill: "excel", jobs: 4 }] });
     expect(a).toEqual({ kind: "learn", skill: "excel", jobs: 4 });
@@ -63,7 +70,7 @@ describe("nextAction", () => {
     const done = profileChecklist({
       skills: Array.from({ length: 15 }, (_, i) => `s${i}`),
       experience: Array.from({ length: 3 }, () => ({ start: "2020-01", summary: "x".repeat(80) })),
-      yearsExperience: 6, locations: ["Malmö"], remoteOnly: false,
+      yearsExperience: 6, locations: ["Malmö"], remoteOnly: false, education: [{ level: "master", field: null }],
     });
     expect(nextAction({ matches: [], strength: 100, checklist: done, gaps: [] })).toEqual({ kind: "browse" });
   });

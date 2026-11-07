@@ -51,6 +51,7 @@ function STEP_EN(i: ChecklistItem): string {
     case "described": return `Describe ${i.want} roles in 2–3 sentences each (${i.have} of ${i.want} done)`;
     case "dated": return "Add start dates to every role";
     case "years": return "Add your total years of experience";
+    case "education": return "Add your highest education — 20 of 100 fit points";
     case "places": return "Choose where you want to work, or remote";
   }
 }
@@ -61,6 +62,7 @@ function STEP_SV(i: ChecklistItem): string {
     case "described": return `Beskriv ${i.want} roller med 2–3 meningar var (${i.have} av ${i.want} klara)`;
     case "dated": return "Lägg till startdatum för varje roll";
     case "years": return "Lägg till hur många års erfarenhet du har";
+    case "education": return "Lägg till din högsta utbildning — 20 av 100 poäng";
     case "places": return "Välj var du vill jobba, eller distans";
   }
 }
