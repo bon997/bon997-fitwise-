@@ -3,10 +3,10 @@ import { z } from "zod";
 
 /** Model choices are env-configurable so you can swap without a deploy. */
 export const MODELS = {
-  /** Resume parsing, cover letters, fit explanations — quality matters. */
+  /** Resume parsing and cover letters — quality matters. */
   smart: process.env.CLAUDE_MODEL ?? "claude-sonnet-5-5",
-  /** Bulk job-post skill extraction at ingest — volume matters. */
-  fast: process.env.CLAUDE_FAST_MODEL ?? "claude-haiku-4-5-20251001",
+  /** Job-post skill extraction at ingest and short fit explanations — volume matters. */
+  fast: process.env.CLAUDE_FAST_MODEL ?? "claude-haiku-5-5",
 };
 
 let client: Anthropic | null = null;
