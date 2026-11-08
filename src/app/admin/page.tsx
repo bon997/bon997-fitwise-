@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { sql, one } from "@/lib/db";
 import { AppHeader } from "@/components/app/AppHeader";
 import { ImportJobsForm } from "@/components/admin/ImportJobsForm";
+import { DailyImports } from "@/components/admin/DailyImports";
+import { nightlyEstimate, type ImportSearch } from "@/lib/scheduled-import";
 import { timeAgo } from "@/lib/format";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
@@ -32,7 +34,7 @@ export default async function AdminPage() {
   const locale = await getLocale();
   const t = T[locale];
 
-  const [totals, runs] = await Promise.all([
+  const [totals, runs, searches, estimate] = await Promise.all([
     one<Totals>(`SELECT
       (SELECT count(*)::int FROM users) AS users,
       (SELECT count(*)::int FROM users WHERE jsonb_array_length(skills) > 0) AS with_profile,
@@ -41,6 +43,8 @@ export default async function AdminPage() {
       (SELECT count(*)::int FROM jobs WHERE created_at > now() - interval '7 days') AS jobs_7d,
       (SELECT count(*)::int FROM jobs WHERE is_active AND skills = '[]'::jsonb) AS no_skills`),
     sql<Run>("SELECT * FROM ingest_runs ORDER BY started_at DESC LIMIT 15"),
+    sql<ImportSearch>("SELECT * FROM import_searches ORDER BY created_at"),
+    nightlyEstimate(),
   ]);
 
   const tiles = [
@@ -65,6 +69,14 @@ export default async function AdminPage() {
             </div>
           ))}
         </dl>
+
+        <div className="mt-8">
+          <DailyImports
+            searches={searches.map((x) => ({ ...x, last_run_at: x.last_run_at ? x.last_run_at.toISOString() : null }))}
+            estimate={estimate}
+            sources={{ serpapi: Boolean(process.env.SERPAPI_KEY), rapidapi: Boolean(process.env.RAPIDAPI_KEY) }}
+          />
+        </div>
 
         <div className="mt-8">
           <ImportJobsForm
