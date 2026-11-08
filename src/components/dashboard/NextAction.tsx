@@ -9,7 +9,7 @@ const T = defineT({
     eyebrow: "Your next step",
     apply: (n: number) => (n === 1 ? "A job fits you well — apply today" : `${n} jobs fit you well — apply today`),
     applyBody: (title: string, company: string, score: number) => `Start with ${title} at ${company}: ${score} fit. Strong matches get filled fast.`,
-    applyCta: "Open the job",
+    applyCta: "Open job and write cover letter",
     profile: "Make your profile stronger",
     profileCta: "Update my profile",
     learn: (skill: string) => `Learn ${skill}`,
@@ -27,7 +27,7 @@ const T = defineT({
     eyebrow: "Ditt nästa steg",
     apply: (n: number) => (n === 1 ? "Ett jobb passar dig bra — sök i dag" : `${n} jobb passar dig bra — sök i dag`),
     applyBody: (title: string, company: string, score: number) => `Börja med ${title} på ${company}: ${score} i matchning. Bra jobb tillsätts snabbt.`,
-    applyCta: "Öppna jobbet",
+    applyCta: "Öppna jobbet och skriv brev",
     profile: "Gör din profil starkare",
     profileCta: "Uppdatera min profil",
     learn: (skill: string) => `Lär dig ${skill}`,
@@ -84,7 +84,7 @@ export function NextActionCard({
   switch (action.kind) {
     case "apply":
       title = t.apply(action.ready); body = t.applyBody(action.title, action.company, action.score);
-      href = `/jobs/${action.jobId}`; cta = t.applyCta; break;
+      href = `/jobs/${action.jobId}#apply-heading`; cta = t.applyCta; break;
     case "profile":
       title = t.profile; body = `${t.step(action.step)}${action.step.gain > 0 ? ` · ${t.points(action.step.gain)}` : ""}`;
       href = "/profile"; cta = t.profileCta; break;

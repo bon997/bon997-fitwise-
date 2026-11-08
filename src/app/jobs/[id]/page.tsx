@@ -33,6 +33,12 @@ const T = defineT({
     signIn: "Sign in",
     signInRest: "to see your fit score and apply with AI.",
     open: "Open application page ↗",
+    letterTitle: "Write a cover letter with AI",
+    letterShort: "Write a cover letter for this job",
+    letterNeedsCv: "We write a personal letter for this job from your real experience. Add your CV or a few skills first — it takes about a minute.",
+    letterNeedsAccount: "Create a free account and add your CV, and we'll write a personal letter for this job in Swedish or English.",
+    letterCvCta: "Add my CV",
+    letterSignupCta: "Create free account",
     fit: "fit",
     at: (title: string, company: string) => `${title} at ${company}`,
   },
@@ -52,6 +58,12 @@ const T = defineT({
     signIn: "Logga in",
     signInRest: "för att se din matchningspoäng och söka med AI.",
     open: "Öppna ansökningssidan ↗",
+    letterTitle: "Skriv ett personligt brev med AI",
+    letterShort: "Skriv ett personligt brev till jobbet",
+    letterNeedsCv: "Vi skriver ett personligt brev till det här jobbet utifrån din riktiga erfarenhet. Lägg till ditt CV eller några kompetenser först — det tar ungefär en minut.",
+    letterNeedsAccount: "Skapa ett gratis konto och lägg till ditt CV, så skriver vi ett personligt brev till det här jobbet på svenska eller engelska.",
+    letterCvCta: "Lägg till mitt CV",
+    letterSignupCta: "Skapa gratis konto",
     fit: "match",
     at: (title: string, company: string) => `${title} hos ${company}`,
   },
@@ -153,12 +165,18 @@ export default async function JobPage({ params }: Props) {
             {user && <div className="mt-4"><JobActions jobId={job.id} saved={Boolean(saved)} /></div>}
             {fit && typeof breakdown.readiness === "string" && (
               // Phones: the fit card sits below the ad, so give the verdict up top.
-              <a href="#fit-heading" className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm lg:hidden">
-                <span>
-                  <strong className="tabular-nums">{fit.score}</strong> {t.fit} · {L.readiness[breakdown.readiness]}
-                </span>
-                <span className="text-accent">{t.seeFit} ↓</span>
-              </a>
+              <div className="mt-4 rounded-xl border border-line bg-white text-sm lg:hidden">
+                <a href="#fit-heading" className="flex items-center justify-between gap-3 px-4 py-3">
+                  <span>
+                    <strong className="tabular-nums">{fit.score}</strong> {t.fit} · {L.readiness[breakdown.readiness]}
+                  </span>
+                  <span className="text-accent">{t.seeFit} ↓</span>
+                </a>
+                <a href="#apply-heading" className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
+                  <span>{t.letterShort}</span>
+                  <span className="text-accent">↓</span>
+                </a>
+              </div>
             )}
 
             {job.responsibilities.length > 0 && (
@@ -234,12 +252,26 @@ export default async function JobPage({ params }: Props) {
                 existingLetter={application?.cover_letter ?? null}
                 application={application ? { id: application.id, status: application.status } : null}
               />
-            ) : job.apply_url ? (
-              <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
-                className="block rounded-full bg-ink px-5 py-3 text-center text-sm font-medium text-paper hover:bg-ink-2">
-                {t.open}
-              </a>
-            ) : null}
+            ) : (
+              // Without a profile the letter can't be written, but the tool must still be visible:
+              // hiding it left people unable to find cover letters at all.
+              <section className="rounded-2xl border border-line bg-white p-5 sm:p-6" aria-labelledby="letter-heading">
+                <h2 id="letter-heading" className="text-lg font-semibold">{t.letterTitle}</h2>
+                <p className="mt-1.5 text-sm text-ink-2">{user ? t.letterNeedsCv : t.letterNeedsAccount}</p>
+                <Link
+                  href={user ? "/profile" : `/signup?returnTo=/jobs/${job.id}`}
+                  className="mt-4 inline-block rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-paper hover:opacity-90"
+                >
+                  {user ? t.letterCvCta : t.letterSignupCta}
+                </Link>
+                {job.apply_url && (
+                  <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
+                    className="mt-5 block rounded-full bg-ink px-5 py-3 text-center text-sm font-medium text-paper hover:bg-ink-2">
+                    {t.open}
+                  </a>
+                )}
+              </section>
+            )}
           </aside>
         </div>
       </main>
