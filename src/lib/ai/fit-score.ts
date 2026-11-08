@@ -21,7 +21,8 @@ import { normalizeSkill, skillCredit } from "./skills";
 export const SENIORITY = ["intern", "junior", "mid", "senior", "lead", "executive"] as const;
 export type Seniority = (typeof SENIORITY)[number];
 
-export type JobSkill = { name: string; required: boolean };
+/** `src: "tags"` = taken from the employer's own Platsbanken tags because the AI couldn't read the ad yet. */
+export type JobSkill = { name: string; required: boolean; src?: "tags" };
 
 /** Education levels in Swedish terms, lowest first. "vocational" = yrkeshögskola / YH. */
 export const EDUCATION = ["gymnasium", "vocational", "bachelor", "master", "phd"] as const;

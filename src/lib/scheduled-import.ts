@@ -13,7 +13,7 @@
  * with the ones that waited longest.
  */
 import { one, sql } from "./db";
-import { enrichJobs, hideDuplicateJobs, importJobs, type IngestRequest } from "./ingest";
+import { enrichJobs, hideDuplicateJobs, importJobs, NEEDS_SKILLS_SQL, type IngestRequest } from "./ingest";
 
 /** Stop starting new searches after this long, leaving time to read skills. */
 export const SEARCH_BUDGET_MS = 25_000;
@@ -40,6 +40,8 @@ export type ScheduledImportResult = {
   fetched: number;
   inserted: number;
   enriched: number;
+  /** Jobs that got their employer's Platsbanken tags because the AI was unavailable. */
+  tagged: number;
   enrichFailed: number;
   enrichError?: string;
   duplicatesHidden: number;
@@ -70,7 +72,7 @@ export async function hideExpiredJobs(maxAgeDays = JOB_MAX_AGE_DAYS): Promise<nu
 export async function runScheduledImport(opts: { now?: () => number } = {}): Promise<ScheduledImportResult> {
   const now = opts.now ?? Date.now;
   const started = now();
-  const result: ScheduledImportResult = { searches: [], skipped: 0, fetched: 0, inserted: 0, enriched: 0, enrichFailed: 0, duplicatesHidden: 0, expired: 0 };
+  const result: ScheduledImportResult = { searches: [], skipped: 0, fetched: 0, inserted: 0, enriched: 0, tagged: 0, enrichFailed: 0, duplicatesHidden: 0, expired: 0 };
 
   // 1. Searches, the longest-waiting first.
   const searches = await sql<ImportSearch>(
@@ -101,13 +103,18 @@ export async function runScheduledImport(opts: { now?: () => number } = {}): Pro
   }
 
   // 2. Read skills, this run's new jobs first, then older ones still waiting, in small batches.
-  if (process.env.ANTHROPIC_API_KEY) {
+  //    With no AI (no key, no credit) Platsbanken jobs get their employer's own tags instead,
+  //    and the AI replaces those on a later night once it works again.
+  {
     const queue = [...fresh];
     const tried = new Set<string>();
+    let aiDown = !process.env.ANTHROPIC_API_KEY?.trim();
     while (now() - started < TOTAL_BUDGET_MS) {
       if (queue.length === 0) {
+        // While the AI is down only empty jobs are worth a pass; tagged ones wait for the AI.
+        const waiting = aiDown ? "skills = '[]'::jsonb" : NEEDS_SKILLS_SQL;
         const backlog = await sql<{ id: string }>(
-          "SELECT id FROM jobs WHERE is_active AND skills = '[]'::jsonb ORDER BY coalesce(posted_at, created_at) DESC LIMIT 10",
+          `SELECT id FROM jobs WHERE is_active AND ${waiting} ORDER BY coalesce(posted_at, created_at) DESC LIMIT 10`,
         );
         // Skip ids this run already tried, so one bad ad can't loop forever.
         queue.push(...backlog.map((b) => b.id).filter((id) => !tried.has(id)));
@@ -115,12 +122,13 @@ export async function runScheduledImport(opts: { now?: () => number } = {}): Pro
       }
       const batch = queue.splice(0, 10);
       batch.forEach((id) => tried.add(id));
-      const r = await enrichJobs(batch);
+      const r = await enrichJobs(batch, { skipAi: aiDown });
       result.enriched += r.enriched;
+      result.tagged += r.tagged;
       result.enrichFailed += r.failed;
-      if ("enrich_error" in r && typeof r.enrich_error === "string") result.enrichError ??= r.enrich_error;
-      // A missing key or used-up credit fails every job; stop instead of spending the run on it.
-      if (r.enriched === 0 && r.failed > 0) break;
+      if (typeof r.enrich_error === "string") result.enrichError ??= r.enrich_error;
+      // A missing key or used-up credit fails every job: stop calling the AI, keep tagging.
+      if (r.aiDown) aiDown = true;
     }
   }
 

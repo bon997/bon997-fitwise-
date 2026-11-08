@@ -5,6 +5,7 @@ const db = vi.hoisted(() => ({
   searches: [] as Record<string, unknown>[],
   backlog: [] as string[],
   updates: [] as { id: string; note: string }[],
+  backlogQueries: [] as string[],
 }));
 vi.mock("@/lib/db", () => ({
   one: vi.fn(async () => ({ pages: 0 })),
@@ -14,7 +15,10 @@ vi.mock("@/lib/db", () => ({
       db.updates.push({ id: params[0] as string, note: params[1] as string });
       return [];
     }
-    if (q.includes("skills = '[]'::jsonb ORDER BY")) return db.backlog.splice(0, 10).map((id) => ({ id }));
+    if (q.includes("FROM jobs WHERE is_active AND") && q.includes("ORDER BY coalesce")) {
+      db.backlogQueries.push(q);
+      return db.backlog.splice(0, 10).map((id) => ({ id }));
+    }
     return []; // hiding expired jobs
   }),
 }));
@@ -22,6 +26,7 @@ const ingest = vi.hoisted(() => ({
   importJobs: vi.fn(),
   enrichJobs: vi.fn(),
   hideDuplicateJobs: vi.fn(async () => 2),
+  NEEDS_SKILLS_SQL: "(needs skills)",
 }));
 vi.mock("@/lib/ingest", () => ingest);
 
@@ -33,8 +38,9 @@ beforeEach(() => {
   db.searches = [];
   db.backlog = [];
   db.updates = [];
+  db.backlogQueries = [];
   ingest.importJobs.mockReset().mockImplementation(async () => ({ runId: "r", fetched: 10, inserted: 4, updated: 6, duplicates: 1, needsEnrich: ["a", "b"] }));
-  ingest.enrichJobs.mockReset().mockImplementation(async (ids: string[]) => ({ enriched: ids.length, failed: 0 }));
+  ingest.enrichJobs.mockReset().mockImplementation(async (ids: string[]) => ({ enriched: ids.length, tagged: 0, failed: 0, aiDown: false }));
   vi.stubEnv("ANTHROPIC_API_KEY", "x");
   vi.stubEnv("SERPAPI_KEY", "");
 });
@@ -87,19 +93,35 @@ describe("nightly import", () => {
     expect(r.enriched).toBe(2 + 13);
   });
 
-  it("stops reading skills when every job fails (missing key or credit)", async () => {
+  it("stops calling the AI when it fails (no credit) and uses Platsbanken tags for the rest", async () => {
     db.backlog = Array.from({ length: 30 }, (_, i) => `old${i}`);
-    ingest.enrichJobs.mockImplementation(async (ids: string[]) => ({ enriched: 0, failed: ids.length, enrich_error: "credit balance too low" }));
+    ingest.enrichJobs.mockImplementation(async (ids: string[], opts?: { skipAi?: boolean }) =>
+      opts?.skipAi
+        ? { enriched: 0, tagged: ids.length, failed: 0, aiDown: true }
+        : { enriched: 0, tagged: ids.length, failed: 0, aiDown: true, enrich_error: "credit balance too low" });
     const r = await runScheduledImport();
-    expect(ingest.enrichJobs).toHaveBeenCalledTimes(1);
+    expect(ingest.enrichJobs.mock.calls[0][1]).toEqual({ skipAi: false });
+    expect(ingest.enrichJobs.mock.calls.slice(1).every((c) => c[1]?.skipAi === true)).toBe(true);
+    expect(r.tagged).toBe(30);
     expect(r.enrichError).toBe("credit balance too low");
+    // While the AI is down only empty jobs are fetched from the backlog, not already-tagged ones.
+    expect(db.backlogQueries.at(-1)).toContain("skills = '[]'::jsonb");
   });
 
-  it("doesn't read skills without an AI key", async () => {
+  it("without an AI key, never calls the AI but still tags Platsbanken jobs", async () => {
     vi.stubEnv("ANTHROPIC_API_KEY", "");
     db.searches = [search("1")];
+    ingest.enrichJobs.mockImplementation(async (ids: string[]) => ({ enriched: 0, tagged: ids.length, failed: 0, aiDown: true }));
+    const r = await runScheduledImport();
+    expect(ingest.enrichJobs).toHaveBeenCalled();
+    expect(ingest.enrichJobs.mock.calls.every((c) => c[1]?.skipAi === true)).toBe(true);
+    expect(r.tagged).toBe(2);
+  });
+
+  it("with the AI working, older tagged jobs are queued for a proper read", async () => {
+    db.backlog = ["t1"];
     await runScheduledImport();
-    expect(ingest.enrichJobs).not.toHaveBeenCalled();
+    expect(db.backlogQueries[0]).toContain("(needs skills)");
   });
 });
 

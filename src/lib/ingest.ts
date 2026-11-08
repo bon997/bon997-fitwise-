@@ -8,6 +8,8 @@ import { searchJSearch } from "./sources/rapidapi";
 import { searchJobTech } from "./sources/jobtech";
 import type { RawJob } from "./sources/types";
 import { extractJobEducation, extractJobSignals } from "./ai/extract-job";
+import { normalizeSkill } from "./ai/skills";
+import type { JobSkill } from "./ai/fit-score";
 import { upsertJobs, jobEmbeddingText } from "./search/pinecone";
 import type { JobRow } from "./data";
 
@@ -68,13 +70,63 @@ async function pool<T>(items: T[], n: number, fn: (t: T) => Promise<void>) {
   }));
 }
 
-/** Extract skills for jobs that don't have them yet. Safe to call on its own (e.g. after manual inserts). */
-export async function enrichJobs(ids: string[]): Promise<{ enriched: number; failed: number }> {
-  const jobs = await sql<JobRow>("SELECT * FROM jobs WHERE id = ANY($1::uuid[]) AND skills = '[]'::jsonb", [ids]);
+/**
+ * Jobs whose skills still need the AI: none yet, or only the employer's
+ * Platsbanken tags (stored as a stand-in while the AI was unavailable).
+ */
+export const NEEDS_SKILLS_SQL = `(skills = '[]'::jsonb OR skills @> '[{"src":"tags"}]'::jsonb)`;
+
+/**
+ * Free stand-in skills from the employer's own Platsbanken tags ("must have" /
+ * "nice to have"), which mapJobTechHit keeps as the job's requirements text.
+ * Used only when the AI can't read the ad; the AI replaces them later.
+ */
+export function tagSkills(job: Pick<JobRow, "source" | "requirements">): JobSkill[] {
+  if (job.source !== "jobtech" || !job.requirements) return [];
+  const out = new Map<string, boolean>();
+  for (const line of job.requirements.split("\n")) {
+    const m = /^(Required|Nice to have): (.+)$/.exec(line.trim());
+    if (!m) continue;
+    for (const raw of m[2].split(", ")) {
+      const name = normalizeSkill(raw);
+      if (name) out.set(name, (out.get(name) ?? false) || m[1] === "Required");
+    }
+  }
+  return [...out].slice(0, 25).map(([name, required]) => ({ name, required, src: "tags" as const }));
+}
+
+/** After this many AI failures in a row with no success, the rest of the call uses tags only. */
+const AI_DOWN_AFTER = 3;
+
+export type EnrichResult = { enriched: number; tagged: number; failed: number; aiDown: boolean; enrich_error?: string };
+
+/**
+ * Read skills for jobs that need them (see NEEDS_SKILLS_SQL). Safe to call on its own.
+ * When the AI is unavailable (no key, no credit, repeated errors) a Platsbanken
+ * job gets its employer's tags instead, so matching keeps working at no cost.
+ */
+export async function enrichJobs(ids: string[], opts: { skipAi?: boolean } = {}): Promise<EnrichResult> {
+  const jobs = await sql<JobRow>(`SELECT * FROM jobs WHERE id = ANY($1::uuid[]) AND ${NEEDS_SKILLS_SQL}`, [ids]);
   let enriched = 0;
+  let tagged = 0;
   let failed = 0;
+  let failStreak = 0;
+  let aiDown = Boolean(opts.skipAi) || !process.env.ANTHROPIC_API_KEY?.trim();
   let firstError: string | undefined;
+
+  const useTags = async (j: JobRow) => {
+    const tags = tagSkills(j);
+    if (tags.length === 0 || j.skills.length > 0) return false; // nothing to add, or tags already stored
+    await sql("UPDATE jobs SET skills = $2 WHERE id = $1 AND skills = '[]'::jsonb", [j.id, JSON.stringify(tags)]);
+    tagged++;
+    return true;
+  };
+
   await pool(jobs, 5, async (j) => {
+    if (aiDown) {
+      if (!(await useTags(j)) && j.skills.length === 0) failed++;
+      return;
+    }
     try {
       const x = await extractJobSignals(j);
       await sql(
@@ -86,10 +138,12 @@ export async function enrichJobs(ids: string[]): Promise<{ enriched: number; fai
         [j.id, JSON.stringify(x.skills), x.seniority, x.min_years, x.remote, JSON.stringify(x.responsibilities), JSON.stringify(x.education)],
       );
       enriched++;
+      failStreak = 0;
     } catch (e) {
-      failed++;
       firstError ??= e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300);
       console.error(`enrich ${j.id} failed`, e);
+      if (++failStreak >= AI_DOWN_AFTER && enriched === 0) aiDown = true;
+      if (!(await useTags(j)) && j.skills.length === 0) failed++;
     }
   });
 
@@ -100,7 +154,7 @@ export async function enrichJobs(ids: string[]): Promise<{ enriched: number; fai
   );
   if (ready.length) await sql("UPDATE jobs SET embedded_at = now() WHERE id = ANY($1::uuid[])", [ready.map((j) => j.id)]);
   // The first failure reason is returned so the admin page can say why (bad key, no credit…).
-  return { enriched, failed, ...(firstError ? { enrich_error: firstError } : {}) };
+  return { enriched, tagged, failed, aiDown, ...(firstError ? { enrich_error: firstError } : {}) };
 }
 
 /**
@@ -193,7 +247,7 @@ export async function runIngest(r: IngestRequest) {
   const { runId, needsEnrich, ...counts } = await importJobs(r);
   // Also catch up on a few older jobs whose skills were never read (e.g. imported while the AI key was missing).
   const backlog = await sql<{ id: string }>(
-    `SELECT id FROM jobs WHERE is_active AND skills = '[]'::jsonb AND NOT (id = ANY($1::uuid[]))
+    `SELECT id FROM jobs WHERE is_active AND ${NEEDS_SKILLS_SQL} AND NOT (id = ANY($1::uuid[]))
      ORDER BY created_at DESC LIMIT 10`,
     [needsEnrich],
   );
