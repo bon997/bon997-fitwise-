@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/i18n/client";
+import { SpellingHint } from "./SpellingHint";
+import { PLACES } from "@/lib/job-terms";
 import { defineT } from "@/i18n/config";
 import { timeAgo } from "@/lib/format";
 
@@ -34,7 +36,7 @@ const SOURCE = { jobtech: "Platsbanken", serpapi: "Google Jobs", rapidapi: "JSea
 const T = defineT({
   en: {
     title: "Daily imports",
-    intro: "Save a search once and Fitwise imports the newest jobs for it every night (around 04:00), reads their skills and hides ads that are more than 45 days old.",
+    intro: "Save a search once and JobFitwise imports the newest jobs for it every night (around 04:00), reads their skills and hides ads that are more than 45 days old.",
     estimate: (n: number) => `About ${n} jobs checked each night.`,
     google: "Google Jobs uses 1 SerpApi search per page every night, about 30 a month (the free plan has 100).",
     what: "What jobs", whatPh: "e.g. inköpare", where: "Where (optional)", wherePh: "e.g. Malmö",
@@ -53,7 +55,7 @@ const T = defineT({
   },
   sv: {
     title: "Dagliga importer",
-    intro: "Spara en sökning en gång så importerar Fitwise de senaste jobben för den varje natt (runt 04:00), läser ut kompetenserna och döljer annonser som är äldre än 45 dagar.",
+    intro: "Spara en sökning en gång så importerar JobFitwise de senaste jobben för den varje natt (runt 04:00), läser ut kompetenserna och döljer annonser som är äldre än 45 dagar.",
     estimate: (n: number) => `Ungefär ${n} jobb kontrolleras varje natt.`,
     google: "Google Jobs använder 1 SerpApi-sökning per sida varje natt, ungefär 30 i månaden (gratisplanen har 100).",
     what: "Vilka jobb", whatPh: "t.ex. inköpare", where: "Var (valfritt)", wherePh: "t.ex. Malmö",
@@ -137,14 +139,16 @@ export function DailyImports({ searches, estimate, sources }: { searches: Search
         )}
       </div>
 
-      <form onSubmit={add} className="mt-5 grid gap-3 sm:grid-cols-[2fr_1.4fr_1fr_1fr_auto] sm:items-end">
+      <form onSubmit={add} className="mt-5 grid gap-3 sm:grid-cols-[2fr_1.4fr_1fr_1fr_auto] sm:items-start">
         <label className="text-sm">
           <span className="text-ink-2">{t.what}</span>
           <input id="daily-query" required minLength={2} maxLength={200} value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.whatPh} className={`mt-1 ${field}`} />
+          <SpellingHint value={query} onPick={setQuery} />
         </label>
         <label className="text-sm">
           <span className="text-ink-2">{t.where}</span>
           <input id="daily-location" maxLength={100} value={location} onChange={(e) => setLocation(e.target.value)} placeholder={t.wherePh} className={`mt-1 ${field}`} />
+          <SpellingHint value={location} words={PLACES} onPick={setLocation} />
         </label>
         <label className="text-sm">
           <span className="text-ink-2">{t.source}</span>

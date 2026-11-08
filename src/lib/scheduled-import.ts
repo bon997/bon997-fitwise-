@@ -57,7 +57,9 @@ export function sourceReady(source: IngestRequest["source"]): boolean {
 
 /** Short summary stored on the search, shown on the admin page. */
 export const summary = (r: { fetched: number; inserted: number; duplicates: number }) =>
-  `${r.fetched} found · ${r.inserted} new${r.duplicates ? ` · ${r.duplicates} duplicates skipped` : ""}`;
+  r.fetched === 0
+    ? "0 found · check the spelling or try a broader word"
+    : `${r.fetched} found · ${r.inserted} new${r.duplicates ? ` · ${r.duplicates} duplicates skipped` : ""}`;
 
 export async function hideExpiredJobs(maxAgeDays = JOB_MAX_AGE_DAYS): Promise<number> {
   const rows = await sql(

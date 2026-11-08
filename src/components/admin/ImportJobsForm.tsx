@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { SpellingHint } from "./SpellingHint";
+import { PLACES } from "@/lib/job-terms";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
@@ -19,7 +21,8 @@ const T = defineT({
       `Found ${r.fetched}: ${r.inserted} new, ${r.updated} updated. Skills read for ${r.enriched}` +
       (r.tagged ? `, employer's Platsbanken tags used for ${r.tagged} (AI unavailable)` : "") +
       (r.failed > 0 ? ` (${r.failed} failed)` : "") +
-      (r.duplicates ? `. Skipped ${r.duplicates} duplicate ad${r.duplicates > 1 ? "s" : ""}` : "") + ".",
+      (r.duplicates ? `. Skipped ${r.duplicates} duplicate ad${r.duplicates > 1 ? "s" : ""}` : "") + "." +
+      (r.fetched === 0 ? " No jobs found — check the spelling or try a broader word." : ""),
     why: "Why skills failed:",
   },
   sv: {
@@ -35,7 +38,8 @@ const T = defineT({
       `Hittade ${r.fetched}: ${r.inserted} nya, ${r.updated} uppdaterade. Kompetenser lästa för ${r.enriched}` +
       (r.tagged ? `, arbetsgivarens Platsbanken-taggar användes för ${r.tagged} (AI otillgänglig)` : "") +
       (r.failed > 0 ? ` (${r.failed} misslyckades)` : "") +
-      (r.duplicates ? `. Hoppade över ${r.duplicates} dubblett${r.duplicates > 1 ? "er" : ""}` : "") + ".",
+      (r.duplicates ? `. Hoppade över ${r.duplicates} dubblett${r.duplicates > 1 ? "er" : ""}` : "") + "." +
+      (r.fetched === 0 ? " Inga jobb hittades — kontrollera stavningen eller prova ett bredare ord." : ""),
     why: "Varför kompetenserna inte lästes:",
   },
 });
@@ -113,22 +117,28 @@ export function ImportJobsForm({
           </p>
         )}
         <div className="mt-4 grid gap-3 sm:grid-cols-[2fr_1.4fr_1fr]">
-          <input
-            required
-            minLength={2}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t.whatPh}
-            aria-label={t.what}
-            className={field}
-          />
-          <input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder={t.wherePh}
-            aria-label={t.where}
-            className={field}
-          />
+          <div>
+            <input
+              required
+              minLength={2}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t.whatPh}
+              aria-label={t.what}
+              className={field}
+            />
+            <SpellingHint value={query} onPick={setQuery} />
+          </div>
+          <div>
+            <input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder={t.wherePh}
+              aria-label={t.where}
+              className={field}
+            />
+            <SpellingHint value={location} words={PLACES} onPick={setLocation} />
+          </div>
           <select
             value={source}
             onChange={(e) => setSource(e.target.value)}
