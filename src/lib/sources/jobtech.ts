@@ -30,8 +30,15 @@ export async function searchJobTech(p: SearchParams): Promise<RawJob[]> {
   url.searchParams.set("q", [p.query, p.location].filter(Boolean).join(" "));
   url.searchParams.set("limit", String(PAGE_SIZE));
   url.searchParams.set("offset", String(((p.page ?? 1) - 1) * PAGE_SIZE));
+  if (p.newestFirst) url.searchParams.set("sort", "pubdate-desc");
 
-  const res = await fetch(url, { headers: { accept: "application/json" }, cache: "no-store" });
+  const get = (u: URL) => fetch(u, { headers: { accept: "application/json" }, cache: "no-store" });
+  let res = await get(url);
+  // If the API ever stops accepting the sort option, fall back to its default order rather than fail.
+  if (res.status === 400 && url.searchParams.has("sort")) {
+    url.searchParams.delete("sort");
+    res = await get(url);
+  }
   if (!res.ok) throw new Error(`Platsbanken ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = (await res.json()) as { hits?: JobTechHit[] };
   return (data.hits ?? []).map(mapJobTechHit);

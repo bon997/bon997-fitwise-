@@ -18,7 +18,13 @@ export type RawJob = {
   postedAt: Date | null;
 };
 
-export type SearchParams = { query: string; location?: string; page?: number };
+export type SearchParams = {
+  query: string;
+  location?: string;
+  page?: number;
+  /** Newest ads first, for the nightly import (where the source supports it). */
+  newestFirst?: boolean;
+};
 
 const PERIOD_TO_YEAR: Record<string, number> = { HOUR: 2080, DAY: 260, WEEK: 52, MONTH: 12, YEAR: 1 };
 
