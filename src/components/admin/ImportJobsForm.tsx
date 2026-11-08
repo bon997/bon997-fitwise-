@@ -10,13 +10,14 @@ const T = defineT({
     failed: (s: number) => `Import failed (${s})`,
     title: "Import real jobs",
     intro: "Search a job board and add the results to JobFitwise. Each import adds about 10 jobs. Platsbanken (Sweden) is free; Google Jobs uses one search from your SerpApi plan.",
-    noAi: "ANTHROPIC_API_KEY isn't set, so imported jobs won't get skills extracted and fit scores will be weak.",
+    noAi: "ANTHROPIC_API_KEY isn't set. Platsbanken jobs get the employer's own skill tags instead, but the AI reads ads much better.",
     whatPh: "e.g. frontend developer", what: "What jobs",
     wherePh: "e.g. Stockholm", where: "Where",
     source: "Source",
     importing: "Importing… (up to a minute)", import: "Import jobs",
     result: (r: Result) =>
       `Found ${r.fetched}: ${r.inserted} new, ${r.updated} updated. Skills read for ${r.enriched}` +
+      (r.tagged ? `, employer's Platsbanken tags used for ${r.tagged} (AI unavailable)` : "") +
       (r.failed > 0 ? ` (${r.failed} failed)` : "") +
       (r.duplicates ? `. Skipped ${r.duplicates} duplicate ad${r.duplicates > 1 ? "s" : ""}` : "") + ".",
     why: "Why skills failed:",
@@ -25,13 +26,14 @@ const T = defineT({
     failed: (s: number) => `Importen misslyckades (${s})`,
     title: "Importera riktiga jobb",
     intro: "Sök på en jobbsajt och lägg till resultaten i JobFitwise. Varje import lägger till ungefär 10 jobb. Platsbanken är gratis; Google Jobs använder en sökning från din SerpApi-plan.",
-    noAi: "ANTHROPIC_API_KEY saknas, så importerade jobb får inga kompetenser utlästa och matchningen blir svag.",
+    noAi: "ANTHROPIC_API_KEY saknas. Platsbanken-jobb får arbetsgivarens egna kompetenstaggar i stället, men AI:n läser annonserna bättre.",
     whatPh: "t.ex. inköpare", what: "Vilka jobb",
     wherePh: "t.ex. Stockholm", where: "Var",
     source: "Källa",
     importing: "Importerar… (upp till en minut)", import: "Importera jobb",
     result: (r: Result) =>
       `Hittade ${r.fetched}: ${r.inserted} nya, ${r.updated} uppdaterade. Kompetenser lästa för ${r.enriched}` +
+      (r.tagged ? `, arbetsgivarens Platsbanken-taggar användes för ${r.tagged} (AI otillgänglig)` : "") +
       (r.failed > 0 ? ` (${r.failed} misslyckades)` : "") +
       (r.duplicates ? `. Hoppade över ${r.duplicates} dubblett${r.duplicates > 1 ? "er" : ""}` : "") + ".",
     why: "Varför kompetenserna inte lästes:",
@@ -43,6 +45,7 @@ type Result = {
   inserted: number;
   updated: number;
   enriched: number;
+  tagged?: number;
   failed: number;
   enrich_error?: string;
   duplicates?: number;

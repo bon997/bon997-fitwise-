@@ -41,7 +41,7 @@ export default async function AdminPage() {
       (SELECT count(*)::int FROM jobs WHERE is_active) AS active_jobs,
       (SELECT count(*)::int FROM applications) AS applications,
       (SELECT count(*)::int FROM jobs WHERE created_at > now() - interval '7 days') AS jobs_7d,
-      (SELECT count(*)::int FROM jobs WHERE is_active AND skills = '[]'::jsonb) AS no_skills`),
+      (SELECT count(*)::int FROM jobs WHERE is_active AND (skills = '[]'::jsonb OR skills @> '[{"src":"tags"}]'::jsonb)) AS no_skills`),
     sql<Run>("SELECT * FROM ingest_runs ORDER BY started_at DESC LIMIT 15"),
     sql<ImportSearch>("SELECT * FROM import_searches ORDER BY created_at"),
     nightlyEstimate(),

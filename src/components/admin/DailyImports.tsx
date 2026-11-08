@@ -23,6 +23,7 @@ type RunResult = {
   fetched: number;
   inserted: number;
   enriched: number;
+  tagged?: number;
   enrichError?: string;
   expired: number;
   error?: string;
@@ -46,7 +47,7 @@ const T = defineT({
     never: "Not run yet", last: "Last run",
     remove: "Remove", removeConfirm: "Remove this search? Jobs it already imported stay.", yes: "Remove", no: "Keep",
     runNow: "Run all now", running: "Running… (up to a minute)",
-    ran: (r: RunResult) => `Done: ${r.fetched} found, ${r.inserted} new, skills read for ${r.enriched}${r.expired ? `, ${r.expired} old ads hidden` : ""}.`,
+    ran: (r: RunResult) => `Done: ${r.fetched} found, ${r.inserted} new, skills read for ${r.enriched}${r.tagged ? `, Platsbanken tags for ${r.tagged} (AI unavailable)` : ""}${r.expired ? `, ${r.expired} old ads hidden` : ""}.`,
     rest: (n: number) => `${n} searches didn't fit in this run and will go first next time.`,
     failed: "Something went wrong. Please try again.",
   },
@@ -65,7 +66,7 @@ const T = defineT({
     never: "Inte körd än", last: "Senast körd",
     remove: "Ta bort", removeConfirm: "Ta bort sökningen? Jobb den redan importerat finns kvar.", yes: "Ta bort", no: "Behåll",
     runNow: "Kör alla nu", running: "Kör… (upp till en minut)",
-    ran: (r: RunResult) => `Klart: ${r.fetched} hittade, ${r.inserted} nya, kompetenser lästa för ${r.enriched}${r.expired ? `, ${r.expired} gamla annonser dolda` : ""}.`,
+    ran: (r: RunResult) => `Klart: ${r.fetched} hittade, ${r.inserted} nya, kompetenser lästa för ${r.enriched}${r.tagged ? `, Platsbanken-taggar för ${r.tagged} (AI otillgänglig)` : ""}${r.expired ? `, ${r.expired} gamla annonser dolda` : ""}.`,
     rest: (n: number) => `${n} sökningar fick inte plats i den här körningen och går först nästa gång.`,
     failed: "Något gick fel. Försök igen.",
   },
