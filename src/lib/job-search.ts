@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { sql } from "./db";
 import { scorePriorities } from "./priorities";
+import { can } from "./plans";
 import { JOB_LIST_COLUMNS, publicFit, type JobRow, type UserRow } from "./data";
 import { fitScoresFor, hasProfile, personalProfile } from "./matching";
 import { personalize, forYouScore } from "./ai/personalize";
@@ -131,11 +132,17 @@ export async function jobFacets(params: JobSearchQuery, user: UserRow | null): P
 }
 
 export async function searchJobs(params: JobSearchQuery, user: UserRow | null) {
+  // Plan limits: "For you" is Pro's recommendations; priorities and the minimum-match filter are advanced filters.
+  if (params.sort === "for_you" && !can(user, "recommendations")) params = { ...params, sort: "fit" };
+  if ((params.sort === "priority" || params.min_fit) && !can(user, "advanced_filters")) {
+    params = { ...params, sort: params.sort === "priority" ? "fit" : params.sort, min_fit: undefined };
+  }
   const { where, args, arg, rank } = buildWhere(params, user);
   // Fit-based sort/filter needs scores for the whole result set, so it ranks over
   // the top 300 by relevance/recency and scores those (cached after first time).
   const signedIn = Boolean(user && hasProfile(user));
-  const rules = user?.preferences?.priorities ?? [];
+  // Priorities are a Pro feature; saved ones stay stored but aren't applied on Basic.
+  const rules = can(user, "advanced_filters") ? (user?.preferences?.priorities ?? []) : [];
   const byPriority = Boolean(user) && rules.length > 0 && params.sort === "priority";
   const byFit = byPriority || (signedIn && (params.sort === "fit" || params.sort === "for_you" || Boolean(params.min_fit)));
 

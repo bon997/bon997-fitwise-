@@ -43,6 +43,11 @@ export type UserRow = {
     alerts?: AlertSettings;
   };
   resume_score: number | null;
+  plan: "basic" | "pro" | "premium";
+  plan_status: string | null;
+  plan_period_end: Date | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
   email_verified_at: Date | null;
   job_alerts: boolean;
   job_alert_checked_at: Date | null;
@@ -103,7 +108,7 @@ export const JOB_LIST_COLUMNS = `j.id, j.title, j.company, j.location, j.remote,
   j.application_deadline`;
 
 export function publicUser(u: UserRow) {
-  const { password_hash: _p, google_id: _g, resume_text: _t, alerts_token: _a, ...rest } = u;
+  const { password_hash: _p, google_id: _g, resume_text: _t, alerts_token: _a, stripe_customer_id: _c, stripe_subscription_id: _s, ...rest } = u;
   return { ...rest, years_experience: num(u.years_experience) };
 }
 

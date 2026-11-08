@@ -17,6 +17,7 @@ import { emailButton, emailLayout, esc, sendEmail } from "./email";
 import { hasProfile, recommendJobs } from "./matching";
 import { skillLabel } from "./format";
 import type { JobRow, UserRow } from "./data";
+import { can } from "./plans";
 import { alertSettingsFor, alertSubject, inArea, inCategories, isDue, WINDOW_DAYS, type AlertSettings } from "./alert-settings";
 import type { Locale } from "@/i18n/config";
 
@@ -200,6 +201,11 @@ export async function runJobAlerts(base: string, batch = ALERT_BATCH, now = new 
   const result: AlertRunResult = { checked: 0, sent: 0, nothingNew: 0, failed: 0, notDue: 0, outOfTime: false };
   const started = Date.now();
   for (const user of users) {
+    // Alerts are a Pro feature; someone who dropped to Basic simply stops getting them.
+    if (!can(user, "job_alerts", now)) {
+      result.notDue++;
+      continue;
+    }
     const settings = alertSettingsFor(user.preferences);
     if (!isDue(settings.frequency, user.job_alert_checked_at, now)) {
       result.notDue++;

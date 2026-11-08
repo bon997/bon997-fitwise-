@@ -1,5 +1,6 @@
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
 import { SkillChips } from "@/components/jobs/SkillChips";
+import { LockedTeaser } from "@/components/billing/Upgrade";
 import { defineT, type Locale } from "@/i18n/config";
 import { labels, skillLabel } from "@/lib/format";
 import { WEIGHTS, partPoints, type FitBreakdown } from "@/lib/ai/fit-score";
@@ -13,6 +14,8 @@ const T = defineT({
     scaled: "Parts the ad doesn't mention are left out and the rest scaled up.",
     capped: "Capped because a must-have skill is missing.",
     oldScore: "Recalculating with the new formula — reload in a moment.",
+    lockTitle: "Full match breakdown",
+    lockBody: "See your ATS-style score split into skills, experience, education and location, the must-haves you're missing, and the one skill that would raise it most.",
   },
   sv: {
     fit: "match",
@@ -22,6 +25,8 @@ const T = defineT({
     scaled: "Delar som annonsen inte nämner räknas bort och resten skalas upp.",
     capped: "Begränsad eftersom en krav-kompetens saknas.",
     oldScore: "Räknas om med den nya formeln — ladda om om en stund.",
+    lockTitle: "Hela matchningsanalysen",
+    lockBody: "Se din ATS-poäng uppdelad på kompetenser, erfarenhet, utbildning och ort, vilka krav du saknar och vilken kompetens som höjer poängen mest.",
   },
 });
 
@@ -39,8 +44,10 @@ const READY_STYLE = {
  * skill that would raise this score the most.
  */
 export function FitDetails({
-  score, breakdown, matched, partial, missing, improvement, locale,
+  score, breakdown, matched, partial, missing, improvement, locale, full = true,
 }: {
+  /** false on Basic: the score and readiness only; the breakdown is a Pro feature. */
+  full?: boolean;
   score: number;
   breakdown: Record<string, unknown>;
   matched: string[];
@@ -72,6 +79,12 @@ export function FitDetails({
         </div>
       </div>
 
+      {!full ? (
+        <div className="mt-5 space-y-4">
+          <SkillChips matched={matched} partial={[]} missing={[]} />
+          <LockedTeaser plan="pro" title={t.lockTitle} body={t.lockBody} />
+        </div>
+      ) : (<>
       <dl className="mt-5 space-y-2">
         {PARTS.map((k) => {
           const v = part(k);
@@ -109,6 +122,7 @@ export function FitDetails({
           <span aria-hidden>↗ </span>{t.win(skillLabel(improvement.skill), improvement.from, improvement.to)}
         </p>
       )}
+      </>)}
     </>
   );
 }

@@ -26,7 +26,7 @@ const READY_STYLE = {
   stretch: "bg-paper-2 text-ink-2",
 } as const;
 
-export async function JobCard({ job, saved, signedIn }: { job: JobCardData; saved: boolean; signedIn: boolean }) {
+export async function JobCard({ job, saved, signedIn, gaps = true }: { job: JobCardData; saved: boolean; signedIn: boolean; /** false on Basic: no missing-skill chips (Pro's skill gaps). */ gaps?: boolean }) {
   const locale = await getLocale();
   const L = labels(locale);
   const partial = (job.fit?.breakdown?.partial_skills as string[] | undefined) ?? [];
@@ -77,7 +77,7 @@ export async function JobCard({ job, saved, signedIn }: { job: JobCardData; save
 
       {job.fit && (
         <div className="mt-4">
-          <SkillChips matched={job.fit.matched_skills} partial={partial} missing={job.fit.missing_skills} max={6} />
+          <SkillChips matched={job.fit.matched_skills} partial={gaps ? partial : []} missing={gaps ? job.fit.missing_skills : []} max={6} />
         </div>
       )}
 

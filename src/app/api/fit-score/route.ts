@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { route, ok, readJson, HttpError } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
+import { requireFeature } from "@/lib/plans";
 import { getJob, fitForJob, hasProfile } from "@/lib/matching";
 import { publicFit } from "@/lib/data";
 import { useAiAllowance } from "@/lib/ai-usage";
@@ -23,6 +24,7 @@ export const POST = route(async (req: Request) => {
   if (!job) throw new HttpError(404, "Job not found");
   let fit = await fitForJob(user, job);
   // Explanations are cached with the score, so only a new one costs an AI call.
+  if (body.explain) requireFeature(user, "fit_explanation");
   if (body.explain && fit && !fit.explanation) {
     const allowance = await useAiAllowance(user, "fit_explain");
     fit = await fitForJob(user, job, { explain: true }).catch(async (e) => {

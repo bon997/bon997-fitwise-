@@ -7,6 +7,7 @@ import { computeResumeScore, EDUCATION, SENIORITY } from "@/lib/ai/fit-score";
 import { publicUser, num, type UserRow } from "@/lib/data";
 import { PriorityRules } from "@/lib/priorities";
 import { AlertSettingsSchema } from "@/lib/alert-settings";
+import { requireFeature } from "@/lib/plans";
 import { SESSION_COOKIE } from "@/lib/session";
 import { deleteResumeFile } from "@/lib/storage";
 
@@ -46,6 +47,8 @@ const Patch = z
 export const PATCH = route(async (req: Request) => {
   const user = await requireUser(req);
   const body = Patch.parse(await readJson(req));
+  if (body.job_alerts === true) requireFeature(user, "job_alerts");
+  if (body.preferences?.priorities?.length) requireFeature(user, "advanced_filters");
 
   const skills = body.skills ? normalizeSkills(body.skills) : user.skills;
   const years = body.years_experience !== undefined ? body.years_experience : num(user.years_experience);

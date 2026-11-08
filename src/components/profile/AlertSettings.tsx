@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useLocale } from "@/i18n/client";
+import { UpgradeDialog } from "@/components/billing/Upgrade";
 import { defineT } from "@/i18n/config";
 import {
   CATEGORIES, CATEGORY_LABEL, CITIES, CITY_LABEL, COUNTS, FREQUENCIES, MIN_MATCHES, RADII,
@@ -48,6 +49,8 @@ const T = defineT({
     confirm: "Confirm your email address to get alerts. We sent a link when you signed up.",
     send: "Send a new link",
     sent: "Sent. Check your inbox (and spam folder).",
+    locked: "Email job alerts are part of Pro.",
+    unlock: "Unlock with Pro",
   },
   sv: {
     title: "Jobbtips",
@@ -87,6 +90,8 @@ const T = defineT({
     confirm: "Bekräfta din e-postadress för att få jobbtips. Vi skickade en länk när du registrerade dig.",
     send: "Skicka en ny länk",
     sent: "Skickat. Titta i inkorgen (och skräpposten).",
+    locked: "Jobbtips via mejl ingår i Pro.",
+    unlock: "Lås upp med Pro",
   },
 });
 
@@ -114,9 +119,14 @@ function Choice<V extends string | number>({ name, legend, value, options, label
   );
 }
 
-export function AlertSettings({ initial, settings: initialSettings, email, verified, emailOn, hasProfile }: {
+export function AlertSettings({ initial, settings: initialSettings, email, verified, emailOn, hasProfile, locked = false }: {
   initial: boolean; settings: Settings; email: string; verified: boolean; emailOn: boolean; hasProfile: boolean;
+  /** Basic plan: the settings are visible, but any click opens the Pro upgrade popup. */
+  locked?: boolean;
 }) {
+  const [upgrade, setUpgrade] = useState(false);
+  // Capture phase: stop the click before a radio or checkbox changes, and offer Pro instead.
+  const intercept = locked ? (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); setUpgrade(true); } : undefined;
   const locale = useLocale();
   const t = T[locale];
   const [on, setOn] = useState(initial);
@@ -166,6 +176,14 @@ export function AlertSettings({ initial, settings: initialSettings, email, verif
         </p>
       )}
 
+      {locked && (
+        <p className="mt-4 rounded-lg bg-ink px-3 py-2.5 text-sm text-paper">
+          🔒 {t.locked} <button type="button" onClick={() => setUpgrade(true)} className="font-semibold underline underline-offset-2">{t.unlock}</button>
+        </p>
+      )}
+      <UpgradeDialog plan="pro" open={upgrade} onClose={() => setUpgrade(false)} />
+
+      <div onClickCapture={intercept}>
       {/* Email */}
       <div className="mt-5 rounded-xl bg-paper px-4 py-3">
         <label className="flex items-start gap-3 text-sm">
@@ -241,6 +259,8 @@ export function AlertSettings({ initial, settings: initialSettings, email, verif
           </button>
         )}
         <p aria-live="polite" className={`text-sm ${status?.ok ? "text-accent" : "text-warn"}`}>{status?.text}</p>
+      </div>
+
       </div>
 
       {preview && (

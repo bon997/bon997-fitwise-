@@ -1,5 +1,6 @@
 import { route, ok, readJson, HttpError } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
+import { requireFeature } from "@/lib/plans";
 import { hasProfile } from "@/lib/matching";
 import { alertJobs } from "@/lib/job-alerts";
 import { AlertSettingsSchema } from "@/lib/alert-settings";
@@ -12,6 +13,7 @@ import { AlertSettingsSchema } from "@/lib/alert-settings";
  */
 export const POST = route(async (req: Request) => {
   const user = await requireUser(req);
+  requireFeature(user, "job_alerts");
   if (!hasProfile(user)) throw new HttpError(409, "Add your CV or skills first");
   const settings = AlertSettingsSchema.parse(await readJson(req));
   const jobs = await alertJobs(user, settings, { preview: true });
