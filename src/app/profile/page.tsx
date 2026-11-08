@@ -4,6 +4,7 @@ import { num } from "@/lib/data";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Footer } from "@/components/landing/Sections";
 import { FitScoreRing } from "@/components/ui/FitScoreRing";
+import { PrioritiesEditor } from "@/components/profile/PrioritiesEditor";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { DataControls } from "@/components/profile/DataControls";
 import { AlertSettings } from "@/components/profile/AlertSettings";
@@ -82,6 +83,10 @@ export default async function ProfilePage() {
               preferences: user.preferences ?? {},
             }}
           />
+        </div>
+
+        <div className="mt-10">
+          <PrioritiesEditor initial={user.preferences?.priorities ?? []} />
         </div>
 
         <div className="mt-10">

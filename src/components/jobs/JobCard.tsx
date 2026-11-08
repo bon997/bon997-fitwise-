@@ -16,6 +16,8 @@ export type JobCardData = {
   posted_at: Date | string | null;
   fit?: { score: number; matched_skills: string[]; missing_skills: string[]; breakdown?: Record<string, unknown> } | null;
   personal?: { reasons: { text: string; positive: boolean; code?: string; arg?: string }[]; boost: number } | null;
+  /** "My priorities" points, when the user has set priorities. */
+  priority?: { score: number; hits: { label: string; points: number }[] } | null;
 };
 
 const READY_STYLE = {
@@ -60,6 +62,18 @@ export async function JobCard({ job, saved, signedIn }: { job: JobCardData; save
           </div>
         )}
       </div>
+
+      {job.priority && job.priority.hits.length > 0 && (
+        <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="rounded-full bg-ink px-2 py-0.5 font-semibold tabular-nums text-paper">
+            ★ {job.priority.score} {locale === "sv" ? "prio" : "priority"}
+          </span>
+          {job.priority.hits.slice(0, 3).map((h) => (
+            <span key={h.label} className="text-ink-2">{h.label} <span className="text-muted">+{h.points}</span></span>
+          ))}
+          {job.priority.hits.length > 3 && <span className="text-muted">+{job.priority.hits.length - 3}</span>}
+        </p>
+      )}
 
       {job.fit && (
         <div className="mt-4">

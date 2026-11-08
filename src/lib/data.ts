@@ -1,5 +1,6 @@
 /** Row types (as returned by pg) and the public JSON shapes the API exposes. */
 import type { Education, JobEducation, JobSkill, Seniority } from "./ai/fit-score";
+import type { PriorityRule } from "./priorities";
 
 export type ExperienceItem = {
   title: string;
@@ -35,6 +36,8 @@ export type UserRow = {
     work_mode?: "remote" | "hybrid" | "onsite" | null;
     search_status?: "urgent" | "exploring" | "switching" | "open" | null;
     onboarded?: boolean;
+    /** "My priorities": points rules for sorting jobs (src/lib/priorities.ts). */
+    priorities?: PriorityRule[];
   };
   resume_score: number | null;
   email_verified_at: Date | null;
