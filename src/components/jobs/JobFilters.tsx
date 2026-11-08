@@ -43,6 +43,7 @@ const T = defineT({
     remove: (x: string) => `Remove filter ${x}`,
     sortBy: "Sort by",
     forYou: "For you",
+    myPriorities: "My priorities",
     relevant: "Most relevant",
     bestFit: "Best fit",
     newest: "Newest",
@@ -82,6 +83,7 @@ const T = defineT({
     remove: (x: string) => `Ta bort filtret ${x}`,
     sortBy: "Sortera efter",
     forYou: "För dig",
+    myPriorities: "Mina prioriteringar",
     relevant: "Mest relevanta",
     bestFit: "Bäst matchning",
     newest: "Nyaste",
@@ -113,11 +115,13 @@ export function JobFilters({
   facets,
   userSkills,
   personal,
+  priorities = false,
 }: {
   values: FilterValues;
   facets: JobFacets;
   userSkills: string[];
   personal: boolean;
+  priorities?: boolean;
 }) {
   const locale = useLocale();
   const t = T[locale];
@@ -298,6 +302,7 @@ export function JobFilters({
           onChange={submit}
           className="rounded-lg border border-paper/30 bg-ink px-2 py-1.5 text-paper"
         >
+          {priorities && <option value="priority">{t.myPriorities}</option>}
           {personal && <option value="for_you">{t.forYou}</option>}
           <option value="relevance">{t.relevant}</option>
           {personal && <option value="fit">{t.bestFit}</option>}

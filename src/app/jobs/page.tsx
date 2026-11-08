@@ -21,6 +21,8 @@ const T = defineT({
     none: "No jobs found",
     count: (n: number) => `${n} job${n === 1 ? "" : "s"}`,
     rankedForYou: " · ranked for you by fit and what you've saved or passed on",
+    rankedByPriority: " · sorted by your priorities, highest first ·",
+    editPriorities: "edit",
     empty: "Try fewer filters or a broader search.",
     pagination: "Pagination",
     prev: "← Previous",
@@ -37,6 +39,8 @@ const T = defineT({
     none: "Inga jobb hittades",
     count: (n: number) => `${n} jobb`,
     rankedForYou: " · sorterade för dig efter matchning och vad du sparat eller valt bort",
+    rankedByPriority: " · sorterade efter dina prioriteringar, högst först ·",
+    editPriorities: "ändra",
     empty: "Prova färre filter eller en bredare sökning.",
     pagination: "Sidor",
     prev: "← Föregående",
@@ -60,9 +64,11 @@ export default async function JobsPage({ searchParams }: { searchParams: SP }) {
   const t = T[locale];
   const personal = Boolean(user && hasProfile(user));
 
-  // Signed-in users with a profile get the personalized ranking by default.
-  const parsed = JobSearchQuery.safeParse({ sort: personal ? "for_you" : "relevance", ...raw });
-  const params = parsed.success ? parsed.data : JobSearchQuery.parse({ sort: personal ? "for_you" : "relevance" });
+  const hasPriorities = Boolean(user?.preferences?.priorities?.length);
+  // Default sort: your own priorities if you set any, else the personalized ranking, else relevance.
+  const defaultSort = hasPriorities ? "priority" : personal ? "for_you" : "relevance";
+  const parsed = JobSearchQuery.safeParse({ sort: defaultSort, ...raw });
+  const params = parsed.success ? parsed.data : JobSearchQuery.parse({ sort: defaultSort });
   const [result, facets, savedRows] = await Promise.all([
     searchJobs(params, user),
     jobFacets(params, user),
@@ -98,6 +104,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SP }) {
           facets={facets}
           userSkills={user?.skills ?? []}
           personal={personal}
+          priorities={hasPriorities}
         />
 
         {!user && (
@@ -114,6 +121,9 @@ export default async function JobsPage({ searchParams }: { searchParams: SP }) {
         <h2 className="mt-6 text-sm font-normal text-muted" aria-live="polite">
           {result.total === 0 ? t.none : t.count(result.total)}
           {params.sort === "for_you" && result.total > 0 && t.rankedForYou}
+          {params.sort === "priority" && hasPriorities && result.total > 0 && (
+            <> {t.rankedByPriority} <Link href="/profile#priorities-heading" className="text-accent underline underline-offset-2">{t.editPriorities}</Link></>
+          )}
         </h2>
 
         {result.total === 0 ? (

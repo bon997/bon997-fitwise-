@@ -77,7 +77,7 @@ export function FitDetails({
           const v = part(k);
           const pts = partPoints(k, v);
           return (
-            <div key={k} className="grid grid-cols-[104px_1fr_52px] items-center gap-2 text-xs">
+            <div key={k} className="grid grid-cols-[104px_1fr_auto] items-center gap-2 text-xs">
               <dt className="text-muted">{L.breakdown[k]}</dt>
               <dd className="h-1.5 overflow-hidden rounded-full bg-line" aria-hidden>
                 {v != null && <div className="h-full rounded-full bg-accent" style={{ width: `${v}%` }} />}

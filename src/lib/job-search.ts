@@ -1,6 +1,7 @@
 /** Job search: Postgres full-text + filters, optionally ranked by fit or the personalized "For you" score. */
 import { z } from "zod";
 import { sql } from "./db";
+import { scorePriorities } from "./priorities";
 import { JOB_LIST_COLUMNS, publicFit, type JobRow, type UserRow } from "./data";
 import { fitScoresFor, hasProfile, personalProfile } from "./matching";
 import { personalize, forYouScore } from "./ai/personalize";
@@ -39,7 +40,7 @@ export const JobSearchQuery = z.object({
   salary_min: z.coerce.number().int().min(0).optional(),
   posted_within: z.coerce.number().int().min(1).max(90).optional().describe("days"),
   min_fit: z.coerce.number().int().min(0).max(100).optional(),
-  sort: z.enum(["relevance", "recent", "fit", "for_you", "salary"]).default("relevance"),
+  sort: z.enum(["relevance", "recent", "fit", "for_you", "salary", "priority"]).default("relevance"),
   include_dismissed: bool.optional(),
   page: z.coerce.number().int().min(1).max(100).default(1),
   per_page: z.coerce.number().int().min(1).max(50).default(20),
@@ -134,7 +135,9 @@ export async function searchJobs(params: JobSearchQuery, user: UserRow | null) {
   // Fit-based sort/filter needs scores for the whole result set, so it ranks over
   // the top 300 by relevance/recency and scores those (cached after first time).
   const signedIn = Boolean(user && hasProfile(user));
-  const byFit = signedIn && (params.sort === "fit" || params.sort === "for_you" || Boolean(params.min_fit));
+  const rules = user?.preferences?.priorities ?? [];
+  const byPriority = Boolean(user) && rules.length > 0 && params.sort === "priority";
+  const byFit = byPriority || (signedIn && (params.sort === "fit" || params.sort === "for_you" || Boolean(params.min_fit)));
 
   const order = {
     relevance: `${rank ? `${rank} DESC, ` : ""}coalesce(j.posted_at, j.created_at) DESC`,
@@ -142,13 +145,16 @@ export async function searchJobs(params: JobSearchQuery, user: UserRow | null) {
     salary: "coalesce(j.salary_max, j.salary_min) DESC NULLS LAST",
     fit: `${rank ? `${rank} DESC, ` : ""}coalesce(j.posted_at, j.created_at) DESC`,
     for_you: `${rank ? `${rank} DESC, ` : ""}coalesce(j.posted_at, j.created_at) DESC`,
+    priority: `${rank ? `${rank} DESC, ` : ""}coalesce(j.posted_at, j.created_at) DESC`,
   }[params.sort];
 
   const limit = byFit ? 300 : params.per_page;
   const offset = byFit ? 0 : (params.page - 1) * params.per_page;
 
+  // Priorities read the ad text; it's used for scoring here and never sent to the browser.
+  const textCols = rules.length ? ", left(j.description, 8000) AS description, j.requirements" : "";
   const rows = await sql<JobRow & { total: string }>(
-    `SELECT ${JOB_LIST_COLUMNS}, count(*) OVER () AS total
+    `SELECT ${JOB_LIST_COLUMNS}${textCols}, count(*) OVER () AS total
      FROM jobs j WHERE ${where.join(" AND ")}
      ORDER BY ${order}, j.id
      LIMIT ${arg(limit)} OFFSET ${arg(offset)}`,
@@ -171,23 +177,28 @@ export async function searchJobs(params: JobSearchQuery, user: UserRow | null) {
       : [],
   );
 
+  const priorityFor = new Map(rules.length ? rows.map((r) => [r.id, scorePriorities(r, rules)]) : []);
+
   if (byFit) {
     let scored = rows
       .filter((r) => !personalFor.get(r.id)?.hidden)
-      .map((r) => ({ r, s: fits.get(r.id)?.score ?? -1, fy: personalFor.get(r.id)?.for_you ?? -1 }));
+      .map((r) => ({ r, s: fits.get(r.id)?.score ?? -1, fy: personalFor.get(r.id)?.for_you ?? -1, p: priorityFor.get(r.id)?.score ?? 0 }));
     if (params.min_fit) scored = scored.filter((x) => x.s >= params.min_fit!);
     if (params.sort === "fit") scored.sort((a, b) => b.s - a.s);
     if (params.sort === "for_you") scored.sort((a, b) => b.fy - a.fy || b.s - a.s);
+    // Highest priority first; equal priorities by fit, then the order SQL gave (relevance/recency).
+    if (params.sort === "priority") scored.sort((a, b) => b.p - a.p || b.s - a.s);
     total = scored.length;
     const start = (params.page - 1) * params.per_page;
     page = scored.slice(start, start + params.per_page).map((x) => x.r);
   }
 
   return {
-    jobs: page.map(({ total: _t, ...j }) => {
+    jobs: page.map(({ total: _t, description: _d, requirements: _r, ...j }) => {
       const p = personalFor.get(j.id);
       return {
         ...j,
+        priority: priorityFor.get(j.id) ?? null,
         fit: publicFit(fits.get(j.id)),
         personal: p ? { boost: p.boost, reasons: p.reasons, for_you: p.for_you } : null,
       };

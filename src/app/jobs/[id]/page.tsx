@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { Footer } from "@/components/landing/Sections";
 import { FitDetails } from "@/components/jobs/FitDetails";
 import { bestImprovement } from "@/lib/ai/fit-score";
+import { maxPriority, scorePriorities } from "@/lib/priorities";
 import { JobActions } from "@/components/jobs/JobActions";
 import { ApplyWithAI } from "@/components/jobs/ApplyWithAI";
 import { labels, postedAgo, reasonText, skillLabel } from "@/lib/format";
@@ -28,6 +29,10 @@ const T = defineT({
     yourFit: "Your fit",
     howScore: "How is this calculated?",
     seeFit: "See why",
+    prioTitle: "Your priorities",
+    prioEdit: "Edit",
+    prioPoints: "points",
+    prioNone: "None of your priorities match this job.",
     addSkills: "Add your skills",
     addSkillsRest: "to see how well you match this job.",
     signIn: "Sign in",
@@ -53,6 +58,10 @@ const T = defineT({
     yourFit: "Din matchning",
     howScore: "Hur räknas poängen?",
     seeFit: "Se varför",
+    prioTitle: "Dina prioriteringar",
+    prioEdit: "Ändra",
+    prioPoints: "poäng",
+    prioNone: "Inga av dina prioriteringar matchar det här jobbet.",
     addSkills: "Lägg till dina kompetenser",
     addSkillsRest: "för att se hur väl du matchar jobbet.",
     signIn: "Logga in",
@@ -116,6 +125,8 @@ export default async function JobPage({ params }: Props) {
     profile ? personalProfile(user!) : null,
   ]);
   const why = personal ? personalize(job, personal.profile) : null;
+  const myRules = user?.preferences?.priorities ?? [];
+  const prio = myRules.length ? scorePriorities(job, myRules) : null;
   const breakdown = fit?.breakdown ?? {};
   const partial = (breakdown.partial_skills as string[] | undefined) ?? [];
   // Re-scored in code with each missing skill added; free and instant.
@@ -244,6 +255,31 @@ export default async function JobPage({ params }: Props) {
                 </p>
               )}
             </section>
+
+            {myRules.length > 0 && (
+              <section className="rounded-2xl border border-line bg-white p-5 sm:p-6" aria-labelledby="prio-heading">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 id="prio-heading" className="text-lg font-semibold">{t.prioTitle}</h2>
+                  <Link href="/profile#priorities-heading" className="text-xs text-muted underline underline-offset-2 hover:text-ink">{t.prioEdit}</Link>
+                </div>
+                <p className="mt-2 text-sm">
+                  <strong className="text-2xl tabular-nums">{prio!.score}</strong>
+                  <span className="text-muted"> / {maxPriority(myRules)} {t.prioPoints}</span>
+                </p>
+                {prio!.hits.length > 0 ? (
+                  <ul className="mt-3 space-y-1 text-sm">
+                    {prio!.hits.map((h) => (
+                      <li key={h.label} className="flex justify-between gap-3">
+                        <span className="text-ink-2">✓ {h.label}</span>
+                        <span className="tabular-nums text-accent">+{h.points}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-sm text-muted">{t.prioNone}</p>
+                )}
+              </section>
+            )}
 
             {profile ? (
               <ApplyWithAI

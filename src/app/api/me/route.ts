@@ -5,6 +5,7 @@ import { one } from "@/lib/db";
 import { normalizeSkills } from "@/lib/ai/skills";
 import { computeResumeScore, EDUCATION, SENIORITY } from "@/lib/ai/fit-score";
 import { publicUser, num, type UserRow } from "@/lib/data";
+import { PriorityRules } from "@/lib/priorities";
 import { SESSION_COOKIE } from "@/lib/session";
 import { deleteResumeFile } from "@/lib/storage";
 
@@ -28,6 +29,7 @@ const Patch = z
         work_mode: z.enum(["remote", "hybrid", "onsite"]).nullable(),
         search_status: z.enum(["urgent", "exploring", "switching", "open"]).nullable(),
         onboarded: z.boolean(),
+        priorities: PriorityRules,
       })
       .partial(),
     job_alerts: z.boolean(),
@@ -48,7 +50,9 @@ export const PATCH = route(async (req: Request) => {
   const prefs = body.preferences ? { ...user.preferences, ...body.preferences } : user.preferences;
   const affectsMatching =
     body.skills !== undefined || body.years_experience !== undefined || body.seniority !== undefined ||
-    body.preferences !== undefined || body.education !== undefined;
+    body.education !== undefined ||
+    // Priorities only re-sort jobs; they don't change fit scores, so they don't force a recompute.
+    (body.preferences !== undefined && Object.keys(body.preferences).some((k) => k !== "priorities"));
 
   const updated = await one<UserRow>(
     `UPDATE users SET name = $2, skills = $3, years_experience = $4, seniority = $5, preferences = $6,
