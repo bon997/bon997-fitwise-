@@ -8,6 +8,8 @@ import { PrioritiesEditor } from "@/components/profile/PrioritiesEditor";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { DataControls } from "@/components/profile/DataControls";
 import { AlertSettings } from "@/components/profile/AlertSettings";
+import { alertSettingsFor } from "@/lib/alert-settings";
+import { hasProfile } from "@/lib/matching";
 import { emailConfigured } from "@/lib/email";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
@@ -90,7 +92,14 @@ export default async function ProfilePage() {
         </div>
 
         <div className="mt-10">
-          <AlertSettings initial={user.job_alerts} verified={Boolean(user.email_verified_at)} emailOn={emailConfigured()} />
+          <AlertSettings
+            initial={user.job_alerts}
+            settings={alertSettingsFor(user.preferences)}
+            email={user.email}
+            verified={Boolean(user.email_verified_at)}
+            emailOn={emailConfigured()}
+            hasProfile={hasProfile(user)}
+          />
         </div>
 
         <div className="mt-6">

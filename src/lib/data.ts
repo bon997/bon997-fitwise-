@@ -1,6 +1,7 @@
 /** Row types (as returned by pg) and the public JSON shapes the API exposes. */
 import type { Education, JobEducation, JobSkill, Seniority } from "./ai/fit-score";
 import type { PriorityRule } from "./priorities";
+import type { AlertSettings } from "./alert-settings";
 
 export type ExperienceItem = {
   title: string;
@@ -38,6 +39,8 @@ export type UserRow = {
     onboarded?: boolean;
     /** "My priorities": points rules for sorting jobs (src/lib/priorities.ts). */
     priorities?: PriorityRule[];
+    /** Job alert settings (src/lib/alert-settings.ts); missing = the defaults. */
+    alerts?: AlertSettings;
   };
   resume_score: number | null;
   email_verified_at: Date | null;
@@ -73,6 +76,7 @@ export type JobRow = {
   source: string;
   external_id: string;
   posted_at: Date | null;
+  application_deadline: Date | null;
   is_active: boolean;
   embedded_at: Date | null;
   created_at: Date;
@@ -95,7 +99,8 @@ export const num = (v: string | number | null): number | null => (v == null ? nu
 
 /** Columns safe to return in list views (no long text). */
 export const JOB_LIST_COLUMNS = `j.id, j.title, j.company, j.location, j.remote, j.employment_type, j.seniority,
-  j.salary_range, j.salary_min, j.salary_max, j.salary_currency, j.posted_at, j.skills, j.apply_url, j.source`;
+  j.salary_range, j.salary_min, j.salary_max, j.salary_currency, j.posted_at, j.skills, j.apply_url, j.source,
+  j.application_deadline`;
 
 export function publicUser(u: UserRow) {
   const { password_hash: _p, google_id: _g, resume_text: _t, alerts_token: _a, ...rest } = u;
