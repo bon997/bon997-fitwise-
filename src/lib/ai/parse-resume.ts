@@ -17,17 +17,21 @@ const ResumeSchema = z.object({
       skills: z.array(z.string()),
     }),
   ),
-  years_experience: z.number().nullable().describe("Total professional years, excluding overlap and education"),
-  seniority: z.enum(SENIORITY).nullable(),
+  years_experience: z.number().nullable().catch(null).describe("Total professional years, excluding overlap and education"),
+  // .catch: an unexpected word from the model becomes "unknown" instead of failing the whole read.
+  seniority: z.enum(SENIORITY).nullable().catch(null).describe("Use only these values; null if unclear"),
   education: z
     .array(
       z.object({
-        level: z.enum(EDUCATION).describe("gymnasium (upper secondary), vocational (yrkeshögskola/YH or similar), bachelor, master, phd. A foreign degree maps to its nearest Swedish level."),
-        field: z.string().nullable().describe("Field of study, short (e.g. 'computer science')"),
+        level: z.enum(EDUCATION).nullable().catch(null).describe("gymnasium (upper secondary), vocational (yrkeshögskola/YH or similar), bachelor, master, phd. A foreign degree maps to its nearest Swedish level."),
+        field: z.string().nullable().catch(null).describe("Field of study, short (e.g. 'computer science')"),
       }),
     )
     .describe("Completed formal education, highest first. Leave out courses and certificates; empty if none is stated.")
-    .transform((xs) => xs.slice(0, 5)),
+    .catch([])
+    .transform((xs) =>
+      xs.filter((e): e is { level: (typeof EDUCATION)[number]; field: string | null } => e.level != null).slice(0, 5),
+    ),
   suggested_roles: z
     .array(z.string())
     .describe("Up to 6 job titles this person is a realistic fit for now")

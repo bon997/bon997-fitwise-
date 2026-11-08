@@ -4,26 +4,28 @@ import { normalizeSkill } from "./skills";
 import { EDUCATION, SENIORITY } from "./fit-score";
 
 const EducationSchema = z.object({
+  // .catch: an unexpected word from the model becomes "unknown" instead of failing the whole read.
   level: z
     .enum(EDUCATION)
     .nullable()
+    .catch(null)
     .describe("Lowest formal education the ad asks for: gymnasium (upper secondary), vocational (yrkeshögskola/YH or similar post-secondary vocational), bachelor (kandidat/högskoleexamen), master, phd. null if the ad states no education requirement."),
-  field: z.string().nullable().describe("Field of study asked for, short (e.g. 'computer science', 'nursing'), else null"),
-  equivalent_ok: z.boolean().describe("true if the ad accepts equivalent experience instead (e.g. 'eller motsvarande erfarenhet')"),
+  field: z.string().nullable().catch(null).describe("Field of study asked for, short (e.g. 'computer science', 'nursing'), else null"),
+  equivalent_ok: z.boolean().catch(false).describe("true if the ad accepts equivalent experience instead (e.g. 'eller motsvarande erfarenhet')"),
 });
 
 const JobExtractSchema = z.object({
   skills: z
-    .array(z.object({ name: z.string(), required: z.boolean().describe("true if must-have, false if nice-to-have/bonus") }))
+    .array(z.object({ name: z.string(), required: z.boolean().catch(false).describe("true if must-have, false if nice-to-have/bonus") }))
     .describe("Up to 25 skills")
     .transform((xs) => xs.slice(0, 25)),
   responsibilities: z
     .array(z.string())
     .describe("Up to 8 short bullet points, one action each")
     .transform((xs) => xs.slice(0, 8)),
-  seniority: z.enum(SENIORITY).nullable(),
-  min_years: z.number().nullable().describe("Minimum years of experience stated, else null"),
-  remote: z.boolean(),
+  seniority: z.enum(SENIORITY).nullable().catch(null).describe("Use only these values; null if unclear"),
+  min_years: z.number().nullable().catch(null).describe("Minimum years of experience stated, else null"),
+  remote: z.boolean().catch(false),
   education: EducationSchema,
 });
 
