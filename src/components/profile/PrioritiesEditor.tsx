@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/i18n/client";
+import { LockedTeaser } from "@/components/billing/Upgrade";
 import { defineT } from "@/i18n/config";
 import { SUPPLY_CHAIN_PRESET, maxPriority, type PriorityMatch, type PriorityRule } from "@/lib/priorities";
 
@@ -56,7 +57,21 @@ let nextKey = 1;
 const toRow = (r: PriorityRule): Row => ({ ...r, key: nextKey++, wordsText: r.terms.join(", ") });
 const field = "w-full rounded-lg border border-line bg-white px-2.5 py-2 text-sm outline-none focus:border-ink/40";
 
-export function PrioritiesEditor({ initial }: { initial: PriorityRule[] }) {
+export function PrioritiesEditor({ initial, locked = false }: { initial: PriorityRule[]; locked?: boolean }) {
+  const t = T[useLocale()];
+  if (locked) {
+    return (
+      <section className="rounded-2xl border border-line bg-white p-5 sm:p-6" aria-labelledby="priorities-heading">
+        <h2 id="priorities-heading" className="text-lg font-semibold">{t.title}</h2>
+        <p className="mt-1 text-sm text-ink-2">{t.intro}</p>
+        <div className="mt-4"><LockedTeaser plan="pro" title={t.title} body={t.presetNote} /></div>
+      </section>
+    );
+  }
+  return <Editor initial={initial} />;
+}
+
+function Editor({ initial }: { initial: PriorityRule[] }) {
   const t = T[useLocale()];
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>(() => initial.map(toRow));

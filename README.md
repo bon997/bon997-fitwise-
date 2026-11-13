@@ -135,6 +135,41 @@ Rules that keep it trustworthy (`src/lib/ai/personalize.ts`):
 
 Ideas for later customization, once there are real users: per-user learned weights (e.g. someone who always applies to remote jobs), "more like this" on any job, and a weekly email digest.
 
+## Plans & payments (Stripe)
+
+Three plans: **Basic** (free), **Pro** and **Premium**. What each one unlocks is in `src/lib/plans.ts` (`FEATURES`). Gated API routes answer `402 {error, upgrade, feature}`, and the UI turns that into an upgrade popup. The application tracker stays free on every plan, because it is what the Arbetsförmedlingen activity report needs.
+
+While `PAYWALL_ENABLED` is not `true`, everyone gets Premium and the pricing page shows a beta banner. Admins always have Premium. From `/admin` you can give any account a plan by hand (stored as `plan_status = manual`).
+
+### Go-live steps
+
+1. **Database.** Run `db/migrations-2026-11-alerts-and-plans.sql` in the Supabase SQL editor. It is safe to run twice.
+2. **Products.** In Stripe → Product catalogue, create *JobFitwise Pro* and *JobFitwise Premium*, each with a recurring monthly price in **SEK, VAT included** (for example 79 and 149). Copy the two `price_…` ids.
+3. **Webhook.** In Stripe → Developers → Webhooks, add the endpoint `https://www.jobfitwise.se/api/billing/webhook` with these events:
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `customer.subscription.paused`
+   - `customer.subscription.resumed`
+
+   Copy the signing secret (`whsec_…`).
+4. **Customer portal.** In Stripe → Settings → Billing → Customer portal, allow cancelling, updating the payment method and switching between the two prices. Set the return link to `https://www.jobfitwise.se/account`.
+5. **Vercel env vars** (Production), then redeploy:
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `STRIPE_PRICE_PRO`
+   - `STRIPE_PRICE_PREMIUM`
+   - `NEXT_PUBLIC_PRICE_PRO_SEK`
+   - `NEXT_PUBLIC_PRICE_PREMIUM_SEK`
+6. **Test.** With test-mode keys, buy Pro with card `4242 4242 4242 4242`. You should land on `/account` showing Pro, and the webhook in Stripe should show `200`.
+7. **Switch on.** Set `PAYWALL_ENABLED=true` and redeploy. Existing users drop to Basic unless they have paid or you granted them a plan.
+
+### How it works
+
+- Checkout and plan changes go through Stripe-hosted pages (`/api/billing/checkout`, `/api/billing/portal`), so card data never touches our server.
+- Plans change **only** through the signed webhook. Each event id is recorded in `stripe_events`, so retries are processed once. If processing fails, the record is removed so Stripe's retry runs again.
+- A cancelled plan stays active until `plan_period_end`. With `past_due`, the plan stays on while Stripe retries the card, and `/account` shows a warning.
+
 ## API reference
 
 Every endpoint returns JSON. Errors look like `{ error }`, and validation errors add `issues`.

@@ -16,6 +16,8 @@ export type RawJob = {
   salaryCurrency: string | null;
   applyUrl: string | null;
   postedAt: Date | null;
+  /** Last day to apply, when the source gives one (Platsbanken does). */
+  deadline?: Date | null;
 };
 
 export type SearchParams = {

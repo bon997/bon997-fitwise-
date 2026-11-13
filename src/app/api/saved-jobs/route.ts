@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { route, ok, readJson, HttpError } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
+import { BASIC_SAVED_LIMIT, PlanRequiredError, can } from "@/lib/plans";
 import { sql, one } from "@/lib/db";
 
 /** GET /api/saved-jobs — bookmarked jobs, newest first, with fit score when available. */
@@ -26,6 +27,10 @@ export const POST = route(async (req: Request) => {
   const { job_id } = Body.parse(await readJson(req));
   const job = await one("SELECT 1 FROM jobs WHERE id = $1", [job_id]);
   if (!job) throw new HttpError(404, "Job not found");
+  if (!can(user, "unlimited_saves")) {
+    const n = await sql<{ n: number }>("SELECT count(*)::int AS n FROM saved_jobs WHERE user_id = $1 AND job_id <> $2", [user.id, job_id]);
+    if ((n[0]?.n ?? 0) >= BASIC_SAVED_LIMIT) throw new PlanRequiredError("unlimited_saves", "pro");
+  }
   await sql("INSERT INTO saved_jobs (user_id, job_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [user.id, job_id]);
   // Saving contradicts an earlier "not interested", so drop it.
   await sql("DELETE FROM job_dismissals WHERE user_id = $1 AND job_id = $2", [user.id, job_id]);

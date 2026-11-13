@@ -3,6 +3,7 @@ import { type RawJob, type SearchParams } from "./types";
 type Label = { label?: string | null } | null | undefined;
 type JobTechHit = {
   id: string;
+  application_deadline?: string | null;
   headline: string;
   webpage_url?: string | null;
   description?: { text?: string | null } | null;
@@ -73,6 +74,7 @@ export function mapJobTechHit(h: JobTechHit): RawJob {
     ...parseSwedishSalary(h.salary_description),
     applyUrl: h.application_details?.url || h.webpage_url || null,
     postedAt: h.publication_date ? new Date(h.publication_date) : null,
+    deadline: h.application_deadline && !Number.isNaN(Date.parse(h.application_deadline)) ? new Date(h.application_deadline) : null,
   };
 }
 

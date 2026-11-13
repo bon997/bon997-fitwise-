@@ -13,6 +13,8 @@ import { StatusSelect } from "@/components/dashboard/StatusSelect";
 import { labels, skillLabel, timeAgo } from "@/lib/format";
 import { NextActionCard, NextActionSkeleton } from "@/components/dashboard/NextAction";
 import { ProfileStrength } from "@/components/dashboard/ProfileStrength";
+import { LockedTeaser } from "@/components/billing/Upgrade";
+import { can } from "@/lib/plans";
 import { bestProfileStep, nextAction, profileChecklist } from "@/lib/next-action";
 import type { Locale } from "@/i18n/config";
 import type { UserRow } from "@/lib/data";
@@ -38,6 +40,10 @@ const T = defineT({
     nothingYet: "Nothing yet. Open a job and use",
     applyAi: "Cover letter with AI",
     gaps: "Skills worth learning",
+    gapsLockTitle: (n: number) => `${n} skills would raise your scores`,
+    gapsLockBody: "See which missing skills appear most in your near-miss jobs, and what to learn first.",
+    moreTitle: (n: number) => `${n} more personalised matches`,
+    moreBody: "Pro ranks every new job for you, learns from what you save and pass on, and emails the best ones.",
     gapsNote: "Missing from your near-miss matches (50–85 fit).",
     jobs: (n: number) => `${n} job${n === 1 ? "" : "s"}`,
     saved: "Saved jobs",
@@ -66,6 +72,10 @@ const T = defineT({
     nothingYet: "Inget än. Öppna ett jobb och använd",
     applyAi: "Personligt brev med AI",
     gaps: "Kompetenser värda att lära sig",
+    gapsLockTitle: (n: number) => `${n} kompetenser skulle höja din matchning`,
+    gapsLockBody: "Se vilka saknade kompetenser som syns mest i dina nästan-matchningar och vad du ska lära dig först.",
+    moreTitle: (n: number) => `${n} fler personliga matchningar`,
+    moreBody: "Pro rankar varje nytt jobb åt dig, lär sig av vad du sparar och väljer bort och mejlar de bästa.",
     gapsNote: "Saknas i dina nästan-matchningar (50–85 i matchning).",
     jobs: (n: number) => `${n} jobb`,
     saved: "Sparade jobb",
@@ -110,7 +120,10 @@ async function ActionSection({ user, appliedIds, locale }: { user: UserRow; appl
 
 async function MatchesList({ user, savedIds, locale }: { user: UserRow; savedIds: Set<string>; locale: Locale }) {
   const t = T[locale];
-  const { matches } = await loadMatches(user);
+  const { matches: all } = await loadMatches(user);
+  // Basic sees its top matches; the full personalised list is Pro's recommendations.
+  const full = can(user, "recommendations");
+  const matches = full ? all : all.slice(0, BASIC_MATCHES);
   if (matches.length === 0) {
     return (
       <div className="mt-5 rounded-2xl border border-dashed border-line p-8 text-center text-ink-2">
@@ -119,11 +132,16 @@ async function MatchesList({ user, savedIds, locale }: { user: UserRow; savedIds
     );
   }
   return (
-    <div className="mt-5 grid gap-4 xl:grid-cols-2">
-      {matches.map((m) => (
-        <JobCard key={m.job.id} job={{ ...m.job, fit: m.fit, personal: m.personal }} saved={savedIds.has(m.job.id)} signedIn />
-      ))}
-    </div>
+    <>
+      <div className="mt-5 grid gap-4 xl:grid-cols-2">
+        {matches.map((m) => (
+          <JobCard key={m.job.id} job={{ ...m.job, fit: m.fit, personal: m.personal }} saved={savedIds.has(m.job.id)} signedIn gaps={can(user, "skill_gaps")} />
+        ))}
+      </div>
+      {!full && all.length > matches.length && (
+        <div className="mt-4"><LockedTeaser plan="pro" title={t.moreTitle(all.length - matches.length)} body={t.moreBody} /></div>
+      )}
+    </>
   );
 }
 
@@ -139,6 +157,14 @@ async function GapsSection({ user, locale }: { user: UserRow; locale: Locale }) 
   const t = T[locale];
   const { gaps } = await loadMatches(user);
   if (gaps.length === 0) return null;
+  if (!can(user, "skill_gaps")) {
+    return (
+      <section aria-labelledby="gaps-heading" className="rounded-2xl border border-line bg-white p-5">
+        <h2 id="gaps-heading" className="text-lg font-semibold">{t.gaps}</h2>
+        <div className="mt-3"><LockedTeaser plan="pro" title={t.gapsLockTitle(gaps.length)} body={t.gapsLockBody} /></div>
+      </section>
+    );
+  }
   return (
     <section aria-labelledby="gaps-heading" className="rounded-2xl border border-line bg-white p-5">
       <h2 id="gaps-heading" className="text-lg font-semibold">{t.gaps}</h2>
@@ -167,6 +193,9 @@ const checklistFor = (user: UserRow) =>
     remoteOnly: Boolean(user.preferences?.remote_only),
     education: user.education ?? [],
   });
+
+/** Matches shown on Basic before "N more" (the full list is Pro). */
+const BASIC_MATCHES = 3;
 
 const PIPELINE = ["applied", "interviewing", "offer"] as const;
 

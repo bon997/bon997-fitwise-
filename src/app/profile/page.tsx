@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { num } from "@/lib/data";
@@ -8,6 +9,9 @@ import { PrioritiesEditor } from "@/components/profile/PrioritiesEditor";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { DataControls } from "@/components/profile/DataControls";
 import { AlertSettings } from "@/components/profile/AlertSettings";
+import { alertSettingsFor } from "@/lib/alert-settings";
+import { hasProfile } from "@/lib/matching";
+import { can } from "@/lib/plans";
 import { emailConfigured } from "@/lib/email";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
@@ -21,6 +25,7 @@ const T = defineT({
     intro: "Everything here shapes your fit scores and your \"For you\" ranking.",
     signOut: "Sign out",
     retake: "Answer the quick questions again",
+    plan: "Your plan and billing",
   },
   sv: {
     meta: "Din profil — JobFitwise",
@@ -30,6 +35,7 @@ const T = defineT({
     intro: "Allt här påverkar dina matchningspoäng och din ”För dig”-ranking.",
     signOut: "Logga ut",
     retake: "Svara på snabbfrågorna igen",
+    plan: "Din plan och betalning",
   },
 });
 
@@ -62,6 +68,8 @@ export default async function ProfilePage() {
               {isNew ? t.newIntro : t.intro}
             </p>
             <a href="/onboarding" className="mt-2 inline-block text-sm text-accent underline underline-offset-2">{t.retake}</a>
+            <span className="mx-2 text-muted" aria-hidden>·</span>
+            <Link href="/account" className="mt-2 inline-block text-sm text-accent underline underline-offset-2">{t.plan}</Link>
           </div>
           {user.resume_score != null && (
             <div className="shrink-0 text-center">
@@ -86,11 +94,19 @@ export default async function ProfilePage() {
         </div>
 
         <div className="mt-10">
-          <PrioritiesEditor initial={user.preferences?.priorities ?? []} />
+          <PrioritiesEditor initial={user.preferences?.priorities ?? []} locked={!can(user, "advanced_filters")} />
         </div>
 
         <div className="mt-10">
-          <AlertSettings initial={user.job_alerts} verified={Boolean(user.email_verified_at)} emailOn={emailConfigured()} />
+          <AlertSettings
+            initial={user.job_alerts}
+            settings={alertSettingsFor(user.preferences)}
+            email={user.email}
+            verified={Boolean(user.email_verified_at)}
+            emailOn={emailConfigured()}
+            hasProfile={hasProfile(user)}
+            locked={!can(user, "job_alerts")}
+          />
         </div>
 
         <div className="mt-6">

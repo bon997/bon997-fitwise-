@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { route, ok, readJson, HttpError } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
+import { requireFeature } from "@/lib/plans";
 import { getJob, fitForJob, hasProfile, profileText } from "@/lib/matching";
 import { generateCoverLetter } from "@/lib/ai/cover-letter";
 import { one } from "@/lib/db";
@@ -24,6 +25,7 @@ const Body = z.object({
  */
 export const POST = route(async (req: Request) => {
   const user = await requireUser(req);
+  requireFeature(user, "cover_letters");
   if (!hasProfile(user)) throw new HttpError(409, say(req, "Upload a resume first", "Ladda upp ett CV först"));
   const body = Body.parse(await readJson(req));
   const job = await getJob(body.job_id);

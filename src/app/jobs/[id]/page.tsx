@@ -10,6 +10,8 @@ import { Footer } from "@/components/landing/Sections";
 import { FitDetails } from "@/components/jobs/FitDetails";
 import { bestImprovement } from "@/lib/ai/fit-score";
 import { maxPriority, scorePriorities } from "@/lib/priorities";
+import { can } from "@/lib/plans";
+import { LockedTeaser } from "@/components/billing/Upgrade";
 import { JobActions } from "@/components/jobs/JobActions";
 import { ApplyWithAI } from "@/components/jobs/ApplyWithAI";
 import { labels, postedAgo, reasonText, skillLabel } from "@/lib/format";
@@ -40,6 +42,7 @@ const T = defineT({
     open: "Open application page ↗",
     letterTitle: "Write a cover letter with AI",
     letterShort: "Write a cover letter for this job",
+    letterLocked: "Premium writes a personal cover letter for this job from your real experience, in Swedish or English, plus a tailored CV and interview prep (coming soon).",
     letterNeedsCv: "We write a personal letter for this job from your real experience. Add your CV or a few skills first — it takes about a minute.",
     letterNeedsAccount: "Create a free account and add your CV, and we'll write a personal letter for this job in Swedish or English.",
     letterCvCta: "Add my CV",
@@ -69,6 +72,7 @@ const T = defineT({
     open: "Öppna ansökningssidan ↗",
     letterTitle: "Skriv ett personligt brev med AI",
     letterShort: "Skriv ett personligt brev till jobbet",
+    letterLocked: "Premium skriver ett personligt brev till jobbet utifrån din riktiga erfarenhet, på svenska eller engelska, plus anpassat CV och intervjuförberedelse (kommer snart).",
     letterNeedsCv: "Vi skriver ett personligt brev till det här jobbet utifrån din riktiga erfarenhet. Lägg till ditt CV eller några kompetenser först — det tar ungefär en minut.",
     letterNeedsAccount: "Skapa ett gratis konto och lägg till ditt CV, så skriver vi ett personligt brev till det här jobbet på svenska eller engelska.",
     letterCvCta: "Lägg till mitt CV",
@@ -125,13 +129,14 @@ export default async function JobPage({ params }: Props) {
     profile ? personalProfile(user!) : null,
   ]);
   const why = personal ? personalize(job, personal.profile) : null;
-  const myRules = user?.preferences?.priorities ?? [];
+  const myRules = can(user, "advanced_filters") ? (user?.preferences?.priorities ?? []) : [];
   const prio = myRules.length ? scorePriorities(job, myRules) : null;
   const breakdown = fit?.breakdown ?? {};
   const partial = (breakdown.partial_skills as string[] | undefined) ?? [];
   // Re-scored in code with each missing skill added; free and instant.
   const semantic = (breakdown.details as { semantic?: number | null } | undefined)?.semantic;
-  const improvement = fit && user ? bestImprovement(toFitProfile(user), toFitJob(job), semantic == null ? null : semantic / 100) : null;
+  const fullFit = can(user, "match_breakdown");
+  const improvement = fit && user && fullFit ? bestImprovement(toFitProfile(user), toFitJob(job), semantic == null ? null : semantic / 100) : null;
   const required = job.skills.filter((s) => s.required);
   const niceToHave = job.skills.filter((s) => !s.required);
 
@@ -236,6 +241,7 @@ export default async function JobPage({ params }: Props) {
                     missing={fit.missing_skills}
                     improvement={improvement}
                     locale={locale}
+                    full={fullFit}
                   />
                   {why && why.reasons.length > 0 && (
                     <ul className="mt-4 space-y-1 border-t border-line pt-4 text-xs">
@@ -281,7 +287,17 @@ export default async function JobPage({ params }: Props) {
               </section>
             )}
 
-            {profile ? (
+            {profile && !can(user, "cover_letters") ? (
+              <section id="apply-heading" className="rounded-2xl border border-line bg-white p-5 sm:p-6">
+                <LockedTeaser plan="premium" title={t.letterTitle} body={t.letterLocked} />
+                {job.apply_url && (
+                  <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
+                    className="mt-4 block rounded-full bg-ink px-5 py-3 text-center text-sm font-medium text-paper hover:bg-ink-2">
+                    {t.open}
+                  </a>
+                )}
+              </section>
+            ) : profile ? (
               <ApplyWithAI
                 jobId={job.id}
                 applyUrl={job.apply_url}

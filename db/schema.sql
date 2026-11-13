@@ -259,3 +259,22 @@ CREATE UNIQUE INDEX IF NOT EXISTS import_searches_unique
   ON import_searches (source, lower(query), lower(coalesce(location, '')));
 -- Fitwise reads its tables as their owner; this only shuts Supabase's public API out.
 ALTER TABLE import_searches ENABLE ROW LEVEL SECURITY;
+
+-- ── Job alert emails: application deadline (Platsbanken gives one) ─────
+-- Alert settings live in users.preferences.alerts: frequency, count, categories,
+-- city, radius_km, min_match (src/lib/alert-settings.ts).
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS application_deadline timestamptz;
+
+-- ── Subscription plans (src/lib/plans.ts) and Stripe billing ───────────
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'pro', 'premium'));
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_status text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_period_end timestamptz;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id text;
+CREATE UNIQUE INDEX IF NOT EXISTS users_stripe_customer ON users (stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
+CREATE TABLE IF NOT EXISTS stripe_events (
+  id          text PRIMARY KEY,
+  type        text NOT NULL,
+  received_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE stripe_events ENABLE ROW LEVEL SECURITY;

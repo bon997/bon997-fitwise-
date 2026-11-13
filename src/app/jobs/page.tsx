@@ -6,6 +6,7 @@ import { sql } from "@/lib/db";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Footer } from "@/components/landing/Sections";
 import { JobCard } from "@/components/jobs/JobCard";
+import { can } from "@/lib/plans";
 import { JobFilters } from "@/components/jobs/JobFilters";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
@@ -64,9 +65,10 @@ export default async function JobsPage({ searchParams }: { searchParams: SP }) {
   const t = T[locale];
   const personal = Boolean(user && hasProfile(user));
 
-  const hasPriorities = Boolean(user?.preferences?.priorities?.length);
-  // Default sort: your own priorities if you set any, else the personalized ranking, else relevance.
-  const defaultSort = hasPriorities ? "priority" : personal ? "for_you" : "relevance";
+  const hasPriorities = Boolean(user?.preferences?.priorities?.length) && can(user, "advanced_filters");
+  const forYou = personal && can(user, "recommendations");
+  // Default sort: your own priorities if you set any, else the personalized ranking (Pro), else best fit / relevance.
+  const defaultSort = hasPriorities ? "priority" : forYou ? "for_you" : personal ? "fit" : "relevance";
   const parsed = JobSearchQuery.safeParse({ sort: defaultSort, ...raw });
   const params = parsed.success ? parsed.data : JobSearchQuery.parse({ sort: defaultSort });
   const [result, facets, savedRows] = await Promise.all([
@@ -105,6 +107,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SP }) {
           userSkills={user?.skills ?? []}
           personal={personal}
           priorities={hasPriorities}
+          locked={personal && !forYou}
         />
 
         {!user && (
@@ -133,7 +136,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SP }) {
         ) : (
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             {result.jobs.map((j) => (
-              <JobCard key={j.id} job={j} saved={saved.has(j.id)} signedIn={Boolean(user)} />
+              <JobCard key={j.id} job={j} saved={saved.has(j.id)} signedIn={Boolean(user)} gaps={can(user, "skill_gaps")} />
             ))}
           </div>
         )}
