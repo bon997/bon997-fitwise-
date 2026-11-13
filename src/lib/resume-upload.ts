@@ -18,6 +18,16 @@ export class ResumeUploadError extends Error {
 
 type Result = { res: Response; body: Record<string, unknown> };
 
+/** Report a failed upload to the server log (Vercel → Logs, search "client-log"). Never throws. */
+function report(reason: UploadFailure, file: File, detail: string, ms = 0) {
+  try {
+    const info = JSON.stringify({ where: "resume", reason, detail: detail.slice(0, 200), size: file.size, type: file.type, ext: file.name.split(".").pop(), ms, online: typeof navigator !== "undefined" ? navigator.onLine : null });
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) navigator.sendBeacon("/api/client-log", info);
+  } catch {
+    /* diagnostics only */
+  }
+}
+
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function profileStamp(): Promise<string | null | undefined> {
@@ -35,10 +45,14 @@ export async function uploadResume(file: File, deps = { fetch: (...a: Parameters
   let data: ArrayBuffer;
   try {
     data = await file.arrayBuffer();
-  } catch {
+  } catch (e) {
+    report("unreadable", file, String(e));
     throw new ResumeUploadError("unreadable");
   }
-  if (data.byteLength === 0) throw new ResumeUploadError("unreadable");
+  if (data.byteLength === 0) {
+    report("unreadable", file, "empty file");
+    throw new ResumeUploadError("unreadable");
+  }
   const copy = new File([data], file.name, { type: file.type });
 
   const before = await deps.profileStamp();
@@ -51,7 +65,7 @@ export async function uploadResume(file: File, deps = { fetch: (...a: Parameters
       const res = await deps.fetch("/api/resume", { method: "POST", body: form });
       const body = await res.json().catch(() => ({}));
       return { res, body };
-    } catch {
+    } catch (e) {
       const quick = Date.now() - started < 5000;
       if (quick && attempt === 0) {
         await deps.wait(1500);
@@ -69,6 +83,7 @@ export async function uploadResume(file: File, deps = { fetch: (...a: Parameters
           }
         }
       }
+      report("network", file, String(e), Date.now() - started);
       throw new ResumeUploadError("network");
     }
   }

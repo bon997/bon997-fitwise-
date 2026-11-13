@@ -44,6 +44,8 @@ export const POST = route(async (req: Request) => {
   if (!ext) throw new HttpError(415, say(req, "Upload a PDF, Word (.docx) or text file", "Ladda upp en PDF, Word-fil (.docx) eller textfil"));
 
   const bytes = Buffer.from(await file.arrayBuffer());
+  const t0 = Date.now();
+  console.log("resume upload", { user: user.id, size: file.size, type: mimeType });
   const allowance = await useAiAllowance(user, "resume_parse", localeFromRequest(req));
   const [{ parsed, text }, resumeUrl] = await Promise.all([
     parseResume({ bytes, mimeType }, localeFromRequest(req)).catch(async (e) => {
@@ -60,6 +62,7 @@ export const POST = route(async (req: Request) => {
     }),
   ]);
 
+  console.log("resume parsed", { user: user.id, ms: Date.now() - t0 });
   const prefs = { ...user.preferences, suggested_roles: parsed.suggested_roles };
   if (!prefs.target_titles?.length) prefs.target_titles = parsed.suggested_roles.slice(0, 3);
 
