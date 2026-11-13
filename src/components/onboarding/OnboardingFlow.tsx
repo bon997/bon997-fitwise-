@@ -9,6 +9,7 @@ import { DrivePicker, type DriveConfig } from "@/components/profile/DrivePicker"
 import { POPULAR_TITLES, TITLE_OPTIONS, type TitleOption } from "@/lib/onboarding-data";
 import { searchMatch } from "@/lib/search-match";
 import { LogoMark } from "@/components/brand/LogoMark";
+import { uploadResume, ResumeUploadError } from "@/lib/resume-upload";
 
 /**
  * Onboarding: one question per screen. Every answer is saved to the profile and used:
@@ -89,6 +90,8 @@ const T = defineT({
       badType: "That file type can't be read. Upload a PDF, Word (.docx) or text file.",
       oldDoc: "Old Word files (.doc) can't be read. Save it as .docx or PDF and try again.",
       tooBig: "That file is too big. Upload a CV under 4 MB.",
+      unreadable: "Your phone couldn't open this file. If it's in Google Drive, WhatsApp or iCloud, save it to the phone first (Download), then choose it again.",
+      network: "The connection dropped while uploading. Check your internet (Wi-Fi works best) and try again.",
       failed: (s: number) => `Upload failed (error ${s}). Try again, or skip for now.`,
     },
     salary: {
@@ -189,6 +192,8 @@ const T = defineT({
       badType: "Den filtypen kan inte läsas. Ladda upp en PDF, Word-fil (.docx) eller textfil.",
       oldDoc: "Gamla Word-filer (.doc) kan inte läsas. Spara som .docx eller PDF och försök igen.",
       tooBig: "Filen är för stor. Ladda upp ett CV under 4 MB.",
+      unreadable: "Telefonen kunde inte öppna filen. Om den ligger i Google Drive, WhatsApp eller iCloud: spara den på telefonen först (Ladda ner) och välj den igen.",
+      network: "Anslutningen bröts under uppladdningen. Kontrollera internet (Wi-Fi fungerar bäst) och försök igen.",
       failed: (s: number) => `Uppladdningen misslyckades (fel ${s}). Försök igen eller hoppa över.`,
     },
     salary: {
@@ -735,14 +740,11 @@ function ResumeStep({ t, drive, onDone, onSkip }: { t: Tx; drive: DriveConfig | 
     setBusy(true);
     setMsg(null);
     try {
-      const form = new FormData();
-      form.append("file", f);
-      const res = await fetch("/api/resume", { method: "POST", body: form });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? t.resume.failed(res.status));
+      const { res, body } = await uploadResume(f);
+      if (!res.ok) throw new Error((body.error as string | undefined) ?? t.resume.failed(res.status));
       onDone();
     } catch (e) {
-      setMsg((e as Error).message);
+      setMsg(e instanceof ResumeUploadError ? t.resume[e.reason] : (e as Error).message);
       setBusy(false);
     } finally {
       if (fileRef.current) fileRef.current.value = "";
