@@ -259,3 +259,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS import_searches_unique
   ON import_searches (source, lower(query), lower(coalesce(location, '')));
 -- Fitwise reads its tables as their owner; this only shuts Supabase's public API out.
 ALTER TABLE import_searches ENABLE ROW LEVEL SECURITY;
+
+-- ── Job alert emails: application deadline (Platsbanken gives one) ─────
+-- Alert settings live in users.preferences.alerts: frequency, count, categories,
+-- city, radius_km, min_match (src/lib/alert-settings.ts).
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS application_deadline timestamptz;
