@@ -6,11 +6,14 @@ import { skillLabel } from "@/lib/format";
 import { useLocale } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
 import { DrivePicker, type DriveConfig } from "./DrivePicker";
+import { uploadResume, ResumeUploadError } from "@/lib/resume-upload";
 
 const T = defineT({
   en: {
     tooBig: "That file is too big. Upload a resume under 4 MB.",
     tooSlow: "Reading the resume took too long. Try again, or upload a smaller PDF.",
+    unreadable: "Your phone couldn't open this file. If it's in Google Drive, WhatsApp or iCloud, save it to the phone first (Download), then choose it again.",
+    network: "The connection dropped while uploading. Check your internet (Wi-Fi works best) and try again.",
     failed: (s: number) => `Upload failed (error ${s}). Try again in a minute.`,
     read: "Resume read. Check the skills below and fix anything we got wrong.",
     checkValues: "Please check the highlighted values.",
@@ -64,6 +67,8 @@ const T = defineT({
   sv: {
     tooBig: "Filen är för stor. Ladda upp ett CV under 4 MB.",
     tooSlow: "Det tog för lång tid att läsa CV:t. Försök igen eller ladda upp en mindre PDF.",
+    unreadable: "Telefonen kunde inte öppna filen. Om den ligger i Google Drive, WhatsApp eller iCloud: spara den på telefonen först (Ladda ner) och välj den igen.",
+    network: "Anslutningen bröts under uppladdningen. Kontrollera internet (Wi-Fi fungerar bäst) och försök igen.",
     failed: (s: number) => `Uppladdningen misslyckades (fel ${s}). Försök igen om en minut.`,
     read: "CV:t är inläst. Kontrollera kompetenserna nedan och rätta det vi fått fel.",
     checkValues: "Kontrollera de markerade värdena.",
@@ -177,13 +182,10 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
     setUploading(true);
     setUploadMsg(null);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/resume", { method: "POST", body: form });
-      const body = await res.json().catch(() => ({}));
+      const { res, body } = await uploadResume(file);
       if (!res.ok) {
         throw new Error(
-          body.error ??
+          (body.error as string | undefined) ??
             (res.status === 413
               ? t.tooBig
               : res.status === 504
@@ -191,7 +193,8 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
                 : t.failed(res.status)),
         );
       }
-      const u = body.user;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const u = body.user as any;
       setName(u.name ?? name);
       setSkills(u.skills);
       setYears(u.years_experience?.toString() ?? "");
@@ -199,11 +202,12 @@ export function ProfileForm({ initial, hasResume, drive }: { initial: Profile; h
       setEduLevel(u.education?.[0]?.level ?? "");
       setEduField(u.education?.[0]?.field ?? "");
       setTitles((u.preferences.target_titles ?? []).join(", "));
-      setTips({ improvements: body.improvements ?? [], roles: body.suggested_roles ?? [] });
+      setTips({ improvements: (body.improvements as string[]) ?? [], roles: (body.suggested_roles as string[]) ?? [] });
       setUploadMsg({ kind: "ok", text: t.read });
       router.refresh();
     } catch (e) {
-      setUploadMsg({ kind: "err", text: (e as Error).message });
+      const text = e instanceof ResumeUploadError ? t[e.reason] : (e as Error).message;
+      setUploadMsg({ kind: "err", text });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
