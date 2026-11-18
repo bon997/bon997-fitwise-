@@ -154,7 +154,14 @@ While `PAYWALL_ENABLED` is not `true`, everyone gets Premium and the pricing pag
 ### Go-live steps
 
 1. **Database.** Nothing to do: the tables are created automatically on deploy (see *Database updates*).
-2. **Products.** In Stripe → Product catalogue, create *JobFitwise Pro* and *JobFitwise Premium*, each with a recurring monthly price in **SEK, VAT included** (for example 79 and 149). Copy the two `price_…` ids.
+2. **Products.** In Stripe → Product catalogue, create *JobFitwise Pro* and *JobFitwise Premium*. Give each three recurring prices in **SEK, VAT included**:
+
+   | | Monthly | Every 3 months | Yearly |
+   |---|---|---|---|
+   | Pro | 79 | 199 | 590 |
+   | Premium | 149 | 379 | 1 190 |
+
+   Copy the six `price_…` ids. The 3-month and yearly options only appear on the pricing page once both plans have that price set.
 3. **Webhook.** In Stripe → Developers → Webhooks, add the endpoint `https://www.jobfitwise.se/api/billing/webhook` with these events:
    - `customer.subscription.created`
    - `customer.subscription.updated`
@@ -167,12 +174,17 @@ While `PAYWALL_ENABLED` is not `true`, everyone gets Premium and the pricing pag
 5. **Vercel env vars** (Production), then redeploy:
    - `STRIPE_SECRET_KEY`
    - `STRIPE_WEBHOOK_SECRET`
-   - `STRIPE_PRICE_PRO`
-   - `STRIPE_PRICE_PREMIUM`
+   - `STRIPE_PRICE_PRO`, `STRIPE_PRICE_PRO_QUARTER`, `STRIPE_PRICE_PRO_YEAR`
+   - `STRIPE_PRICE_PREMIUM`, `STRIPE_PRICE_PREMIUM_QUARTER`, `STRIPE_PRICE_PREMIUM_YEAR`
+   - Only if you change the prices: `NEXT_PUBLIC_PRICE_PRO_QUARTER_SEK`, `NEXT_PUBLIC_PRICE_PRO_YEAR_SEK` and the `PREMIUM` versions (defaults 199, 590, 379, 1190)
    - `NEXT_PUBLIC_PRICE_PRO_SEK`
    - `NEXT_PUBLIC_PRICE_PREMIUM_SEK`
 6. **Test.** With test-mode keys, buy Pro with card `4242 4242 4242 4242`. You should land on `/account` showing Pro, and the webhook in Stripe should show `200`.
 7. **Switch on.** Set `PAYWALL_ENABLED=true` and redeploy. Existing users drop to Basic unless they have paid or you granted them a plan.
+
+### Free Pro trial
+
+While the paywall is on, every Basic account gets **7 days of Pro** (`TRIAL_DAYS`; set it to 0 to turn trials off). No card is asked for. The trial starts at the first CV upload. People who already had a CV when the paywall went on get theirs at their next dashboard visit. The dashboard and the account page show the days left, and afterwards the account simply returns to Basic. A trial never changes a paid plan.
 
 ### How it works
 

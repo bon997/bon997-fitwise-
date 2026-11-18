@@ -339,3 +339,6 @@ CREATE TABLE IF NOT EXISTS career_plans (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE career_plans ENABLE ROW LEVEL SECURITY;
+
+-- Free Pro trial end (src/lib/plans.ts TRIAL_DAYS)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at timestamptz;

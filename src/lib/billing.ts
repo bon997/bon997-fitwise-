@@ -12,7 +12,7 @@
  */
 import Stripe from "stripe";
 import { sql, one } from "./db";
-import { planForPrice, stripePriceId, type Plan } from "./plans";
+import { planForPrice, stripePriceId, type Plan, type Period } from "./plans";
 import type { UserRow } from "./data";
 
 let client: Stripe | null = null;
@@ -45,16 +45,16 @@ const hasLiveSubscription = (u: UserRow) =>
  * people who already pay go to the Portal to switch plans, so nobody ends up
  * with two subscriptions.
  */
-export async function checkoutUrl(user: UserRow, plan: Exclude<Plan, "basic">, base: string): Promise<string> {
-  const price = stripePriceId(plan);
-  if (!price) throw new Error(`STRIPE_PRICE_${plan.toUpperCase()} is not set`);
+export async function checkoutUrl(user: UserRow, plan: Exclude<Plan, "basic">, base: string, period: Period = "month"): Promise<string> {
+  const price = stripePriceId(plan, period) ?? (period === "month" ? null : stripePriceId(plan, "month"));
+  if (!price) throw new Error(`No Stripe price is set for ${plan} (${period})`);
   if (hasLiveSubscription(user)) return portalUrl(user, base);
   const session = await stripe().checkout.sessions.create({
     mode: "subscription",
     customer: await customerFor(user),
     client_reference_id: user.id,
     line_items: [{ price, quantity: 1 }],
-    subscription_data: { metadata: { user_id: user.id, plan } },
+    subscription_data: { metadata: { user_id: user.id, plan, period } },
     allow_promotion_codes: true,
     automatic_tax: { enabled: process.env.STRIPE_AUTOMATIC_TAX?.trim() === "true" },
     ...(process.env.STRIPE_AUTOMATIC_TAX?.trim() === "true" ? { customer_update: { address: "auto" as const } } : {}),

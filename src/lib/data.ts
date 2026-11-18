@@ -46,6 +46,8 @@ export type UserRow = {
   plan: "basic" | "pro" | "premium";
   plan_status: string | null;
   plan_period_end: Date | null;
+  /** Free Pro trial end (see TRIAL_DAYS in plans.ts). */
+  trial_ends_at: Date | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   email_verified_at: Date | null;

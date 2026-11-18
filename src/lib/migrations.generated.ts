@@ -23,5 +23,9 @@ export const MIGRATIONS: { id: string; sql: string }[] = [
   {
     "id": "migrations-2026-11-robot",
     "sql": "-- Job robot (daily automatic imports). Safe to run more than once.\n-- Run in Supabase → SQL Editor BEFORE merging the robot. If asked about RLS, choose \"Run and enable RLS\".\n-- ── Daily automatic job imports ─────────────────────────────────────────\n-- Searches the admin saves once; a nightly cron (vercel.json) runs them.\nCREATE TABLE IF NOT EXISTS import_searches (\n  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  source       text NOT NULL CHECK (source IN ('jobtech', 'serpapi', 'rapidapi')),\n  query        text NOT NULL CHECK (length(query) BETWEEN 2 AND 200),\n  location     text CHECK (length(location) <= 100),\n  pages        smallint NOT NULL DEFAULT 1 CHECK (pages BETWEEN 1 AND 5),  -- about 10 jobs per page\n  enabled      boolean NOT NULL DEFAULT true,\n  last_run_at  timestamptz,\n  last_result  text,\n  created_at   timestamptz NOT NULL DEFAULT now()\n);\nCREATE UNIQUE INDEX IF NOT EXISTS import_searches_unique\n  ON import_searches (source, lower(query), lower(coalesce(location, '')));\n-- Fitwise reads its tables as their owner; this only shuts Supabase's public API out.\nALTER TABLE import_searches ENABLE ROW LEVEL SECURITY;\n"
+  },
+  {
+    "id": "migrations-2026-11-trial",
+    "sql": "-- Free Pro trial (7 days by default, see TRIAL_DAYS). Safe to run more than once.\nALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at timestamptz;\n"
   }
 ];

@@ -17,6 +17,8 @@ import { LockedTeaser } from "@/components/billing/Upgrade";
 import { can } from "@/lib/plans";
 import { trackerStats, TRACKER_ROWS_SQL, type TrackerRow } from "@/lib/tracker-stats";
 import { latestReadiness } from "@/lib/interview";
+import { ensureTrial } from "@/lib/trial";
+import { TrialBanner } from "@/components/billing/TrialBanner";
 import { bestProfileStep, nextAction, profileChecklist } from "@/lib/next-action";
 import type { Locale } from "@/i18n/config";
 import type { UserRow } from "@/lib/data";
@@ -232,8 +234,10 @@ const BASIC_MATCHES = 3;
 const PIPELINE = ["applied", "interviewing", "offer"] as const;
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login?returnTo=/dashboard");
+  const signedIn = await getCurrentUser();
+  if (!signedIn) redirect("/login?returnTo=/dashboard");
+  // People who already had a CV when the paywall went on get their free Pro trial here.
+  const user = await ensureTrial(signedIn);
   const first = user.name?.split(" ")[0];
   const locale = await getLocale();
   const t = T[locale];
@@ -310,6 +314,7 @@ export default async function DashboardPage() {
       <AppHeader user={user} active="/dashboard" />
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
         <h1 className="font-display text-4xl sm:text-5xl">{t.hi(first)}</h1>
+        <TrialBanner user={user} locale={locale} />
         {emailConfigured() && (user.job_alerts ? !user.email_verified_at : !user.job_alert_checked_at) && (
           // Alerts on but address unconfirmed, or an account from before alerts existed that hasn't chosen yet.
           <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink-2">

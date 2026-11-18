@@ -41,8 +41,8 @@ const PRICE: Record<PaidPlan, number> = {
 };
 
 /** Start Stripe Checkout for a plan; falls back to the pricing page. */
-export async function startCheckout(plan: PaidPlan): Promise<boolean> {
-  const res = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan }) }).catch(() => null);
+export async function startCheckout(plan: PaidPlan, period: "month" | "quarter" | "year" = "month"): Promise<boolean> {
+  const res = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan, period }) }).catch(() => null);
   const body = await res?.json().catch(() => null);
   if (res?.ok && body?.url) {
     window.location.href = body.url;

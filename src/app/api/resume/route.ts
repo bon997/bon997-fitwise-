@@ -1,3 +1,4 @@
+import { ensureTrial } from "@/lib/trial";
 import { route, ok, HttpError } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/plans";
@@ -80,10 +81,12 @@ export const POST = route(async (req: Request) => {
     ],
   );
 
+  // The first CV upload starts the free Pro trial (when the paywall is on).
+  const current = await ensureTrial(updated!);
   return ok({
-    user: publicUser(updated!),
+    user: publicUser(current),
     suggested_roles: parsed.suggested_roles,
     // Tips are part of Pro's resume analysis; Basic still gets the profile itself.
-    improvements: can(user, "resume_tips") ? parsed.improvements : [],
+    improvements: can(current, "resume_tips") ? parsed.improvements : [],
   });
 });
