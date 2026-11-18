@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/gen-migrations.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
     "db:setup": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f db/schema.sql",
-    "db:seed": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f db/seed.sql"
+    "db:seed": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f db/seed.sql",
+    "db:migrations": "node scripts/gen-migrations.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

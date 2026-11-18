@@ -135,6 +135,16 @@ Rules that keep it trustworthy (`src/lib/ai/personalize.ts`):
 
 Ideas for later customization, once there are real users: per-user learned weights (e.g. someone who always applies to remote jobs), "more like this" on any job, and a weekly email digest.
 
+## Database updates (automatic)
+
+New tables and columns are added by the app itself. On every server start, `src/instrumentation.ts` runs `src/lib/migrate.ts`, which applies each `db/migrations-*.sql` file once, in name order, and records it in `schema_migrations`. Everything happens in one transaction under an advisory lock, so parallel cold starts are safe, and it also works through Supabase's pooler. A failure is rolled back and logged, and the site keeps running.
+
+To add a database change:
+1. Create `db/migrations-<yyyy-mm>-<name>.sql`. It must be safe to run more than once: `IF NOT EXISTS`, `ON CONFLICT DO NOTHING`.
+2. Run `npm run db:migrations`. This also runs automatically before every build. A test fails if you forget.
+
+Set `SKIP_MIGRATIONS=true` to turn this off.
+
 ## Plans & payments (Stripe)
 
 Three plans: **Basic** (free), **Pro** and **Premium**. What each one unlocks is in `src/lib/plans.ts` (`FEATURES`). Gated API routes answer `402 {error, upgrade, feature}`, and the UI turns that into an upgrade popup. The application tracker stays free on every plan, because it is what the Arbetsförmedlingen activity report needs.
@@ -143,7 +153,7 @@ While `PAYWALL_ENABLED` is not `true`, everyone gets Premium and the pricing pag
 
 ### Go-live steps
 
-1. **Database.** Run `db/migrations-2026-11-alerts-and-plans.sql` in the Supabase SQL editor. It is safe to run twice.
+1. **Database.** Nothing to do: the tables are created automatically on deploy (see *Database updates*).
 2. **Products.** In Stripe → Product catalogue, create *JobFitwise Pro* and *JobFitwise Premium*, each with a recurring monthly price in **SEK, VAT included** (for example 79 and 149). Copy the two `price_…` ids.
 3. **Webhook.** In Stripe → Developers → Webhooks, add the endpoint `https://www.jobfitwise.se/api/billing/webhook` with these events:
    - `customer.subscription.created`
