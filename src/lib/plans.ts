@@ -39,6 +39,8 @@ export const FEATURES = {
   cover_letters: "premium",
   /** Interview coach: questions with CV-based answers, STAR examples, mock interviews. */
   interview_coach: "premium",
+  /** Career coach: role path, skill plan, certifications, salary steps, alternative routes. */
+  career_coach: "premium",
   /** Coming: tailored CV, LinkedIn optimisation. */
   career_tools: "premium",
 } as const satisfies Record<string, Plan>;
@@ -47,7 +49,7 @@ export type Feature = keyof typeof FEATURES;
 export const BASIC_SAVED_LIMIT = 10;
 
 /** How many times someone without the plan may try a paid AI tool, so they see what it does. */
-export const FREE_PREVIEWS = { gap_report: 1, interview_coach: 1 } as const;
+export const FREE_PREVIEWS = { gap_report: 1, interview_coach: 1, career_coach: 1 } as const;
 /** Without Premium, an interview pack shows only this many questions. */
 export const INTERVIEW_PREVIEW_QUESTIONS = 3;
 

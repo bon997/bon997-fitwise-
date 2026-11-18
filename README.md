@@ -192,6 +192,7 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 | `POST /api/interview/sessions` | Premium | Start a 5-question practice interview `{ job_id }`. |
 | `GET /api/interview/sessions/:id` | owner | The practice interview so far. |
 | `POST /api/interview/sessions/:id/answer` | Premium | `{ answer, index }` → score 1–5, feedback and a stronger answer; after the last question, the readiness score (0–100) and summary. |
+| `GET\|POST /api/career-plan` | user | Career plan `{ target_role?, horizon: 1\|3\|5 }`: role path with salary ranges, skill plan, certifications, alternative routes, salary tips, first steps, and open-job counts per role. Premium; others get one plan showing the path and first steps. |
 | `GET /api/applications/stats` | user | Sent, active, waiting for a reply, interview rate, offer rate, this week. |
 | `GET\|POST\|DELETE /api/saved-jobs` | user | Bookmarks. |
 | `POST\|DELETE /api/jobs/:id/dismiss` | user | "Not interested" `{ reason }` / undo. Feeds personalization. |
