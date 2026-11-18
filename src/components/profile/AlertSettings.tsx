@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { parseAlertSentence, describeUnderstood } from "@/lib/alert-sentence";
 import Link from "next/link";
 import { useLocale } from "@/i18n/client";
 import { UpgradeDialog } from "@/components/billing/Upgrade";
@@ -50,6 +51,14 @@ const T = defineT({
     send: "Send a new link",
     sent: "Sent. Check your inbox (and spam folder).",
     locked: "Email job alerts are part of Pro.",
+    say: "Describe your alert",
+    sayHint: "Write it the way you'd say it. We fill in the settings below, then you save.",
+    sayPlaceholder: "e.g. 5 logistics jobs in Gothenburg every day",
+    sayGo: "Fill in",
+    sayGot: "Filled in:",
+    sayNone: "Didn't catch that. Try something like “10 procurement jobs in Stockholm weekly”.",
+    sayFar: (town: string) => `We don't send alerts by area around ${town} yet, so it's set to all of Sweden.`,
+    sayCheck: "Check the settings below, then press Save.",
     unlock: "Unlock with Pro",
   },
   sv: {
@@ -91,6 +100,14 @@ const T = defineT({
     send: "Skicka en ny länk",
     sent: "Skickat. Titta i inkorgen (och skräpposten).",
     locked: "Jobbtips via mejl ingår i Pro.",
+    say: "Beskriv din bevakning",
+    sayHint: "Skriv som du skulle säga det. Vi fyller i inställningarna nedan, sedan sparar du.",
+    sayPlaceholder: "t.ex. 5 logistikjobb i Göteborg varje dag",
+    sayGo: "Fyll i",
+    sayGot: "Ifyllt:",
+    sayNone: "Det förstod vi inte. Prova t.ex. ”10 inköpsjobb i Stockholm varje vecka”.",
+    sayFar: (town: string) => `Vi skickar ännu inte bevakningar för området runt ${town}, så det gäller hela Sverige.`,
+    sayCheck: "Kontrollera inställningarna nedan och tryck sedan Spara.",
     unlock: "Lås upp med Pro",
   },
 });
@@ -138,6 +155,17 @@ export function AlertSettings({ initial, settings: initialSettings, email, verif
   const [previewing, startPreview] = useTransition();
 
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) => { setS((x) => ({ ...x, [k]: v })); setStatus(null); setPreview(null); };
+  const [sentence, setSentence] = useState("");
+  const [heard, setHeard] = useState<{ ok: boolean; text: string; far?: string } | null>(null);
+  const fillFromSentence = () => {
+    const r = parseAlertSentence(sentence);
+    if (!r.understood.length) return setHeard({ ok: false, text: t.sayNone });
+    setS((x) => ({ ...x, ...r.settings }));
+    setOn(true);
+    setStatus(null);
+    setPreview(null);
+    setHeard({ ok: true, text: describeUnderstood(r, locale), far: r.farTown });
+  };
   const toggleCat = (c: Category) => set("categories", s.categories.includes(c) ? s.categories.filter((x) => x !== c) : [...s.categories, c]);
   const day = (d: string) => new Date(d).toLocaleDateString(locale === "sv" ? "sv-SE" : "en-GB", { day: "numeric", month: "short" });
 
@@ -203,6 +231,34 @@ export function AlertSettings({ initial, settings: initialSettings, email, verif
                 {link !== "idle" && link !== "busy" && <p className="mt-1">{link}</p>}
               </>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Plain-language setup */}
+      <div className="mt-5 rounded-xl border border-accent/30 bg-accent-soft/40 px-4 py-3">
+        <label htmlFor="alert-sentence" className="text-sm font-medium">{t.say}</label>
+        <p className="mt-0.5 text-xs text-ink-2">{t.sayHint}</p>
+        <form className="mt-2 flex flex-col gap-2 sm:flex-row" onSubmit={(e) => { e.preventDefault(); fillFromSentence(); }}>
+          <input
+            id="alert-sentence"
+            value={sentence}
+            onChange={(e) => setSentence(e.target.value)}
+            maxLength={200}
+            placeholder={t.sayPlaceholder}
+            className="min-w-0 flex-1 rounded-lg border border-line bg-white px-3 py-2 text-sm"
+          />
+          <button type="submit" disabled={!sentence.trim()} className="shrink-0 rounded-full bg-accent px-4 py-2 text-sm font-medium text-paper hover:opacity-90 disabled:opacity-40">{t.sayGo}</button>
+        </form>
+        {heard && (
+          <div role="status" className="mt-2 text-sm">
+            {heard.ok ? (
+              <>
+                <p><span className="font-medium text-accent">{t.sayGot}</span> {heard.text}</p>
+                {heard.far && <p className="text-xs text-ink-2">{t.sayFar(heard.far.charAt(0).toUpperCase() + heard.far.slice(1))}</p>}
+                <p className="text-xs text-muted">{t.sayCheck}</p>
+              </>
+            ) : <p className="text-warn">{heard.text}</p>}
           </div>
         )}
       </div>
