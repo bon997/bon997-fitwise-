@@ -297,3 +297,17 @@ INSERT INTO application_events (application_id, user_id, status, at)
 SELECT a.id, a.user_id, a.status, coalesce(a.applied_at, a.created_at)
 FROM applications a
 WHERE NOT EXISTS (SELECT 1 FROM application_events e WHERE e.application_id = a.id);
+
+-- ── AI reports cache (src/lib/ai-reports.ts) ──────────────────────────
+CREATE TABLE IF NOT EXISTS ai_reports (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  job_id      uuid NOT NULL REFERENCES jobs(id)  ON DELETE CASCADE,
+  kind        text NOT NULL,                     -- gap
+  content     jsonb NOT NULL,
+  locale      text NOT NULL DEFAULT 'en',
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT ai_reports_unique UNIQUE (user_id, job_id, kind)
+);
+CREATE INDEX IF NOT EXISTS ai_reports_user_kind ON ai_reports (user_id, kind);
+ALTER TABLE ai_reports ENABLE ROW LEVEL SECURITY;

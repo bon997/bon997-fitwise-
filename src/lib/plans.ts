@@ -33,6 +33,8 @@ export const FEATURES = {
   resume_tips: "pro",
   /** More than BASIC_SAVED_LIMIT saved jobs. */
   unlimited_saves: "pro",
+  /** The AI CV gap report on a job page (Basic gets FREE_PREVIEWS of it). */
+  gap_report: "pro",
   /** AI cover letters ("Cover letter with AI"). */
   cover_letters: "premium",
   /** Coming: tailored CV, interview prep, LinkedIn optimisation. */
@@ -41,6 +43,9 @@ export const FEATURES = {
 export type Feature = keyof typeof FEATURES;
 
 export const BASIC_SAVED_LIMIT = 10;
+
+/** How many times someone without the plan may try a paid AI tool, so they see what it does. */
+export const FREE_PREVIEWS = { gap_report: 1 } as const;
 
 const RANK: Record<Plan, number> = { basic: 0, pro: 1, premium: 2 };
 

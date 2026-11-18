@@ -16,6 +16,7 @@ export const AI_DAILY_LIMITS = {
   cover_letter: Number(process.env.LIMIT_COVER_LETTERS_PER_DAY ?? 10),
   resume_parse: Number(process.env.LIMIT_RESUME_UPLOADS_PER_DAY ?? 5),
   fit_explain: Number(process.env.LIMIT_FIT_EXPLANATIONS_PER_DAY ?? 30),
+  gap_report: Number(process.env.LIMIT_GAP_REPORTS_PER_DAY ?? 20),
 } as const;
 
 export type AiKind = keyof typeof AI_DAILY_LIMITS;
