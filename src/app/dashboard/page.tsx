@@ -48,6 +48,9 @@ const T = defineT({
     tileInterviewSub: (a: number, b: number) => `${a} of ${b} reached interview`,
     tileMatch: "Match strength",
     tileMatchSub: "Average of your top 10 matches",
+    careerTitle: "Career coach",
+    careerBody: "See your next roles, what they pay and the skills and certifications that get you there.",
+    careerCta: "Open career coach →",
     tileReady: "Interview readiness",
     tileReadySub: "From your latest practice interview",
     tileReadyNone: "Practise in the interview coach",
@@ -92,6 +95,9 @@ const T = defineT({
     tileInterviewSub: (a: number, b: number) => `${a} av ${b} till intervju`,
     tileMatch: "Matchningsstyrka",
     tileMatchSub: "Snitt av dina 10 bästa matchningar",
+    careerTitle: "Karriärcoach",
+    careerBody: "Se dina nästa roller, vad de betalar och kompetenserna och certifieringarna som tar dig dit.",
+    careerCta: "Öppna karriärcoachen →",
     tileReady: "Intervjuberedskap",
     tileReadySub: "Från din senaste övningsintervju",
     tileReadyNone: "Öva i intervjucoachen",
@@ -342,6 +348,12 @@ export default async function DashboardPage() {
 
           <div className="space-y-8">
             <ProfileStrength strength={resumeStrength(user)} checklist={checklistFor(user)} locale={locale} />
+
+            <section aria-labelledby="career-heading" className="rounded-2xl border border-line bg-white p-5">
+              <h2 id="career-heading" className="text-lg font-semibold">{t.careerTitle}</h2>
+              <p className="mt-1 text-sm text-ink-2">{t.careerBody}</p>
+              <Link href="/career" className="mt-3 inline-block text-sm font-medium text-accent hover:underline">{t.careerCta}</Link>
+            </section>
 
             <section aria-labelledby="tracker-heading" className="rounded-2xl border border-line bg-white p-5">
               <div className="flex items-baseline justify-between gap-3">

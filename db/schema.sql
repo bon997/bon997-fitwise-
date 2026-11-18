@@ -328,3 +328,14 @@ CREATE TABLE IF NOT EXISTS interview_sessions (
 CREATE INDEX IF NOT EXISTS interview_sessions_user ON interview_sessions (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS interview_sessions_job ON interview_sessions (user_id, job_id, created_at DESC);
 ALTER TABLE interview_sessions ENABLE ROW LEVEL SECURITY;
+
+-- ── Career coach plans (src/lib/agents/career.ts) ────────────────────
+CREATE TABLE IF NOT EXISTS career_plans (
+  user_id     uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  target_role text,
+  horizon     smallint NOT NULL DEFAULT 3,       -- years
+  plan        jsonb NOT NULL,
+  locale      text NOT NULL DEFAULT 'en',
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE career_plans ENABLE ROW LEVEL SECURITY;

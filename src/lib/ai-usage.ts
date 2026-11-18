@@ -4,8 +4,8 @@ import { AI_DAILY_LIMITS, type AiKind } from "./site";
 import type { Locale } from "@/i18n/config";
 
 const LABEL: Record<Locale, Record<AiKind, string>> = {
-  en: { cover_letter: "cover letters", resume_parse: "resume uploads", fit_explain: "fit explanations", gap_report: "CV gap reports", interview_prep: "interview packs", interview_turn: "mock interview answers" },
-  sv: { cover_letter: "personliga brev", resume_parse: "CV-uppladdningar", fit_explain: "matchningsförklaringar", gap_report: "CV-analyser", interview_prep: "intervjupaket", interview_turn: "svar i övningsintervjuer" },
+  en: { cover_letter: "cover letters", resume_parse: "resume uploads", fit_explain: "fit explanations", gap_report: "CV gap reports", interview_prep: "interview packs", interview_turn: "mock interview answers", career_plan: "career plans" },
+  sv: { cover_letter: "personliga brev", resume_parse: "CV-uppladdningar", fit_explain: "matchningsförklaringar", gap_report: "CV-analyser", interview_prep: "intervjupaket", interview_turn: "svar i övningsintervjuer", career_plan: "karriärplaner" },
 };
 
 /**
