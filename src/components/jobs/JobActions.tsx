@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { UpgradeDialog } from "@/components/billing/Upgrade";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
@@ -48,8 +49,11 @@ const T = defineT({
   },
 });
 
+class UpgradeNeeded extends Error {}
+
 async function call(url: string, init: RequestInit, fallback: string) {
   const res = await fetch(url, { ...init, headers: { "Content-Type": "application/json", ...init.headers } });
+  if (res.status === 402) throw new UpgradeNeeded();
   if (!res.ok && res.status !== 204) throw new Error((await res.json().catch(() => ({}))).error ?? fallback);
 }
 
@@ -61,6 +65,7 @@ export function JobActions({ jobId, saved: initialSaved, compact = false }: { jo
   const [state, setState] = useState<"idle" | "asking" | "dismissed">("idle");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [upgrade, setUpgrade] = useState(false);
 
   const run = (fn: () => Promise<void>) =>
     start(async () => {
@@ -68,7 +73,8 @@ export function JobActions({ jobId, saved: initialSaved, compact = false }: { jo
       try {
         await fn();
       } catch (e) {
-        setError((e as Error).message);
+        if (e instanceof UpgradeNeeded) setUpgrade(true); // Basic: saved-jobs limit reached
+        else setError((e as Error).message);
       }
     });
 
@@ -108,6 +114,7 @@ export function JobActions({ jobId, saved: initialSaved, compact = false }: { jo
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <UpgradeDialog plan="pro" open={upgrade} onClose={() => setUpgrade(false)} />
       <button
         onClick={toggleSave}
         disabled={pending}

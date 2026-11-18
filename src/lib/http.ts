@@ -1,3 +1,4 @@
+import { PlanRequiredError } from "./plans";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { AiUnavailableError } from "./ai/claude";
@@ -17,6 +18,9 @@ export function route<A extends unknown[]>(fn: (...args: A) => Promise<Response>
       return await fn(...args);
     } catch (err) {
       if (err instanceof HttpError) return NextResponse.json({ error: err.message }, { status: err.status });
+      if (err instanceof PlanRequiredError) {
+        return NextResponse.json({ error: err.message, upgrade: err.plan, feature: err.feature }, { status: 402 });
+      }
       if (err instanceof ZodError) {
         return NextResponse.json({ error: "Invalid request", issues: err.issues }, { status: 400 });
       }

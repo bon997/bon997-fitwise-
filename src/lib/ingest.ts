@@ -38,8 +38,9 @@ async function upsertRaw(j: RawJob): Promise<{ id: string; inserted: boolean; ch
   // xmax = 0 identifies a fresh insert. Skills are cleared only if the text changed, forcing re-extraction.
   const row = await one<{ id: string; inserted: boolean; changed: boolean }>(
     `INSERT INTO jobs (source, external_id, title, company, location, remote, employment_type, description,
-                       requirements, responsibilities, salary_range, salary_min, salary_max, salary_currency, apply_url, posted_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+                       requirements, responsibilities, salary_range, salary_min, salary_max, salary_currency, apply_url, posted_at,
+                       application_deadline)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
      ON CONFLICT (source, external_id) DO UPDATE SET
        title = EXCLUDED.title, company = EXCLUDED.company, location = EXCLUDED.location,
        remote = EXCLUDED.remote, employment_type = EXCLUDED.employment_type,
@@ -49,6 +50,7 @@ async function upsertRaw(j: RawJob): Promise<{ id: string; inserted: boolean; ch
        salary_range = EXCLUDED.salary_range, salary_min = EXCLUDED.salary_min, salary_max = EXCLUDED.salary_max,
        salary_currency = EXCLUDED.salary_currency, apply_url = EXCLUDED.apply_url,
        posted_at = coalesce(jobs.posted_at, EXCLUDED.posted_at), is_active = true,
+       application_deadline = coalesce(EXCLUDED.application_deadline, jobs.application_deadline),
        skills = CASE WHEN jobs.description IS DISTINCT FROM EXCLUDED.description
                        OR jobs.requirements IS DISTINCT FROM EXCLUDED.requirements
                      THEN '[]'::jsonb ELSE jobs.skills END
@@ -56,7 +58,7 @@ async function upsertRaw(j: RawJob): Promise<{ id: string; inserted: boolean; ch
     [
       j.source, j.externalId, j.title, j.company, j.location, j.remote, j.employmentType, j.description,
       j.requirements, JSON.stringify(j.responsibilities), j.salaryRange, j.salaryMin, j.salaryMax,
-      j.salaryCurrency, j.applyUrl, j.postedAt,
+      j.salaryCurrency, j.applyUrl, j.postedAt, j.deadline ?? null,
     ],
   );
   return row!;

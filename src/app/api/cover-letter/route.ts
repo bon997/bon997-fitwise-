@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { route, ok, readJson, HttpError } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
+import { requireFeature } from "@/lib/plans";
 import { getJob, fitForJob, hasProfile, profileText } from "@/lib/matching";
 import { generateCoverLetter } from "@/lib/ai/cover-letter";
 import { one } from "@/lib/db";
@@ -24,6 +25,7 @@ const Body = z.object({
  */
 export const POST = route(async (req: Request) => {
   const user = await requireUser(req);
+  requireFeature(user, "cover_letters");
   if (!hasProfile(user)) throw new HttpError(409, say(req, "Upload a resume first", "Ladda upp ett CV först"));
   const body = Body.parse(await readJson(req));
   const job = await getJob(body.job_id);
@@ -47,9 +49,13 @@ export const POST = route(async (req: Request) => {
   let application = null;
   if (body.save) {
     application = await one(
-      `INSERT INTO applications (user_id, job_id, cover_letter) VALUES ($1, $2, $3)
-       ON CONFLICT (user_id, job_id) DO UPDATE SET cover_letter = EXCLUDED.cover_letter
-       RETURNING id, status`,
+      `WITH up AS (
+         INSERT INTO applications (user_id, job_id, cover_letter) VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, job_id) DO UPDATE SET cover_letter = EXCLUDED.cover_letter
+         RETURNING id, status, user_id, (xmax = 0) AS inserted),
+       ev AS (INSERT INTO application_events (application_id, user_id, status)
+              SELECT id, user_id, status FROM up WHERE inserted RETURNING 1)
+       SELECT id, status FROM up`,
       [user.id, job.id, letter],
     );
   }

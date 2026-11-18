@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { UpgradeDialog } from "@/components/billing/Upgrade";
 import { useLocale } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
 import { labels, skillLabel } from "@/lib/format";
@@ -116,13 +117,17 @@ export function JobFilters({
   userSkills,
   personal,
   priorities = false,
+  locked = false,
 }: {
   values: FilterValues;
   facets: JobFacets;
   userSkills: string[];
   personal: boolean;
   priorities?: boolean;
+  /** Basic plan: "For you" and "My priorities" are shown but open the upgrade popup. */
+  locked?: boolean;
 }) {
+  const [upgrade, setUpgrade] = useState(false);
   const locale = useLocale();
   const t = T[locale];
   const L = labels(locale);
@@ -299,17 +304,27 @@ export function JobFilters({
           id="sort"
           name="sort"
           defaultValue={values.sort}
-          onChange={submit}
+          onChange={(e) => {
+            if (e.target.value.startsWith("locked:")) {
+              e.target.value = values.sort; // keep the current sort; offer Pro instead
+              setUpgrade(true);
+              return;
+            }
+            submit();
+          }}
           className="rounded-lg border border-paper/30 bg-ink px-2 py-1.5 text-paper"
         >
           {priorities && <option value="priority">{t.myPriorities}</option>}
-          {personal && <option value="for_you">{t.forYou}</option>}
+          {personal && !locked && <option value="for_you">{t.forYou}</option>}
+          {locked && <option value="locked:for_you">🔒 {t.forYou} · Pro</option>}
+          {locked && <option value="locked:priority">🔒 {t.myPriorities} · Pro</option>}
           <option value="relevance">{t.relevant}</option>
           {personal && <option value="fit">{t.bestFit}</option>}
           <option value="recent">{t.newest}</option>
           <option value="salary">{t.salary}</option>
         </select>
       </div>
+      <UpgradeDialog plan="pro" open={upgrade} onClose={() => setUpgrade(false)} />
     </form>
   );
 }

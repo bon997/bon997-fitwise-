@@ -1,5 +1,6 @@
 import { route, ok, HttpError } from "@/lib/http";
 import { requireUser } from "@/lib/auth";
+import { can } from "@/lib/plans";
 import { one } from "@/lib/db";
 import { parseResume, ACCEPTED_RESUME_TYPES } from "@/lib/ai/parse-resume";
 import { storeResume } from "@/lib/storage";
@@ -82,6 +83,7 @@ export const POST = route(async (req: Request) => {
   return ok({
     user: publicUser(updated!),
     suggested_roles: parsed.suggested_roles,
-    improvements: parsed.improvements,
+    // Tips are part of Pro's resume analysis; Basic still gets the profile itself.
+    improvements: can(user, "resume_tips") ? parsed.improvements : [],
   });
 });

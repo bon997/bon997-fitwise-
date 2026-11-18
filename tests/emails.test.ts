@@ -49,18 +49,34 @@ describe("job alert email", () => {
   const token = "a".repeat(36);
 
   it("counts jobs in the subject, in both languages", () => {
-    expect(alertEmail({ name: "Anna", jobs: [job()], locale: "sv", base, alertsToken: token }).subject).toBe("1 nytt jobb som passar dig");
-    expect(alertEmail({ name: "Anna", jobs: [job(), job()], locale: "en", base, alertsToken: token }).subject).toBe("2 new jobs that fit you");
+    expect(alertEmail({ name: "Anna", jobs: [job()], locale: "sv", base, alertsToken: token }).subject).toBe("Veckans bästa jobb som matchar din profil");
+    expect(alertEmail({ name: "Anna", jobs: [job(), job()], locale: "en", base, alertsToken: token }).subject).toBe("This Week's Top 2 Jobs Matching Your Profile");
+    expect(alertEmail({ name: "Anna", jobs: [job(), job(), job()], locale: "en", base, alertsToken: token, settings: { frequency: "daily", categories: ["logistics"] } }).subject)
+      .toBe("Today's Top 3 Logistics Jobs Matching Your Profile");
   });
 
   it("lists each job with score, skills and a link", () => {
     const e = alertEmail({ name: "Anna", jobs: [job()], locale: "en", base, alertsToken: token });
     expect(e.html).toContain(`href="${base}/jobs/11111111-1111-1111-1111-111111111111"`);
-    expect(e.html).toContain(">82<");
+    expect(e.html).toContain(">82%<");
     expect(e.html).toContain("You have: Truck, WMS");
     expect(e.html).toContain("Missing: SAP");
-    expect(e.text).toContain("Lagerarbetare (82 fit)");
+    expect(e.text).toContain("Lagerarbetare (82% match)");
     expect(e.text).toContain("Åhléns · Malmö · 28–32k SEK / mo");
+  });
+
+  it("has an Apply link (the employer's page when known), the deadline and the distance", () => {
+    const e = alertEmail({
+      name: null, locale: "en", base, alertsToken: token,
+      jobs: [{ ...job({ apply_url: "https://employer.se/apply/1", application_deadline: new Date("2026-11-20T12:00:00Z") }), km: 57 }],
+    });
+    expect(e.html).toContain('href="https://employer.se/apply/1"');
+    expect(e.text).toContain("Apply: https://employer.se/apply/1");
+    expect(e.text).toContain("Apply by 20 Nov");
+    expect(e.text).toContain("57 km away");
+    const fallback = alertEmail({ name: null, jobs: [job()], locale: "sv", base, alertsToken: token });
+    expect(fallback.text).toContain(`Sök: ${base}/jobs/11111111-1111-1111-1111-111111111111`);
+    expect(fallback.text).not.toContain("Sök senast");
   });
 
   it("offers one-click unsubscribe in the body and the headers", () => {

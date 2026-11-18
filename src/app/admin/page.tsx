@@ -4,6 +4,8 @@ import { sql, one } from "@/lib/db";
 import { AppHeader } from "@/components/app/AppHeader";
 import { ImportJobsForm } from "@/components/admin/ImportJobsForm";
 import { DailyImports } from "@/components/admin/DailyImports";
+import { GrantPlan } from "@/components/admin/GrantPlan";
+import { paywallEnabled } from "@/lib/plans";
 import { nightlyEstimate, type ImportSearch } from "@/lib/scheduled-import";
 import { timeAgo } from "@/lib/format";
 import { getLocale } from "@/i18n/server";
@@ -86,6 +88,10 @@ export default async function AdminPage() {
               ai: Boolean(process.env.ANTHROPIC_API_KEY),
             }}
           />
+        </div>
+
+        <div className="mt-8">
+          <GrantPlan paywall={paywallEnabled()} />
         </div>
 
         <section className="mt-8 rounded-2xl border border-line bg-white p-5 sm:p-6">

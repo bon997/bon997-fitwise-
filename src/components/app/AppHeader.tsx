@@ -8,8 +8,8 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { LogoMark } from "@/components/brand/LogoMark";
 
 const T = defineT({
-  en: { dashboard: "Dashboard", jobs: "Jobs", profile: "Profile", admin: "Admin", signOut: "Sign out", signIn: "Sign in", help: "Help and FAQ" },
-  sv: { dashboard: "Översikt", jobs: "Jobb", profile: "Profil", admin: "Admin", signOut: "Logga ut", signIn: "Logga in", help: "Hjälp och vanliga frågor" },
+  en: { dashboard: "Dashboard", jobs: "Jobs", applications: "Applications", profile: "Profile", admin: "Admin", signOut: "Sign out", signIn: "Sign in", help: "Help and FAQ" },
+  sv: { dashboard: "Översikt", jobs: "Jobb", applications: "Ansökningar", profile: "Profil", admin: "Admin", signOut: "Logga ut", signIn: "Logga in", help: "Hjälp och vanliga frågor" },
 });
 
 export async function AppHeader({ user, active }: { user: UserRow | null; active?: string }) {
@@ -20,6 +20,7 @@ export async function AppHeader({ user, active }: { user: UserRow | null; active
   const nav = [
     { href: "/dashboard", label: t.dashboard, icon: ICONS.dashboard },
     { href: "/jobs", label: t.jobs, icon: ICONS.jobs },
+    { href: "/applications", label: t.applications, icon: ICONS.applications },
     { href: "/profile", label: t.profile, icon: ICONS.profile },
     ...(user?.role === "admin" ? [{ href: "/admin", label: t.admin, icon: ICONS.admin }] : []),
   ];
@@ -96,6 +97,7 @@ export async function AppHeader({ user, active }: { user: UserRow | null; active
 }
 
 const ICONS = {
+  applications: <><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z" /><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" /><path d="m9 14 2 2 4-4" /></>,
   dashboard: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></>,
   jobs: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /></>,
   profile: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
