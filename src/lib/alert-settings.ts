@@ -105,14 +105,22 @@ export const CITY_CENTRE: Record<Exclude<City, "sweden">, [number, number]> = {
 
 const NAMES = [...Object.keys(TOWNS), ...Object.keys(ALIASES)].sort((a, b) => b.length - a.length);
 
-/** The town a job's location text names, or null. "Kungsbacka, Hallands län" → kungsbacka. */
-export function townOf(location: string | null | undefined): [number, number] | null {
-  if (!location) return null;
-  const text = location.toLowerCase();
+/** The first town named in a text, with its centre. "Kungsbacka, Hallands län" → kungsbacka. */
+export function findTown(text: string | null | undefined): { name: string; at: [number, number] } | null {
+  if (!text) return null;
+  const lower = text.toLowerCase();
   for (const name of NAMES) {
-    if (new RegExp(`(^|[^\\p{L}])${name}($|[^\\p{L}])`, "u").test(text)) return TOWNS[ALIASES[name] ?? name] ?? null;
+    if (new RegExp(`(^|[^\\p{L}])${name}($|[^\\p{L}])`, "u").test(lower)) {
+      const town = ALIASES[name] ?? name;
+      return TOWNS[town] ? { name: town, at: TOWNS[town] } : null;
+    }
   }
   return null;
+}
+
+/** The town a job's location text names, or null. */
+export function townOf(location: string | null | undefined): [number, number] | null {
+  return findTown(location)?.at ?? null;
 }
 
 /** Great-circle distance in km. */
