@@ -24,6 +24,7 @@ const T = defineT({
     none: "—",
     tabs: { all: "All", active: "Active", interview: "Interview", offer: "Offer", closed: "Closed", draft: "Not sent" },
     savedTitle: "Saved, not applied yet",
+    match: "match",
     emptyTitle: "Nothing here yet",
     empty: "Find a job you like, then use Save or Cover letter with AI. It shows up here, and you can mark it as applied.",
     findJobs: "Find jobs",
@@ -43,6 +44,7 @@ const T = defineT({
     none: "—",
     tabs: { all: "Alla", active: "Pågående", interview: "Intervju", offer: "Erbjudande", closed: "Avslutade", draft: "Ej skickade" },
     savedTitle: "Sparade, inte sökta än",
+    match: "matchning",
     emptyTitle: "Inget här än",
     empty: "Hitta ett jobb du gillar och tryck Spara eller Personligt brev med AI. Det hamnar här och du kan markera det som sökt.",
     findJobs: "Hitta jobb",
@@ -155,7 +157,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                     <li key={s.id} className="flex items-center justify-between gap-3 py-3">
                       <div className="min-w-0">
                         <Link href={`/jobs/${s.id}`} className="block truncate text-sm font-medium hover:underline">{s.title}</Link>
-                        <p className="truncate text-xs text-muted">{s.company}{s.score != null ? ` · ${s.score}` : ""}</p>
+                        <p className="truncate text-xs text-muted">{s.company}{s.score != null ? ` · ${s.score}% ${t.match}` : ""}</p>
                       </div>
                       <MarkAppliedButton jobId={s.id} />
                     </li>

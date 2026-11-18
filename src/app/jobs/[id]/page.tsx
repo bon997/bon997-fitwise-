@@ -10,10 +10,13 @@ import { Footer } from "@/components/landing/Sections";
 import { FitDetails } from "@/components/jobs/FitDetails";
 import { bestImprovement } from "@/lib/ai/fit-score";
 import { maxPriority, scorePriorities } from "@/lib/priorities";
-import { can } from "@/lib/plans";
+import { can, FREE_PREVIEWS } from "@/lib/plans";
 import { LockedTeaser } from "@/components/billing/Upgrade";
 import { JobActions } from "@/components/jobs/JobActions";
 import { ApplyWithAI } from "@/components/jobs/ApplyWithAI";
+import { GapReport, type GapAccess } from "@/components/jobs/GapReport";
+import { getReport, countReports, isStale } from "@/lib/ai-reports";
+import type { GapReport as GapReportData } from "@/lib/agents/gap-report";
 import { labels, postedAgo, reasonText, skillLabel } from "@/lib/format";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
@@ -119,7 +122,7 @@ export default async function JobPage({ params }: Props) {
   if (!job) notFound();
 
   const profile = Boolean(user && hasProfile(user));
-  const [fit, saved, application, personal] = await Promise.all([
+  const [fit, saved, application, personal, gap, gapsUsed] = await Promise.all([
     profile ? fitForJob(user!, job) : null,
     user ? one("SELECT 1 FROM saved_jobs WHERE user_id = $1 AND job_id = $2", [user.id, id]) : null,
     user
@@ -127,7 +130,10 @@ export default async function JobPage({ params }: Props) {
           "SELECT id, status, cover_letter FROM applications WHERE user_id = $1 AND job_id = $2", [user.id, id])
       : null,
     profile ? personalProfile(user!) : null,
+    profile ? getReport<GapReportData>(user!.id, id, "gap") : null,
+    profile && !can(user, "gap_report") ? countReports(user!.id, "gap") : 0,
   ]);
+  const gapAccess: GapAccess = can(user, "gap_report") || gap ? "full" : gapsUsed < FREE_PREVIEWS.gap_report ? "preview" : "locked";
   const why = personal ? personalize(job, personal.profile) : null;
   const myRules = can(user, "advanced_filters") ? (user?.preferences?.priorities ?? []) : [];
   const prio = myRules.length ? scorePriorities(job, myRules) : null;
@@ -214,6 +220,15 @@ export default async function JobPage({ params }: Props) {
                   <p className="mt-1.5 text-sm text-ink-2"><span className="font-medium text-ink">{t.nice}</span> {niceToHave.map((s) => skillLabel(s.name)).join(", ")}</p>
                 )}
               </section>
+            )}
+
+            {profile && (
+              <GapReport
+                jobId={job.id}
+                fitScore={fit?.score ?? null}
+                access={gapAccess}
+                initial={gap ? { report: gap.content, created_at: new Date(gap.created_at).toISOString(), stale: isStale(gap, user!.profile_updated_at) } : null}
+              />
             )}
 
             {(job.requirements || job.description) && (
