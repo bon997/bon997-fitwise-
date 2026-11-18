@@ -37,7 +37,9 @@ export const FEATURES = {
   gap_report: "pro",
   /** AI cover letters ("Cover letter with AI"). */
   cover_letters: "premium",
-  /** Coming: tailored CV, interview prep, LinkedIn optimisation. */
+  /** Interview coach: questions with CV-based answers, STAR examples, mock interviews. */
+  interview_coach: "premium",
+  /** Coming: tailored CV, LinkedIn optimisation. */
   career_tools: "premium",
 } as const satisfies Record<string, Plan>;
 export type Feature = keyof typeof FEATURES;
@@ -45,7 +47,9 @@ export type Feature = keyof typeof FEATURES;
 export const BASIC_SAVED_LIMIT = 10;
 
 /** How many times someone without the plan may try a paid AI tool, so they see what it does. */
-export const FREE_PREVIEWS = { gap_report: 1 } as const;
+export const FREE_PREVIEWS = { gap_report: 1, interview_coach: 1 } as const;
+/** Without Premium, an interview pack shows only this many questions. */
+export const INTERVIEW_PREVIEW_QUESTIONS = 3;
 
 const RANK: Record<Plan, number> = { basic: 0, pro: 1, premium: 2 };
 
