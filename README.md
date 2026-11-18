@@ -188,6 +188,10 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 | `GET\|PATCH\|DELETE /api/applications/:id` | owner | PATCH takes `status`, `notes`, `interview_at`, `next_step`. Status changes set `applied_at` the first time an application leaves draft and add a timeline event. |
 | `GET /api/applications/:id/timeline` | owner | Status history, oldest first. |
 | `GET\|POST /api/jobs/:id/gap-report` | user | AI CV gap report for one job (strengths, gaps, CV edits, certifications, ATS keywords), cached per user and job until the CV changes. Pro; Basic gets one free. |
+| `GET\|POST /api/jobs/:id/interview-prep` | user | Interview pack for one job: 15–20 questions with CV-based answers, STAR examples, questions to ask, salary tip. Premium; others get one pack and see its first 3 questions. |
+| `POST /api/interview/sessions` | Premium | Start a 5-question practice interview `{ job_id }`. |
+| `GET /api/interview/sessions/:id` | owner | The practice interview so far. |
+| `POST /api/interview/sessions/:id/answer` | Premium | `{ answer, index }` → score 1–5, feedback and a stronger answer; after the last question, the readiness score (0–100) and summary. |
 | `GET /api/applications/stats` | user | Sent, active, waiting for a reply, interview rate, offer rate, this week. |
 | `GET\|POST\|DELETE /api/saved-jobs` | user | Bookmarks. |
 | `POST\|DELETE /api/jobs/:id/dismiss` | user | "Not interested" `{ reason }` / undo. Feeds personalization. |

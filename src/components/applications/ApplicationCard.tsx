@@ -26,6 +26,7 @@ const T = defineT({
     details: "Interview date, next step and notes",
     hasNotes: "Has notes",
     next: "Next:",
+    prepare: "Prepare for the interview →",
   },
   sv: {
     applied: "Sökt",
@@ -44,6 +45,7 @@ const T = defineT({
     details: "Intervjudatum, nästa steg och anteckningar",
     hasNotes: "Har anteckningar",
     next: "Nästa:",
+    prepare: "Förbered dig för intervjun →",
   },
 });
 
@@ -129,6 +131,12 @@ export function ApplicationCard({ app }: { app: CardApplication }) {
           {app.next_step && app.notes && " · "}
           {app.notes && <span className="text-muted">{t.hasNotes}</span>}
         </p>
+      )}
+
+      {(app.status === "interviewing" || app.interview_at) && app.status !== "rejected" && app.status !== "withdrawn" && (
+        <Link href={`/jobs/${app.job.id}/interview`} className="mt-3 inline-block rounded-full bg-accent px-4 py-2 text-sm font-medium text-paper hover:opacity-90">
+          {t.prepare}
+        </Link>
       )}
 
       <details className="mt-3">

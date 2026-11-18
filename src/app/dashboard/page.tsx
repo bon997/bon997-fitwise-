@@ -16,6 +16,7 @@ import { ProfileStrength } from "@/components/dashboard/ProfileStrength";
 import { LockedTeaser } from "@/components/billing/Upgrade";
 import { can } from "@/lib/plans";
 import { trackerStats, TRACKER_ROWS_SQL, type TrackerRow } from "@/lib/tracker-stats";
+import { latestReadiness } from "@/lib/interview";
 import { bestProfileStep, nextAction, profileChecklist } from "@/lib/next-action";
 import type { Locale } from "@/i18n/config";
 import type { UserRow } from "@/lib/data";
@@ -47,6 +48,9 @@ const T = defineT({
     tileInterviewSub: (a: number, b: number) => `${a} of ${b} reached interview`,
     tileMatch: "Match strength",
     tileMatchSub: "Average of your top 10 matches",
+    tileReady: "Interview readiness",
+    tileReadySub: "From your latest practice interview",
+    tileReadyNone: "Practise in the interview coach",
     nothingYet: "Nothing yet. Open a job and use",
     applyAi: "Cover letter with AI",
     gaps: "Skills worth learning",
@@ -88,6 +92,9 @@ const T = defineT({
     tileInterviewSub: (a: number, b: number) => `${a} av ${b} till intervju`,
     tileMatch: "Matchningsstyrka",
     tileMatchSub: "Snitt av dina 10 bästa matchningar",
+    tileReady: "Intervjuberedskap",
+    tileReadySub: "Från din senaste övningsintervju",
+    tileReadyNone: "Öva i intervjucoachen",
     nothingYet: "Inget än. Öppna ett jobb och använd",
     applyAi: "Personligt brev med AI",
     gaps: "Kompetenser värda att lära sig",
@@ -250,7 +257,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const [applications, saved, trackerRows, [strength]] = await Promise.all([
+  const [applications, saved, trackerRows, [strength], ready] = await Promise.all([
     sql<{ id: string; status: string; updated_at: Date; job_id: string; title: string; company: string; score: number | null }>(
       `SELECT a.id, a.status, a.updated_at, j.id AS job_id, j.title, j.company, f.score
        FROM applications a JOIN jobs j ON j.id = a.job_id
@@ -272,13 +279,21 @@ export default async function DashboardPage() {
          WHERE f.user_id = $1 AND j.is_active ORDER BY f.score DESC LIMIT 10) top`,
       [user.id],
     ),
+    latestReadiness(user.id),
   ]);
   const stats = trackerStats(trackerRows);
+  const interviewJob = applications.find((a) => a.status === "interviewing");
   const tiles = [
     { href: "/profile", label: t.tileProfile, value: `${resumeStrength(user)}%`, sub: t.tileProfileSub },
     { href: "/applications", label: t.tileSent, value: String(stats.sent), sub: t.tileWeek(stats.this_week) },
     { href: "/applications?tab=interview", label: t.tileInterview, value: stats.interview_rate == null ? "—" : `${stats.interview_rate}%`, sub: t.tileInterviewSub(stats.interviews, stats.sent) },
     { href: "/jobs?sort=fit", label: t.tileMatch, value: strength?.avg == null ? "—" : `${strength.avg}%`, sub: t.tileMatchSub },
+    {
+      href: ready ? `/jobs/${ready.job_id}/interview` : interviewJob ? `/jobs/${interviewJob.job_id}/interview` : "/applications?tab=interview",
+      label: t.tileReady,
+      value: ready ? `${ready.score}%` : "—",
+      sub: ready ? t.tileReadySub : t.tileReadyNone,
+    },
   ];
   const appliedIds = new Set(applications.filter((a) => a.status !== "draft").map((a) => a.job_id));
   const savedIds = new Set(saved.map((s) => s.id));
@@ -297,7 +312,7 @@ export default async function DashboardPage() {
           </p>
         )}
 
-        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {tiles.map((x) => (
             <Link key={x.label} href={x.href} className="block rounded-2xl border border-line bg-white p-4 transition-colors hover:border-ink/40">
               <p className="text-xs text-muted">{x.label}</p>

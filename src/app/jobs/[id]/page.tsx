@@ -45,6 +45,9 @@ const T = defineT({
     open: "Open application page ↗",
     letterTitle: "Write a cover letter with AI",
     letterShort: "Write a cover letter for this job",
+    coachTitle: "Interview coach",
+    coachBody: "Likely questions with answers from your CV, STAR examples and a practice interview with a readiness score.",
+    coachCta: "Prepare for the interview →",
     letterLocked: "Premium writes a personal cover letter for this job from your real experience, in Swedish or English, plus a tailored CV and interview prep (coming soon).",
     letterNeedsCv: "We write a personal letter for this job from your real experience. Add your CV or a few skills first — it takes about a minute.",
     letterNeedsAccount: "Create a free account and add your CV, and we'll write a personal letter for this job in Swedish or English.",
@@ -75,6 +78,9 @@ const T = defineT({
     open: "Öppna ansökningssidan ↗",
     letterTitle: "Skriv ett personligt brev med AI",
     letterShort: "Skriv ett personligt brev till jobbet",
+    coachTitle: "Intervjucoach",
+    coachBody: "Troliga frågor med svar utifrån ditt CV, STAR-exempel och en övningsintervju med beredskapspoäng.",
+    coachCta: "Förbered dig för intervjun →",
     letterLocked: "Premium skriver ett personligt brev till jobbet utifrån din riktiga erfarenhet, på svenska eller engelska, plus anpassat CV och intervjuförberedelse (kommer snart).",
     letterNeedsCv: "Vi skriver ett personligt brev till det här jobbet utifrån din riktiga erfarenhet. Lägg till ditt CV eller några kompetenser först — det tar ungefär en minut.",
     letterNeedsAccount: "Skapa ett gratis konto och lägg till ditt CV, så skriver vi ett personligt brev till det här jobbet på svenska eller engelska.",
@@ -299,6 +305,14 @@ export default async function JobPage({ params }: Props) {
                 ) : (
                   <p className="mt-2 text-sm text-muted">{t.prioNone}</p>
                 )}
+              </section>
+            )}
+
+            {profile && (
+              <section className="rounded-2xl border border-line bg-white p-5 sm:p-6" aria-labelledby="coach-heading">
+                <h2 id="coach-heading" className="text-lg font-semibold">{t.coachTitle}</h2>
+                <p className="mt-1.5 text-sm text-ink-2">{t.coachBody}</p>
+                <Link href={`/jobs/${job.id}/interview`} className="mt-3 inline-block text-sm font-medium text-accent hover:underline">{t.coachCta}</Link>
               </section>
             )}
 
