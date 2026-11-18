@@ -16,7 +16,7 @@ export const GET = route(async (req: Request) => {
 
   const [applications, counts] = await Promise.all([
     sql(
-      `SELECT a.id, a.status, a.notes, a.applied_at, a.created_at, a.updated_at,
+      `SELECT a.id, a.status, a.notes, a.applied_at, a.created_at, a.updated_at, a.interview_at, a.next_step,
               (a.cover_letter IS NOT NULL) AS has_cover_letter,
               json_build_object('id', j.id, 'title', j.title, 'company', j.company, 'location', j.location,
                                 'remote', j.remote, 'apply_url', j.apply_url) AS job,
@@ -54,10 +54,13 @@ export const POST = route(async (req: Request) => {
   if (!job) throw new HttpError(404, "Job not found");
 
   const row = await one(
-    `INSERT INTO applications (user_id, job_id, status, cover_letter, notes, applied_at)
-     VALUES ($1, $2, $3::application_status, $4, $5, CASE WHEN $3::application_status <> 'draft' THEN now() END)
-     ON CONFLICT (user_id, job_id) DO NOTHING
-     RETURNING *`,
+    `WITH ins AS (
+       INSERT INTO applications (user_id, job_id, status, cover_letter, notes, applied_at)
+       VALUES ($1, $2, $3::application_status, $4, $5, CASE WHEN $3::application_status <> 'draft' THEN now() END)
+       ON CONFLICT (user_id, job_id) DO NOTHING
+       RETURNING *),
+     ev AS (INSERT INTO application_events (application_id, user_id, status) SELECT id, user_id, status FROM ins RETURNING 1)
+     SELECT * FROM ins`,
     [user.id, body.job_id, body.status, body.cover_letter ?? null, body.notes ?? null],
   );
   if (!row) throw new HttpError(409, "You already have an application for this job");

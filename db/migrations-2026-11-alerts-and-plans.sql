@@ -18,3 +18,22 @@ CREATE TABLE IF NOT EXISTS stripe_events (
   received_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE stripe_events ENABLE ROW LEVEL SECURITY;
+
+-- ── Application tracker: timeline, interview date, next step ──────────
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS interview_at timestamptz;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS next_step text;
+CREATE TABLE IF NOT EXISTS application_events (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  application_id uuid NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  user_id        uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status         application_status NOT NULL,
+  at             timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS application_events_app ON application_events (application_id, at);
+CREATE INDEX IF NOT EXISTS application_events_user ON application_events (user_id, status);
+ALTER TABLE application_events ENABLE ROW LEVEL SECURITY;
+-- One starting event for applications that existed before the timeline.
+INSERT INTO application_events (application_id, user_id, status, at)
+SELECT a.id, a.user_id, a.status, coalesce(a.applied_at, a.created_at)
+FROM applications a
+WHERE NOT EXISTS (SELECT 1 FROM application_events e WHERE e.application_id = a.id);

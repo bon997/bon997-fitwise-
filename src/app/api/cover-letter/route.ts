@@ -49,9 +49,13 @@ export const POST = route(async (req: Request) => {
   let application = null;
   if (body.save) {
     application = await one(
-      `INSERT INTO applications (user_id, job_id, cover_letter) VALUES ($1, $2, $3)
-       ON CONFLICT (user_id, job_id) DO UPDATE SET cover_letter = EXCLUDED.cover_letter
-       RETURNING id, status`,
+      `WITH up AS (
+         INSERT INTO applications (user_id, job_id, cover_letter) VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, job_id) DO UPDATE SET cover_letter = EXCLUDED.cover_letter
+         RETURNING id, status, user_id, (xmax = 0) AS inserted),
+       ev AS (INSERT INTO application_events (application_id, user_id, status)
+              SELECT id, user_id, status FROM up WHERE inserted RETURNING 1)
+       SELECT id, status FROM up`,
       [user.id, job.id, letter],
     );
   }

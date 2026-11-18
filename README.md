@@ -185,7 +185,9 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 | `POST /api/fit-score` | user | `{ job_id, explain? }` → score, matched/missing skills, breakdown. |
 | `POST /api/cover-letter` | user | `{ job_id, tone?, notes?, save? }` → letter, saved to a draft application. |
 | `GET /api/applications` / `POST` | user | Tracker list with per-status counts / create (409 if one already exists). |
-| `GET\|PATCH\|DELETE /api/applications/:id` | owner | Status changes set `applied_at` the first time an application leaves draft. |
+| `GET\|PATCH\|DELETE /api/applications/:id` | owner | PATCH takes `status`, `notes`, `interview_at`, `next_step`. Status changes set `applied_at` the first time an application leaves draft and add a timeline event. |
+| `GET /api/applications/:id/timeline` | owner | Status history, oldest first. |
+| `GET /api/applications/stats` | user | Sent, active, waiting for a reply, interview rate, offer rate, this week. |
 | `GET\|POST\|DELETE /api/saved-jobs` | user | Bookmarks. |
 | `POST\|DELETE /api/jobs/:id/dismiss` | user | "Not interested" `{ reason }` / undo. Feeds personalization. |
 | `GET /api/me/export` | user | Download all of the user's data as JSON (GDPR). |

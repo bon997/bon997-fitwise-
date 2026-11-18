@@ -15,6 +15,7 @@ import { NextActionCard, NextActionSkeleton } from "@/components/dashboard/NextA
 import { ProfileStrength } from "@/components/dashboard/ProfileStrength";
 import { LockedTeaser } from "@/components/billing/Upgrade";
 import { can } from "@/lib/plans";
+import { trackerStats, TRACKER_ROWS_SQL, type TrackerRow } from "@/lib/tracker-stats";
 import { bestProfileStep, nextAction, profileChecklist } from "@/lib/next-action";
 import type { Locale } from "@/i18n/config";
 import type { UserRow } from "@/lib/data";
@@ -37,6 +38,15 @@ const T = defineT({
     noMatches: "No new matches in the last two weeks.",
     browse: "Browse all jobs",
     applications: "Applications",
+    openAll: "Open all →",
+    tileProfile: "Profile strength",
+    tileProfileSub: "Raise it on your profile",
+    tileSent: "Applications sent",
+    tileWeek: (n: number) => `${n} this week`,
+    tileInterview: "Interview rate",
+    tileInterviewSub: (a: number, b: number) => `${a} of ${b} reached interview`,
+    tileMatch: "Match strength",
+    tileMatchSub: "Average of your top 10 matches",
     nothingYet: "Nothing yet. Open a job and use",
     applyAi: "Cover letter with AI",
     gaps: "Skills worth learning",
@@ -69,6 +79,15 @@ const T = defineT({
     noMatches: "Inga nya matchningar de senaste två veckorna.",
     browse: "Bläddra bland alla jobb",
     applications: "Ansökningar",
+    openAll: "Visa alla →",
+    tileProfile: "Profilstyrka",
+    tileProfileSub: "Höj den på din profil",
+    tileSent: "Skickade ansökningar",
+    tileWeek: (n: number) => `${n} denna vecka`,
+    tileInterview: "Andel intervjuer",
+    tileInterviewSub: (a: number, b: number) => `${a} av ${b} till intervju`,
+    tileMatch: "Matchningsstyrka",
+    tileMatchSub: "Snitt av dina 10 bästa matchningar",
     nothingYet: "Inget än. Öppna ett jobb och använd",
     applyAi: "Personligt brev med AI",
     gaps: "Kompetenser värda att lära sig",
@@ -231,7 +250,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const [applications, saved] = await Promise.all([
+  const [applications, saved, trackerRows, [strength]] = await Promise.all([
     sql<{ id: string; status: string; updated_at: Date; job_id: string; title: string; company: string; score: number | null }>(
       `SELECT a.id, a.status, a.updated_at, j.id AS job_id, j.title, j.company, f.score
        FROM applications a JOIN jobs j ON j.id = a.job_id
@@ -246,7 +265,21 @@ export default async function DashboardPage() {
        WHERE s.user_id = $1 ORDER BY s.created_at DESC LIMIT 8`,
       [user.id],
     ),
+    sql<TrackerRow>(TRACKER_ROWS_SQL, [user.id]),
+    sql<{ avg: number | null }>(
+      `SELECT round(avg(score))::int AS avg FROM (
+         SELECT f.score FROM fit_scores f JOIN jobs j ON j.id = f.job_id
+         WHERE f.user_id = $1 AND j.is_active ORDER BY f.score DESC LIMIT 10) top`,
+      [user.id],
+    ),
   ]);
+  const stats = trackerStats(trackerRows);
+  const tiles = [
+    { href: "/profile", label: t.tileProfile, value: `${resumeStrength(user)}%`, sub: t.tileProfileSub },
+    { href: "/applications", label: t.tileSent, value: String(stats.sent), sub: t.tileWeek(stats.this_week) },
+    { href: "/applications?tab=interview", label: t.tileInterview, value: stats.interview_rate == null ? "—" : `${stats.interview_rate}%`, sub: t.tileInterviewSub(stats.interviews, stats.sent) },
+    { href: "/jobs?sort=fit", label: t.tileMatch, value: strength?.avg == null ? "—" : `${strength.avg}%`, sub: t.tileMatchSub },
+  ];
   const appliedIds = new Set(applications.filter((a) => a.status !== "draft").map((a) => a.job_id));
   const savedIds = new Set(saved.map((s) => s.id));
   const count = (s: string) => applications.filter((a) => a.status === s).length;
@@ -263,6 +296,16 @@ export default async function DashboardPage() {
             <Link href="/profile#alerts-heading" className="font-medium text-accent hover:underline">{user.job_alerts ? t.confirmLink : t.inviteLink}</Link>
           </p>
         )}
+
+        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {tiles.map((x) => (
+            <Link key={x.label} href={x.href} className="block rounded-2xl border border-line bg-white p-4 transition-colors hover:border-ink/40">
+              <p className="text-xs text-muted">{x.label}</p>
+              <p className="mt-1 font-display text-3xl tabular-nums">{x.value}</p>
+              <p className="text-xs text-ink-2">{x.sub}</p>
+            </Link>
+          ))}
+        </div>
 
         <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
           <div className="min-w-0 space-y-12">
@@ -286,7 +329,10 @@ export default async function DashboardPage() {
             <ProfileStrength strength={resumeStrength(user)} checklist={checklistFor(user)} locale={locale} />
 
             <section aria-labelledby="tracker-heading" className="rounded-2xl border border-line bg-white p-5">
-              <h2 id="tracker-heading" className="text-lg font-semibold">{t.applications}</h2>
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 id="tracker-heading" className="text-lg font-semibold">{t.applications}</h2>
+                <Link href="/applications" className="shrink-0 text-sm text-ink-2 hover:text-ink">{t.openAll}</Link>
+              </div>
               <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
                 {PIPELINE.map((s) => (
                   <div key={s} className="rounded-xl bg-paper px-2 py-2">
@@ -299,7 +345,7 @@ export default async function DashboardPage() {
                 <p className="mt-2 text-sm text-ink-2">{t.nothingYet} <strong>{t.applyAi}</strong>.</p>
               ) : (
                 <ul className="mt-3 divide-y divide-line">
-                  {applications.map((a) => (
+                  {applications.slice(0, 5).map((a) => (
                     <li key={a.id} className="flex items-center justify-between gap-3 py-3">
                       <div className="min-w-0">
                         <Link href={`/jobs/${a.job_id}`} className="block truncate text-sm font-medium hover:underline">{a.title}</Link>
