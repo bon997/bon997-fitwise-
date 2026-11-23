@@ -170,7 +170,20 @@ export function normalizeSkill(raw: string): string {
     .trim()
     .replace(/\s+/g, " ")
     .replace(/^[-•*·\s]+|[.,;:\s]+$/g, "");
-  return ALIASES[s] ?? s;
+  return ALIASES[s] ?? languageOf(s) ?? s;
+}
+
+/** "Flytande engelska", "English (fluent)", "god svenska i tal och skrift" → the language itself. */
+function languageOf(s: string): string | null {
+  const m = s.match(
+    /^(?:(?:fluent|flytande|god|goda|mycket god|very good|good|business|professional|native|basic|grundläggande|kunskaper i|knowledge of|skriftlig|muntlig|och|and)\s+)*(english|engelska|swedish|svenska|norwegian|norska|danish|danska|finnish|finska|german|tyska|french|franska|spanish|spanska|arabic|arabiska|polish|polska)(?:\s*\(.*\)|\s+i tal och skrift|\s+in speech and writing|\s*[–:-].*)?$/,
+  );
+  if (!m) return null;
+  const map: Record<string, string> = {
+    engelska: "english", svenska: "swedish", norska: "norwegian", danska: "danish", finska: "finnish",
+    tyska: "german", franska: "french", spanska: "spanish", arabiska: "arabic", polska: "polish",
+  };
+  return map[m[1]] ?? m[1];
 }
 
 export function normalizeSkills(list: readonly string[]): string[] {
@@ -208,3 +221,42 @@ export function skillCredit(jobSkill: string, userSkills: ReadonlySet<string>): 
   if (related?.some((r) => userSkills.has(r))) credit = Math.max(credit, 0.5);
   return credit;
 }
+
+// ── Languages ─────────────────────────────────────────────────────────────
+/** Spoken languages. They are requirements, not "skills to learn next", and CVs often don't list them. */
+export const LANGUAGES = ["english", "swedish", "norwegian", "danish", "finnish", "german", "french", "spanish", "arabic", "polish"] as const;
+const LANGUAGE_WORDS: Record<(typeof LANGUAGES)[number], RegExp> = {
+  english: /\b(english|engelska)\b/i,
+  swedish: /\b(swedish|svenska)\b/i,
+  norwegian: /\b(norwegian|norska)\b/i,
+  danish: /\b(danish|danska)\b/i,
+  finnish: /\b(finnish|finska)\b/i,
+  german: /\b(german|tyska)\b/i,
+  french: /\b(french|franska)\b/i,
+  spanish: /\b(spanish|spanska)\b/i,
+  arabic: /\b(arabic|arabiska)\b/i,
+  polish: /\b(polish|polska)\b/i,
+};
+export const isLanguage = (skill: string) => (LANGUAGES as readonly string[]).includes(skill);
+
+const EN_WORDS = /\b(the|and|with|for|of|to|in|responsible|managed|experience)\b/gi;
+const SV_WORDS = /\b(och|att|med|för|som|på|av|ansvarig|erfarenhet|arbetat)\b/gi;
+
+/**
+ * Languages a CV shows the person knows: ones it names ("English – fluent", "Svenska: modersmål"),
+ * plus the language the CV itself is written in.
+ */
+export function languagesFromResume(text: string | null | undefined): string[] {
+  if (!text) return [];
+  const found = new Set<string>();
+  for (const lang of LANGUAGES) if (LANGUAGE_WORDS[lang].test(text)) found.add(lang);
+  const en = text.match(EN_WORDS)?.length ?? 0;
+  const sv = text.match(SV_WORDS)?.length ?? 0;
+  if (en >= 15 && en > sv) found.add("english");
+  if (sv >= 15 && sv > en) found.add("swedish");
+  return [...found];
+}
+
+/** The user's skills plus the languages their CV shows. */
+export const withLanguages = (skills: readonly string[], resumeText: string | null | undefined) =>
+  [...new Set([...skills, ...languagesFromResume(resumeText)])];
