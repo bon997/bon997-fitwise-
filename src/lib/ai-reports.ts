@@ -1,7 +1,7 @@
 import { one } from "./db";
 
 /** Cached AI write-ups per user and job (gap report now; interview prep later). */
-export type ReportKind = "gap" | "interview";
+export type ReportKind = "gap" | "interview" | "letter";
 
 export type StoredReport<T> = { content: T; created_at: Date; locale: string };
 

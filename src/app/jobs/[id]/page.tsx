@@ -17,6 +17,7 @@ import { ApplyWithAI } from "@/components/jobs/ApplyWithAI";
 import { GapReport, type GapAccess } from "@/components/jobs/GapReport";
 import { getReport, countReports, isStale } from "@/lib/ai-reports";
 import type { GapReport as GapReportData } from "@/lib/agents/gap-report";
+import type { ApplicationPack } from "@/lib/application-pack-shared";
 import { labels, postedAgo, reasonText, skillLabel } from "@/lib/format";
 import { getLocale } from "@/i18n/server";
 import { defineT } from "@/i18n/config";
@@ -128,7 +129,7 @@ export default async function JobPage({ params }: Props) {
   if (!job) notFound();
 
   const profile = Boolean(user && hasProfile(user));
-  const [fit, saved, application, personal, gap, gapsUsed] = await Promise.all([
+  const [fit, saved, application, personal, gap, gapsUsed, letterPack] = await Promise.all([
     profile ? fitForJob(user!, job) : null,
     user ? one("SELECT 1 FROM saved_jobs WHERE user_id = $1 AND job_id = $2", [user.id, id]) : null,
     user
@@ -138,6 +139,7 @@ export default async function JobPage({ params }: Props) {
     profile ? personalProfile(user!) : null,
     profile ? getReport<GapReportData>(user!.id, id, "gap") : null,
     profile && !can(user, "gap_report") ? countReports(user!.id, "gap") : 0,
+    profile && can(user, "cover_letters") ? getReport<ApplicationPack>(user!.id, id, "letter") : null,
   ]);
   const gapAccess: GapAccess = can(user, "gap_report") || gap ? "full" : gapsUsed < FREE_PREVIEWS.gap_report ? "preview" : "locked";
   const why = personal ? personalize(job, personal.profile) : null;
@@ -331,6 +333,7 @@ export default async function JobPage({ params }: Props) {
                 jobId={job.id}
                 applyUrl={job.apply_url}
                 existingLetter={application?.cover_letter ?? null}
+                existingPack={letterPack?.content ?? null}
                 application={application ? { id: application.id, status: application.status } : null}
               />
             ) : (
