@@ -205,7 +205,7 @@ Every endpoint returns JSON. Errors look like `{ error }`, and validation errors
 | `GET /api/me` / `PATCH /api/me` | user | Profile. PATCH lets the user fix skills, years, seniority, preferences and `job_alerts`. |
 | `GET /api/match` | user | Weekly matches ranked by fit, plus skill gaps, suggested roles and resume score. |
 | `POST /api/fit-score` | user | `{ job_id, explain? }` → score, matched/missing skills, breakdown. |
-| `POST /api/cover-letter` | user | `{ job_id, tone?, notes?, save? }` → letter, saved to a draft application. |
+| `POST /api/cover-letter` | Premium | `{ job_id, tone?, language?, achievements?, company?, save? }` → application pack: tailored 200–300 word letter (saved to the application), recruiter analysis of the top 5 requirements, ATS keywords, and a 3-sentence Swedish email. |
 | `GET /api/applications` / `POST` | user | Tracker list with per-status counts / create (409 if one already exists). |
 | `GET\|PATCH\|DELETE /api/applications/:id` | owner | PATCH takes `status`, `notes`, `interview_at`, `next_step`. Status changes set `applied_at` the first time an application leaves draft and add a timeline event. |
 | `GET /api/applications/:id/timeline` | owner | Status history, oldest first. |
