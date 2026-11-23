@@ -8,6 +8,7 @@
 import { sql, one } from "./db";
 import { computeFitScore, type FitProfile, type FitJob, type FitResult } from "./ai/fit-score";
 import { renderProfileText } from "./ai/parse-resume";
+import { withLanguages, LANGUAGES } from "./ai/skills";
 import { explainFit } from "./ai/cover-letter";
 import { querySimilarJobs, semanticScores, semanticEnabled } from "./search/pinecone";
 import { buildProfile, personalize, forYouScore, type PersonalProfile, type SignalJob, type DismissReason } from "./ai/personalize";
@@ -15,7 +16,8 @@ import { JOB_LIST_COLUMNS, num, type FitScoreRow, type JobRow, type UserRow } fr
 
 export function toFitProfile(u: UserRow): FitProfile {
   return {
-    skills: u.skills,
+    // Languages count even when the CV doesn't list them as skills (a CV written in English shows English).
+    skills: withLanguages(u.skills, u.resume_text),
     yearsExperience: num(u.years_experience),
     seniority: u.seniority,
     education: u.education ?? [],
@@ -95,7 +97,7 @@ export async function scoreAndStore(
 
 /** Fresh cached scores for these jobs; computes and stores any that are missing or stale. */
 /** Bump when the scoring rules change, so cached scores are recomputed. */
-const SCORING_CHANGED_AT = "2026-11-07T22:00:00Z"; // 40/30/20/10 with education, confidence, readiness
+const SCORING_CHANGED_AT = "2026-11-23T22:30:00Z"; // languages read from the CV
 
 export async function fitScoresFor(user: UserRow, jobIds: string[]): Promise<Map<string, FitScoreRow>> {
   if (jobIds.length === 0 || !hasProfile(user)) return new Map();
@@ -240,8 +242,9 @@ export async function skillGaps(userId: string, limit = 5) {
     `SELECT s.skill, count(*)::int AS jobs
      FROM fit_scores f, jsonb_array_elements_text(f.missing_skills) AS s(skill)
      WHERE f.user_id = $1 AND f.score BETWEEN 50 AND 85
+       AND s.skill <> ALL ($3::text[]) -- languages aren't "learn next" material
      GROUP BY s.skill ORDER BY jobs DESC, s.skill LIMIT $2`,
-    [userId, limit],
+    [userId, limit, LANGUAGES],
   );
 }
 
