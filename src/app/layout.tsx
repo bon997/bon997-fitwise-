@@ -5,6 +5,9 @@ import { getLocale } from "@/i18n/server";
 import { LocaleProvider } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
 import { siteUrl } from "@/components/seo/JsonLd";
+import { cookies } from "next/headers";
+import { AppShell } from "@/components/app/AppShell";
+import { APP_COOKIE } from "@/lib/app-mode";
 
 const META = defineT({
   en: {
@@ -48,11 +51,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { themeColor: "#1d6b52" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = await getLocale();
+  const [locale, jar] = await Promise.all([getLocale(), cookies()]);
+  const androidApp = jar.get(APP_COOKIE)?.value === "android";
   return (
     <html lang={locale} className={`${inter.variable} ${instrumentSerif.variable}`}>
       <body>
-        <LocaleProvider locale={locale}>{children}</LocaleProvider>
+        <LocaleProvider locale={locale}>
+          <AppShell androidApp={androidApp}>{children}</AppShell>
+        </LocaleProvider>
       </body>
     </html>
   );

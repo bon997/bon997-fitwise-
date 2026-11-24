@@ -23,7 +23,7 @@ const T = defineT({
 });
 
 /** "Pro trial: 5 days left" while a trial runs, "Your trial has ended" for two weeks after. */
-export function TrialBanner({ user, locale }: { user: UserRow; locale: Locale }) {
+export function TrialBanner({ user, locale, androidApp = false }: { user: UserRow; locale: Locale; androidApp?: boolean }) {
   const t = T[locale];
   const left = trialDaysLeft(user);
   if (left == null && !trialJustEnded(user)) return null;
@@ -31,7 +31,7 @@ export function TrialBanner({ user, locale }: { user: UserRow; locale: Locale })
     <p className={`mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl px-4 py-3 text-sm ${left != null ? "border border-accent/30 bg-accent-soft/60" : "border border-line bg-white"}`}>
       <strong className="font-semibold">{left != null ? t.running(left) : t.ended}</strong>
       <span className="text-ink-2">{left != null ? t.runningBody : t.endedBody}</span>
-      <Link href="/pricing?period=quarter" className="font-medium text-accent hover:underline">{left != null ? t.keep : t.plans}</Link>
+      {!androidApp && <Link href="/pricing?period=quarter" className="font-medium text-accent hover:underline">{left != null ? t.keep : t.plans}</Link>}
     </p>
   );
 }

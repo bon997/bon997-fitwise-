@@ -6,6 +6,7 @@ import { Footer } from "@/components/landing/Sections";
 import { ManageButton } from "@/components/billing/ManageButton";
 import { PlanButton } from "@/components/billing/PlanButton";
 import { TrialBanner } from "@/components/billing/TrialBanner";
+import { isAndroidApp } from "@/lib/app-mode";
 import { PRICE_SEK, currentPlan, paywallEnabled } from "@/lib/plans";
 import { getLocale } from "@/i18n/server";
 import { defineT, intlLocale } from "@/i18n/config";
@@ -66,7 +67,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       <AppHeader user={user} active="/profile" />
       <main className="mx-auto max-w-2xl px-4 pb-20 pt-8 sm:px-6">
         <h1 className="font-display text-4xl">{t.title}</h1>
-        <TrialBanner user={user} locale={locale} />
+        <TrialBanner user={user} locale={locale} androidApp={await isAndroidApp()} />
         {sp.checkout === "success" && <p className="mt-4 rounded-xl bg-accent-soft px-4 py-3 text-sm">{t.welcome}</p>}
 
         <section className="mt-6 rounded-2xl border border-line bg-white p-6">

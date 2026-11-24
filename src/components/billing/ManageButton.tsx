@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useAndroidApp } from "@/components/app/AppShell";
 
 /** Opens Stripe's Customer Portal (change plan, card, receipts, cancel). */
 export function ManageButton({ label, failedText }: { label: string; failedText: string }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const inApp = useAndroidApp();
   const open = async () => {
     setBusy(true);
     setFailed(false);
@@ -14,6 +16,7 @@ export function ManageButton({ label, failedText }: { label: string; failedText:
     if (res?.ok && body?.url) window.location.href = body.url;
     else { setBusy(false); setFailed(true); }
   };
+  if (inApp) return null;
   return (
     <>
       <button type="button" onClick={open} disabled={busy} className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-ink-2 disabled:opacity-60">{label}</button>

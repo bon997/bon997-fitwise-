@@ -19,6 +19,7 @@ import { trackerStats, TRACKER_ROWS_SQL, type TrackerRow } from "@/lib/tracker-s
 import { latestReadiness } from "@/lib/interview";
 import { ensureTrial } from "@/lib/trial";
 import { TrialBanner } from "@/components/billing/TrialBanner";
+import { isAndroidApp } from "@/lib/app-mode";
 import { bestProfileStep, nextAction, profileChecklist } from "@/lib/next-action";
 import type { Locale } from "@/i18n/config";
 import type { UserRow } from "@/lib/data";
@@ -314,7 +315,7 @@ export default async function DashboardPage() {
       <AppHeader user={user} active="/dashboard" />
       <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
         <h1 className="font-display text-4xl sm:text-5xl">{t.hi(first)}</h1>
-        <TrialBanner user={user} locale={locale} />
+        <TrialBanner user={user} locale={locale} androidApp={await isAndroidApp()} />
         {emailConfigured() && (user.job_alerts ? !user.email_verified_at : !user.job_alert_checked_at) && (
           // Alerts on but address unconfirmed, or an account from before alerts existed that hasn't chosen yet.
           <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink-2">
