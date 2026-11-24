@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageShell } from "@/components/marketing/PageShell";
 import { PlanButton } from "@/components/billing/PlanButton";
+import { isAndroidApp } from "@/lib/app-mode";
 import { getCurrentUser } from "@/lib/auth";
 import { currentPlan, paywallEnabled, periodDeal, offeredPeriods, trialDaysLeft, TRIAL_DAYS, type Plan, type Period } from "@/lib/plans";
 import { getLocale } from "@/i18n/server";
@@ -15,6 +16,7 @@ const T = defineT({
     eyebrow: "Pricing",
     title: "Start free. Upgrade when it helps.",
     intro: "Search, save and apply for free. Pro finds and emails you the right jobs; Premium helps you win them.",
+    inApp: "Plans can't be bought in the Android app. Everything you already have stays unlocked here.",
     beta: "Free during beta: every feature is unlocked for everyone right now. Plans start later, and we'll tell you before anything changes.",
     month: "/ month",
     per: { month: "/ month", quarter: "/ 3 months", year: "/ year" } as Record<Period, string>,
@@ -74,6 +76,7 @@ const T = defineT({
     eyebrow: "Priser",
     title: "Börja gratis. Uppgradera när det hjälper.",
     intro: "Sök, spara och ansök gratis. Pro hittar och mejlar rätt jobb; Premium hjälper dig att få dem.",
+    inApp: "Planer kan inte köpas i Android-appen. Allt du redan har är upplåst här.",
     beta: "Gratis under betan: alla funktioner är upplåsta för alla just nu. Planerna startar senare, och vi säger till innan något ändras.",
     month: "/ mån",
     per: { month: "/ mån", quarter: "/ 3 mån", year: "/ år" } as Record<Period, string>,
@@ -175,6 +178,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
   return (
     <PageShell eyebrow={t.eyebrow} title={t.title} intro={t.intro}>
       {!live && <p className="mb-6 rounded-xl border border-accent/30 bg-accent-soft/60 px-4 py-3 text-sm">{t.beta}</p>}
+      {live && (await isAndroidApp()) && <p className="mb-6 rounded-xl border border-line bg-white px-4 py-3 text-sm">{t.inApp}</p>}
       {periods.length > 1 && (
         <nav aria-label={t.periodLabel} className="mb-8 flex justify-center">
           <div className="inline-flex gap-1 rounded-full border border-line bg-white p-1">

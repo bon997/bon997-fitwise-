@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { startCheckout } from "./Upgrade";
+import { useAndroidApp } from "@/components/app/AppShell";
 
 /** "Upgrade" on the pricing page: Stripe Checkout when signed in, sign-up first otherwise. */
 export function PlanButton({ plan, period = "month", label, signedIn, current, failedText, className }: {
@@ -10,7 +11,10 @@ export function PlanButton({ plan, period = "month", label, signedIn, current, f
 }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const inApp = useAndroidApp();
   if (current) return <p className={`${className} cursor-default opacity-70`}>{current}</p>;
+  // No purchases inside the Play Store app (Google Play payments policy).
+  if (inApp) return null;
   if (!signedIn) return <Link href={`/signup?returnTo=${encodeURIComponent(`/pricing?period=${period}`)}`} className={className}>{label}</Link>;
   return (
     <>

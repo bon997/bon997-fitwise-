@@ -135,6 +135,21 @@ Rules that keep it trustworthy (`src/lib/ai/personalize.ts`):
 
 Ideas for later customization, once there are real users: per-user learned weights (e.g. someone who always applies to remote jobs), "more like this" on any job, and a weekly email digest.
 
+## Android app (Google Play)
+
+The Play Store app is a **Trusted Web Activity**: a small Android wrapper that opens www.jobfitwise.se full-screen in Chrome. Every website deploy updates the app too, so there is no separate code base.
+
+What the website provides:
+- an installable web app: `src/app/manifest.ts` (start URL `/app`, maskable icons) and `public/sw.js` with an offline page
+- `/.well-known/assetlinks.json`, which proves the app and the domain belong together. Set `ANDROID_CERT_SHA256` in Vercel to the SHA-256 fingerprints from Play Console, comma-separated. The package name defaults to `se.jobfitwise.app` (`ANDROID_PACKAGE_NAME`).
+- **app mode:** `/app` notices a launch from the app (Chrome sends `android-app://se.jobfitwise.app` as referrer) and sets the `fw_app` cookie. Inside the app every purchase button, upgrade link and the Stripe portal are hidden, because Google Play doesn't allow selling digital subscriptions through our own checkout in the app. Features someone already has stay unlocked.
+
+Publishing:
+1. Create a Google Play developer account (one-time US$25). New personal accounts must run a closed test with at least 12 testers for 14 days before going public.
+2. At pwabuilder.com, enter `https://www.jobfitwise.se` → **Package for stores → Android**. Use package ID `se.jobfitwise.app`, keep the start URL `/app`, and download the package, which includes the signing key. Keep that key safe.
+3. In Play Console, create the app and upload the `.aab`. Copy the SHA-256 fingerprints from **App integrity** into `ANDROID_CERT_SHA256` in Vercel and redeploy. The app then opens without an address bar.
+4. Fill in the store listing (icon 512×512, feature graphic 1024×500, at least 2 phone screenshots), the privacy policy URL (`https://www.jobfitwise.se/privacy`), data safety and content rating. Then start the closed test.
+
 ## Database updates (automatic)
 
 New tables and columns are added by the app itself. On every server start, `src/instrumentation.ts` runs `src/lib/migrate.ts`, which applies each `db/migrations-*.sql` file once, in name order, and records it in `schema_migrations`. Everything happens in one transaction under an advisory lock, so parallel cold starts are safe, and it also works through Supabase's pooler. A failure is rolled back and logged, and the site keeps running.

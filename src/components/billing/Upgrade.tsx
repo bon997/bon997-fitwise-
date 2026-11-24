@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/i18n/client";
 import { defineT } from "@/i18n/config";
+import { useAndroidApp } from "@/components/app/AppShell";
 
 type PaidPlan = "pro" | "premium";
 
@@ -19,6 +20,9 @@ const T = defineT({
     working: "Opening checkout…",
     failed: "Couldn't open checkout. Try again, or compare plans.",
     locked: { pro: "Pro", premium: "Premium" },
+    inApp: { pro: "Pro features aren't included in your current plan.", premium: "Premium features aren't included in your current plan." },
+    inAppNote: "Plans can't be bought in the Android app.",
+    ok: "OK",
   },
   sv: {
     pro: "Uppgradera till PRO för AI-drivna jobbrekommendationer och automatiska jobbtips via mejl utifrån ditt CV, dina kompetenser och dina karriärmål.",
@@ -31,6 +35,9 @@ const T = defineT({
     working: "Öppnar betalning…",
     failed: "Kunde inte öppna betalningen. Försök igen eller jämför planer.",
     locked: { pro: "Pro", premium: "Premium" },
+    inApp: { pro: "Pro-funktioner ingår inte i din nuvarande plan.", premium: "Premium-funktioner ingår inte i din nuvarande plan." },
+    inAppNote: "Planer kan inte köpas i Android-appen.",
+    ok: "OK",
   },
 });
 
@@ -54,6 +61,7 @@ export async function startCheckout(plan: PaidPlan, period: "month" | "quarter" 
 /** The upgrade popup (a native modal dialog: focus moves in, Esc closes, the page behind is inert). */
 export function UpgradeDialog({ plan, open, onClose, signedIn = true }: { plan: PaidPlan; open: boolean; onClose: () => void; signedIn?: boolean }) {
   const t = T[useLocale()];
+  const inApp = useAndroidApp();
   const ref = useRef<HTMLDialogElement>(null);
   const [state, setState] = useState<"idle" | "busy" | "failed">("idle");
 
@@ -80,6 +88,14 @@ export function UpgradeDialog({ plan, open, onClose, signedIn = true }: { plan: 
       <div className="p-6">
         <span className="inline-block rounded-full bg-ink px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-paper">{t.locked[plan]}</span>
         <h2 id="upgrade-title" className="mt-3 font-display text-2xl">{t.title[plan]}</h2>
+        {inApp ? (
+          <>
+            <p className="mt-2 text-sm text-ink-2">{t.inApp[plan]}</p>
+            <p className="mt-1 text-xs text-muted">{t.inAppNote}</p>
+            <button type="button" onClick={() => ref.current?.close()} autoFocus
+              className="mt-5 w-full rounded-full border border-line px-5 py-3 text-sm hover:border-ink/40">{t.ok}</button>
+          </>
+        ) : (<>
         <p className="mt-2 text-sm text-ink-2">{t[plan]}</p>
         {state === "failed" && <p role="alert" className="mt-3 text-sm text-warn">{t.failed}</p>}
         <div className="mt-5 flex flex-col gap-2">
@@ -94,6 +110,7 @@ export function UpgradeDialog({ plan, open, onClose, signedIn = true }: { plan: 
           <Link href="/pricing" className="rounded-full border border-line px-5 py-3 text-center text-sm hover:border-ink/40">{t.plans}</Link>
           <button type="button" onClick={() => ref.current?.close()} className="py-2 text-sm text-muted hover:text-ink">{t.later}</button>
         </div>
+        </>)}
       </div>
     </dialog>
   );
@@ -103,6 +120,7 @@ export function UpgradeDialog({ plan, open, onClose, signedIn = true }: { plan: 
 export function LockedTeaser({ plan, title, body, cta }: { plan: PaidPlan; title: string; body: string; cta?: string }) {
   const [open, setOpen] = useState(false);
   const t = T[useLocale()];
+  const inApp = useAndroidApp();
   return (
     <div className="rounded-xl border border-dashed border-line bg-paper/60 p-4">
       <p className="flex items-center gap-2 text-sm font-medium">
@@ -110,9 +128,13 @@ export function LockedTeaser({ plan, title, body, cta }: { plan: PaidPlan; title
         <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-paper">{t.locked[plan]}</span>
       </p>
       <p className="mt-1 text-xs text-ink-2">{body}</p>
-      <button type="button" onClick={() => setOpen(true)} className="mt-3 text-sm font-medium text-accent underline underline-offset-2">
-        {cta ?? t.go(plan === "pro" ? "Pro" : "Premium", PRICE[plan])}
-      </button>
+      {inApp ? (
+        <p className="mt-2 text-xs text-muted">{t.inAppNote}</p>
+      ) : (
+        <button type="button" onClick={() => setOpen(true)} className="mt-3 text-sm font-medium text-accent underline underline-offset-2">
+          {cta ?? t.go(plan === "pro" ? "Pro" : "Premium", PRICE[plan])}
+        </button>
+      )}
       <UpgradeDialog plan={plan} open={open} onClose={() => setOpen(false)} />
     </div>
   );
