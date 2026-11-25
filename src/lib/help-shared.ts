@@ -41,14 +41,21 @@ export type Piece = { text: string } | { href: string; text: string };
 
 const KNOWN = ["/signup", "/login", "/profile", "/jobs", "/applications", "/activity-report", "/career", "/dashboard", "/pricing", "/account", "/faq", "/privacy", "/terms", "/onboarding"];
 
-/** Split an answer into text and links to site pages (only known paths become links; full URLs to jobfitwise.se too). */
+/** Split an answer into text and links: known site paths, full jobfitwise.se URLs, and @jobfitwise.se addresses (mailto). */
 export function linkify(answer: string): Piece[] {
   const out: Piece[] = [];
-  const re = /(https?:\/\/(?:www\.)?jobfitwise\.se(\/[\w\-/]*)?)|((?<![\w.])\/[a-z][\w\-]*(?:\/[\w\-]+)*)/gi;
+  const re = /([\w.+-]+@jobfitwise\.se)|(https?:\/\/(?:www\.)?jobfitwise\.se(\/[\w\-/]*)?)|((?<![\w.@])\/[a-z][\w\-]*(?:\/[\w\-]+)*)/gi;
   let last = 0;
   for (const m of answer.matchAll(re)) {
     const raw = m[0].replace(/[.,;:)]+$/, "");
-    const path = m[1] ? (m[2] || "/") : raw;
+    if (m[1]) {
+      const at = m.index ?? 0;
+      if (at > last) out.push({ text: answer.slice(last, at) });
+      out.push({ href: `mailto:${raw}`, text: raw });
+      last = at + raw.length;
+      continue;
+    }
+    const path = m[2] ? (m[3] || "/") : raw;
     const ok = path === "/" || KNOWN.some((k) => path === k || path.startsWith(`${k}/`));
     if (!ok) continue;
     const at = m.index ?? 0;

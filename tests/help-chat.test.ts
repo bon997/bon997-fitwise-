@@ -18,6 +18,10 @@ describe("help chat links", () => {
     expect(linkify("go to https://www.jobfitwise.se/pricing.")).toContainEqual({ href: "/pricing", text: "https://www.jobfitwise.se/pricing" });
     expect(linkify("PDF/Word and /etc/passwd and https://evil.example/profile").every((x) => !("href" in x))).toBe(true);
   });
+  it("makes our email address a mailto link, but not other addresses", () => {
+    expect(linkify("Email hej@jobfitwise.se.")).toEqual([{ text: "Email " }, { href: "mailto:hej@jobfitwise.se", text: "hej@jobfitwise.se" }, { text: "." }]);
+    expect(linkify("or someone@gmail.com").every((x) => !("href" in x))).toBe(true);
+  });
   it("keeps the whole text", () => {
     const s = "Steps:\n1. /signup\n2. /profile → Job alerts";
     expect(linkify(s).map((x) => x.text).join("")).toBe(s);
