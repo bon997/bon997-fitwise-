@@ -8,6 +8,8 @@ import { siteUrl } from "@/components/seo/JsonLd";
 import { cookies } from "next/headers";
 import { AppShell } from "@/components/app/AppShell";
 import { APP_COOKIE } from "@/lib/app-mode";
+import { HelpChat } from "@/components/help/HelpChat";
+import { PRICES_SEK, TRIAL_DAYS, paywallEnabled } from "@/lib/plans";
 
 const META = defineT({
   en: {
@@ -53,11 +55,16 @@ export const viewport: Viewport = { themeColor: "#1d6b52" };
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [locale, jar] = await Promise.all([getLocale(), cookies()]);
   const androidApp = jar.get(APP_COOKIE)?.value === "android";
+  const signedIn = jar.has("fw_session");
+  const pricing = { paywall: paywallEnabled(), pro: PRICES_SEK.pro.month, premium: PRICES_SEK.premium.month, trialDays: TRIAL_DAYS };
   return (
     <html lang={locale} className={`${inter.variable} ${instrumentSerif.variable}`}>
       <body>
         <LocaleProvider locale={locale}>
-          <AppShell androidApp={androidApp}>{children}</AppShell>
+          <AppShell androidApp={androidApp}>
+            {children}
+            <HelpChat pricing={pricing} signedIn={signedIn} />
+          </AppShell>
         </LocaleProvider>
       </body>
     </html>

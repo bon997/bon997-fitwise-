@@ -23,3 +23,9 @@ export const AI_DAILY_LIMITS = {
 } as const;
 
 export type AiKind = keyof typeof AI_DAILY_LIMITS;
+
+/** Help chat answers per visitor (or signed-in user) per 24 h, and for the whole site per 24 h. */
+export const HELP_LIMITS = {
+  perVisitor: Number(process.env.LIMIT_HELP_PER_DAY ?? 20),
+  total: Number(process.env.LIMIT_HELP_TOTAL_PER_DAY ?? 1500),
+} as const;
