@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AI_DAILY_LIMITS } from "@/lib/site";
+import { PRICES_SEK, TRIAL_DAYS, paywallEnabled } from "@/lib/plans";
 import { defineT } from "@/i18n/config";
 
 export type Faq = { id: string; q: string; a: React.ReactNode };
@@ -59,12 +60,21 @@ export const FAQ = defineT({
     {
       id: "cost",
       q: "Does JobFitwise cost anything?",
-      a: (
+      a: paywallEnabled() ? (
         <p>
-          Nothing. JobFitwise is free during the beta and we never ask for a card. To keep it free, AI features have daily
-          limits: {AI_DAILY_LIMITS.cover_letter} cover letters and {AI_DAILY_LIMITS.resume_parse} resume uploads per day.
-          Searching jobs and fit scores are unlimited. If paid plans ever come, we&apos;ll tell you well in advance and
-          you&apos;ll choose; nothing is charged without your agreement. See <Link href="/pricing">Pricing</Link>.
+          Basic is free: job search, match scores, CV upload, the application tracker and up to 10 saved jobs. Pro costs{" "}
+          {PRICES_SEK.pro.month} kr a month (CV gap analysis, job alerts, the full match breakdown) and Premium{" "}
+          {PRICES_SEK.premium.month} kr a month (also cover letters, interview coach and career coach); paying for 3 or 12
+          months is cheaper. Prices include VAT.{TRIAL_DAYS > 0 ? ` New accounts get ${TRIAL_DAYS} days of Pro free, no card needed.` : ""}{" "}
+          See <Link href="/pricing">Pricing</Link>.
+        </p>
+      ) : (
+        <p>
+          Nothing right now. JobFitwise is free during the beta, every feature is open to everyone and we never ask for a
+          card. AI features have daily limits, for example {AI_DAILY_LIMITS.cover_letter} cover letters and{" "}
+          {AI_DAILY_LIMITS.resume_parse} resume uploads per day. Paid plans are prepared (Basic stays free); we&apos;ll tell
+          you well in advance before they start and nothing is charged without your agreement. See{" "}
+          <Link href="/pricing">Pricing</Link>.
         </p>
       ),
     },
@@ -73,8 +83,9 @@ export const FAQ = defineT({
       q: "Can I stop using JobFitwise whenever I want?",
       a: (
         <p>
-          There&apos;s no subscription to cancel, so you can simply stop using JobFitwise and keep your account. If you want
-          to leave for good, use &ldquo;Delete my account&rdquo; on your <Link href="/profile">Profile</Link> page. That
+          Yes. {paywallEnabled() ? <>If you pay for Pro or Premium, cancel any time on <Link href="/account">Account</Link> →
+          Manage subscription; the plan stays active until the end of the period you paid for, then you&apos;re on Basic.{" "}</> : <>There&apos;s no subscription during the beta, so you can simply stop and keep your account.{" "}</>}
+          To leave for good, use &ldquo;Delete my account&rdquo; on your <Link href="/profile">Profile</Link> page. That
           removes your profile, resume, applications and saved jobs immediately, so download your data first if you want
           a copy.
         </p>
@@ -223,12 +234,20 @@ export const FAQ = defineT({
     {
       id: "cost",
       q: "Kostar JobFitwise något?",
-      a: (
+      a: paywallEnabled() ? (
         <p>
-          Ingenting. JobFitwise är gratis under betan och vi ber aldrig om kortuppgifter. För att det ska förbli gratis har
-          AI-funktionerna dagliga gränser: {AI_DAILY_LIMITS.cover_letter} personliga brev och {AI_DAILY_LIMITS.resume_parse}{" "}
-          CV-uppladdningar per dag. Jobbsökning och matchningspoäng är obegränsade. Om det någon gång blir betalplaner
-          berättar vi det i god tid och du väljer själv; inget dras utan att du har godkänt det. Se{" "}
+          Basic är gratis: jobbsökning, matchningspoäng, CV-uppladdning, ansökningsspåraren och upp till 10 sparade jobb. Pro
+          kostar {PRICES_SEK.pro.month} kr i månaden (CV-analys, jobbaviseringar, hela matchningsanalysen) och Premium{" "}
+          {PRICES_SEK.premium.month} kr i månaden (även personliga brev, intervjucoach och karriärcoach); 3 eller 12 månader
+          i taget blir billigare. Priserna inkluderar moms.{TRIAL_DAYS > 0 ? ` Nya konton får ${TRIAL_DAYS} dagar Pro gratis, utan kort.` : ""}{" "}
+          Se <Link href="/pricing">Priser</Link>.
+        </p>
+      ) : (
+        <p>
+          Ingenting just nu. JobFitwise är gratis under betan, alla funktioner är öppna för alla och vi ber aldrig om
+          kortuppgifter. AI-funktionerna har dagliga gränser, till exempel {AI_DAILY_LIMITS.cover_letter} personliga brev och{" "}
+          {AI_DAILY_LIMITS.resume_parse} CV-uppladdningar per dag. Betalplaner är förberedda (Basic förblir gratis); vi
+          berättar i god tid innan de startar och inget dras utan att du har godkänt det. Se{" "}
           <Link href="/pricing">Priser</Link>.
         </p>
       ),
@@ -238,9 +257,10 @@ export const FAQ = defineT({
       q: "Kan jag sluta använda JobFitwise när jag vill?",
       a: (
         <p>
-          Det finns inget abonnemang att säga upp, så du kan helt enkelt sluta använda JobFitwise och behålla kontot. Vill du
-          lämna för gott använder du ”Radera mitt konto” på din <Link href="/profile">profilsida</Link>. Då raderas din
-          profil, ditt CV, dina ansökningar och sparade jobb direkt, så ladda ner din data först om du vill ha en kopia.
+          Ja. {paywallEnabled() ? <>Betalar du för Pro eller Premium säger du upp när du vill under <Link href="/account">Konto</Link> →
+          Hantera abonnemang; planen gäller till slutet av perioden du betalat för, sedan har du Basic.{" "}</> : <>Det finns inget abonnemang under betan, så du kan helt enkelt sluta och behålla kontot.{" "}</>}
+          Vill du lämna för gott använder du ”Radera mitt konto” på din <Link href="/profile">profilsida</Link>. Då raderas
+          din profil, ditt CV, dina ansökningar och sparade jobb direkt, så ladda ner din data först om du vill ha en kopia.
         </p>
       ),
     },
