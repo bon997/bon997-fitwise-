@@ -29,7 +29,9 @@ function Answer({ text, onNavigate }: { text: string; onNavigate: () => void }) 
   return (
     <>
       {linkify(text).map((p, i) =>
-        "href" in p ? (
+        "href" in p && p.href.startsWith("mailto:") ? (
+          <a key={i} href={p.href} className="font-medium text-accent underline underline-offset-2">{p.text}</a>
+        ) : "href" in p ? (
           <Link key={i} href={p.href} onClick={onNavigate} className="font-medium text-accent underline underline-offset-2">{p.text}</Link>
         ) : (
           <span key={i}>{p.text}</span>
